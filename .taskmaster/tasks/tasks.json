@@ -1,0 +1,119 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "CTX API MCP migration: base setup",
+        "description": "Initialize migration work to comptox.epa.gov/ctx-api and prepare MCP integration for agents.",
+        "details": "- Add env vars: CTX_API_BASE_URL, CTX_API_KEY, CTX_USE_LEGACY\n- Draft plan for endpoint coverage and testing\n- Set default base URL to new server",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-14T11:32:08.514Z",
+      "description": "Default tasks context",
+      "updated": "2025-10-14T11:32:08.515Z"
+    }
+  },
+  "ctx-api-mcp-migration": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Audit current MCP + CTX endpoints",
+        "description": "Inventory existing MCP tools and which CTX endpoints they call, current base URL(s), auth method, and error handling.",
+        "details": "- Identify all MCP tools for CTX: names, input schema, output schema\n- Map each tool to current CTX endpoint(s) and HTTP methods\n- Document base URL(s) used and any versioning in paths\n- Note current auth header usage and rate-limit handling\n- Output findings to docs/mcp_ctx_audit.md",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Configure base URL + legacy fallback",
+        "description": "Add env-configurable base URL defaulting to https://comptox.epa.gov/ctx-api and optional legacy fallback to https://api-ccte.epa.gov until 2025-10-01.",
+        "details": "- Add `CTX_API_BASE_URL` env var (default to new server)\n- Add `CTX_USE_LEGACY` or allow override of base via env\n- Implement quick health/check call to validate connectivity\n- Keep fallback documented as temporary with deprecation date",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement API key authentication",
+        "description": "Confirm required auth header with new CTX APIs and wire API key from env.",
+        "details": "- Confirm header name (likely `x-api-key`) from docs\n- Read from `CTX_API_KEY` env; never hardcode\n- Add informative error when key missing for live calls\n- Update local setup instructions",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Update MCP tools for CTX endpoints",
+        "description": "Update existing MCP tools to new paths/versions and add coverage for key CTX categories.",
+        "details": "- Verify and adjust paths for existing tools against comptox.epa.gov/ctx-api\n- Add/confirm tools for: chemical search, hazard, bioactivity, exposure\n- Ensure input/output schemas are stable and documented\n- Validate responses and normalize fields where needed",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Add robust error handling + retries",
+        "description": "Improve reliability against rate limits and transient failures.",
+        "details": "- Implement exponential backoff on 429/5xx with jitter\n- Surface actionable error messages with context\n- Capture and log rate-limit headers/request IDs when present\n- Add timeout and circuit-breaker defaults if needed",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Add tests + smoke script",
+        "description": "Ensure MCP works end-to-end against the new CTX server with a valid API key.",
+        "details": "- Unit tests for request builder, auth header, error handling\n- Integration smoke tests gated by `CTX_API_KEY`\n- Add `scripts/smoke_ctx.sh` to hit 1–2 endpoints and report status",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Update docs + examples",
+        "description": "Document new base URL, authentication, migration notes, and provide usage examples.",
+        "details": "- Update docs/api_reference.md with new base URL, sample requests, env vars\n- Add migration notes and deprecation date for legacy server\n- Provide `.env.example` placeholders and quickstart for agents",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Epic: Migrate MCP to new CTX API server",
+        "description": "Track the overall migration, from endpoint updates through testing and docs, defaulting to comptox.epa.gov/ctx-api.",
+        "details": "Subtasks: Audit MCP endpoints; Configure base URL + fallback; Implement API key auth; Update MCP tools; Add error handling + retries; Add tests + smoke script; Update docs + examples",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-14T11:32:16.112Z",
+      "updated": "2025-10-14T11:33:21.399Z",
+      "description": "Tag created on 10/14/2025"
+    }
+  }
+}

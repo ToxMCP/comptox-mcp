@@ -1,0 +1,64 @@
+Title: CTX API MCP Migration
+Owner: Platform
+Priority: High
+Due: 2025-09-15
+
+Summary
+Migrate our MCP integration for EPA’s Computational Toxicology and Exposure (CTX) APIs from the legacy cloud.gov server (https://api-ccte.epa.gov) to the new infrastructure at https://comptox.epa.gov/ctx-api. Ensure agents can use the MCP tools reliably with the new endpoints and versions, while keeping an optional fallback to the legacy server until it is decommissioned on 2025-10-01.
+
+Goals
+- Update base URL and endpoint paths to https://comptox.epa.gov/ctx-api
+- Support API key authentication via environment variable (no hardcoding)
+- Add or update MCP tools for key CTX capabilities (chemical search, hazard, bioactivity, exposure)
+- Improve error handling, rate limiting/backoff, and response validation
+- Provide docs, examples, and a simple smoke test script
+- Maintain a fallback toggle to legacy server until cutoff
+
+Non-Goals
+- Full data modeling of all CTX endpoints
+- Building a UI; MCP-only integration for agents is in scope
+
+Constraints
+- Must not commit any secrets; use env vars such as CTX_API_KEY and CTX_API_BASE_URL
+- Provide minimal but sufficient test coverage to catch regressions
+
+High-Level Tasks
+1) Audit current MCP + endpoints
+- Inventory current endpoints, auth method, and error handling
+- Document base URL(s) and which MCP tools call which endpoints
+- Output: docs/mcp_ctx_audit.md
+
+2) Configure base URL + fallback
+- Introduce `CTX_API_BASE_URL` with default `https://comptox.epa.gov/ctx-api`
+- Add `CTX_USE_LEGACY` to switch to `https://api-ccte.epa.gov` if needed
+- Validate both modes via quick connectivity checks
+
+3) Implement API key auth
+- Use header (likely `x-api-key`); confirm via docs
+- Read from `CTX_API_KEY` env var; error if missing for live calls
+- Add guidance in README for local setup
+
+4) Update MCP tools/endpoints
+- Map and update existing tools to new paths/versions
+- Add tools for key categories: chemical search, hazard, bioactivity, exposure
+- Ensure stable JSON schemas are returned or validated
+
+5) Robust error handling
+- Add retries with exponential backoff for 429/5xx
+- Normalize errors (HTTP, network, parse) into actionable messages
+- Log request IDs/rate-limit headers when available
+
+6) Tests + smoke script
+- Unit tests for request builder and error handling
+- Integration smoke tests gated by `CTX_API_KEY`
+- Lightweight `scripts/smoke_ctx.sh` to verify a couple endpoints
+
+7) Documentation + examples
+- Update docs/api_reference.md with new base URL & examples
+- Add migration notes, deprecation date, and fallback instructions
+- Provide example `.env.example` with placeholders
+
+Acceptance Criteria
+- MCP runs against new base URL by default; smoke test passes with a valid API key
+- README + docs updated; agents can call core CTX tools successfully
+- Fallback to legacy is available but documented as temporary
