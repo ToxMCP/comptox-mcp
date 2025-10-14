@@ -89,8 +89,7 @@ class ChemicalListResource(BaseResource):
         Returns:
             List of chemical list names.
         """
-        results = self.client.public_list_names()
-        return results
+        return self._with_retry(lambda: self.client.public_list_names())
     
     def get_full_list(self, list_name: str) -> List[Dict[str, Any]]:
         """
@@ -102,5 +101,4 @@ class ChemicalListResource(BaseResource):
         Returns:
             List of chemicals.
         """
-        results = self.client.get_full_list(list_name=list_name)
-        return results
+        return self._with_retry(lambda: self.client.get_full_list(list_name=list_name))

@@ -152,8 +152,7 @@ class ChemicalResource(BaseResource):
         Returns:
             List of matching chemicals.
         """
-        results = self.client.search(by=search_type, word=query)
-        return results
+        return self._with_retry(lambda: self.client.search(by=search_type, word=query))
     
     def get_chemical_details(self, id: str, id_type: str) -> Dict[str, Any]:
         """
@@ -166,8 +165,7 @@ class ChemicalResource(BaseResource):
         Returns:
             Chemical details.
         """
-        results = self.client.details(by=id_type, word=id)
-        return results
+        return self._with_retry(lambda: self.client.details(by=id_type, word=id))
     
     def search_msready(self, search_type: str, query: str) -> List[Dict[str, Any]]:
         """
@@ -180,8 +178,7 @@ class ChemicalResource(BaseResource):
         Returns:
             List of matching chemicals.
         """
-        results = self.client.msready(by=search_type, word=query)
-        return results
+        return self._with_retry(lambda: self.client.msready(by=search_type, word=query))
     
     def search_msready_mass(self, start: float, end: float) -> List[Dict[str, Any]]:
         """
@@ -194,5 +191,4 @@ class ChemicalResource(BaseResource):
         Returns:
             List of matching chemicals.
         """
-        results = self.client.msready(by="mass", start=start, end=end)
-        return results
+        return self._with_retry(lambda: self.client.msready(by="mass", start=start, end=end))

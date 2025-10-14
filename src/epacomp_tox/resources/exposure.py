@@ -168,8 +168,7 @@ class ExposureResource(BaseResource):
         Returns:
             List of matching data.
         """
-        results = self.client.search_cpdat(vocab_name=vocab_name, dtxsid=dtxsid)
-        return results
+        return self._with_retry(lambda: self.client.search_cpdat(vocab_name=vocab_name, dtxsid=dtxsid))
     
     def search_httk(self, dtxsid: str) -> Dict[str, Any]:
         """
@@ -181,8 +180,7 @@ class ExposureResource(BaseResource):
         Returns:
             HTTK data.
         """
-        results = self.client.search_httk(dtxsid=dtxsid)
-        return results
+        return self._with_retry(lambda: self.client.search_httk(dtxsid=dtxsid))
     
     def get_cpdat_vocabulary(self, vocab_name: str) -> List[Dict[str, Any]]:
         """
@@ -194,8 +192,7 @@ class ExposureResource(BaseResource):
         Returns:
             List of vocabulary terms.
         """
-        results = self.client.get_cpdat_vocabulary(vocab_name=vocab_name)
-        return results
+        return self._with_retry(lambda: self.client.get_cpdat_vocabulary(vocab_name=vocab_name))
     
     def search_qsurs(self, dtxsid: str) -> Dict[str, Any]:
         """
@@ -207,8 +204,7 @@ class ExposureResource(BaseResource):
         Returns:
             QSUR predictions.
         """
-        results = self.client.search_qsurs(dtxsid=dtxsid)
-        return results
+        return self._with_retry(lambda: self.client.search_qsurs(dtxsid=dtxsid))
     
     def search_exposures(self, data_type: str, dtxsid: str) -> Dict[str, Any]:
         """
@@ -221,5 +217,4 @@ class ExposureResource(BaseResource):
         Returns:
             Exposure data.
         """
-        results = self.client.search_exposures(by=data_type, dtxsid=dtxsid)
-        return results
+        return self._with_retry(lambda: self.client.search_exposures(by=data_type, dtxsid=dtxsid))

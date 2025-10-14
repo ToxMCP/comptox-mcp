@@ -103,7 +103,7 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes.
         """
-        results = ctx.search_toxprints(chemical=chemical)
+        results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemical))
         # Convert DataFrame to dictionary for JSON serialization
         return results.to_dict()
     
@@ -117,6 +117,6 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes for multiple chemicals.
         """
-        results = ctx.search_toxprints(chemical=chemicals)
+        results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemicals))
         # Convert DataFrame to dictionary for JSON serialization
         return results.to_dict()

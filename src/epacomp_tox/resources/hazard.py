@@ -129,8 +129,7 @@ class HazardResource(BaseResource):
         Returns:
             List of hazard data.
         """
-        results = self.client.search(by=data_type, dtxsid=dtxsid, summary=summary)
-        return results
+        return self._with_retry(lambda: self.client.search(by=data_type, dtxsid=dtxsid, summary=summary))
     
     def batch_search_hazard(self, data_type: str, dtxsids: List[str], summary: bool = True) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -144,5 +143,4 @@ class HazardResource(BaseResource):
         Returns:
             Dictionary mapping DTXSIDs to hazard data.
         """
-        results = self.client.batch_search(by=data_type, dtxsid=dtxsids, summary=summary)
-        return results
+        return self._with_retry(lambda: self.client.batch_search(by=data_type, dtxsid=dtxsids, summary=summary))
