@@ -18,12 +18,35 @@ class MCPServer:
             api_key: EPA CompTox API key. If not provided, will attempt to use
                     environment variable EPA_COMPTOX_API_KEY.
         """
-        self.api_key = api_key or os.environ.get("EPA_COMPTOX_API_KEY")
+        # Resolve API key with multiple env fallbacks for compatibility
+        # Preferred: CTX_API_KEY; fallback: EPA_COMPTOX_API_KEY; finally: ctx_x_api_key (ctx-python convention)
+        self.api_key = (
+            api_key
+            or os.environ.get("CTX_API_KEY")
+            or os.environ.get("EPA_COMPTOX_API_KEY")
+            or os.environ.get("ctx_x_api_key")
+        )
         if not self.api_key:
             raise ValueError(
-                "EPA CompTox API key is required. Provide it as a parameter or "
-                "set the EPA_COMPTOX_API_KEY environment variable."
+                "CTX API key is required. Set CTX_API_KEY (preferred) or EPA_COMPTOX_API_KEY, "
+                "or pass api_key to MCPServer."
             )
+
+        # Configure base URL for ctx-python based on env
+        # Preferred: CTX_API_BASE_URL (defaults to new comptox server). Optional legacy toggle via CTX_USE_LEGACY.
+        use_legacy = str(os.environ.get("CTX_USE_LEGACY", "0")).strip() in ("1", "true", "True")
+        default_base = "https://comptox.epa.gov/ctx-api"
+        legacy_base = "https://api-ccte.epa.gov"
+        base_url = os.environ.get("CTX_API_BASE_URL", default_base)
+        if use_legacy:
+            base_url = legacy_base
+
+        # Expose values for ctx-python which reads these envs when instantiated
+        os.environ.setdefault("ctx_api_host", base_url)
+        # default accept header used by ctx APIs
+        os.environ.setdefault("ctx_api_accept", "application/json")
+        # key also exposed for ctx-python CLIs if needed
+        os.environ.setdefault("ctx_x_api_key", self.api_key)
         
         # Initialize resources
         self.resources = self._initialize_resources()

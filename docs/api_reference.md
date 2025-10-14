@@ -2,6 +2,11 @@
 
 This document provides detailed information about the EPAComp Tox MCP API.
 
+Migration Notes
+- Default CTX base URL is `https://comptox.epa.gov/ctx-api`. Override with `CTX_API_BASE_URL`.
+- Set `CTX_USE_LEGACY=1` to use `https://api-ccte.epa.gov` until 2025-10-01.
+- API key env precedence: `CTX_API_KEY` (preferred), `EPA_COMPTOX_API_KEY`, then `ctx_x_api_key`.
+
 ## Server API
 
 ### MCPServer
@@ -13,7 +18,7 @@ MCPServer(api_key=None)
 ```
 
 **Parameters:**
-- `api_key` (str, optional): EPA CompTox API key. If not provided, will attempt to use environment variable `EPA_COMPTOX_API_KEY`.
+- `api_key` (str, optional): EPA CompTox API key. If not provided, server resolves in order: `CTX_API_KEY` (preferred) → `EPA_COMPTOX_API_KEY` → `ctx_x_api_key`.
 
 **Methods:**
 

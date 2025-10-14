@@ -96,7 +96,12 @@ The `MCPServer` class provides the core functionality for the MCP server.
 MCPServer(api_key=None)
 ```
 
-- `api_key`: EPA CompTox API key. If not provided, will attempt to use environment variable `EPA_COMPTOX_API_KEY`.
+- `api_key`: EPA CompTox API key. If not provided, resolves in order: `CTX_API_KEY` (preferred) → `EPA_COMPTOX_API_KEY` → `ctx_x_api_key`.
+
+Migration env vars
+- `CTX_API_BASE_URL` (default: `https://comptox.epa.gov/ctx-api`)
+- `CTX_USE_LEGACY=1` switches to `https://api-ccte.epa.gov` (until 2025-10-01)
+- For ctx-python compatibility, the server also sets `ctx_api_host`, `ctx_api_accept`, and `ctx_x_api_key` envs at runtime.
 
 Methods:
 
