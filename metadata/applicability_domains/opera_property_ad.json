@@ -1,0 +1,24 @@
+{
+  "model": "OPERA Property Predictions",
+  "version": "3.6.1",
+  "criteria": [
+    {
+      "type": "descriptor_range",
+      "descriptors": ["atomCount", "bondCount", "polarSurfaceArea"],
+      "range": {"mode": "min_max"}
+    },
+    {
+      "type": "similarity",
+      "metric": "tanimoto",
+      "threshold": 0.6,
+      "neighbors": 5
+    }
+  ],
+  "policy": "warn",
+  "errorCode": "OPERA_AD_WARN",
+  "references": [
+    {
+      "citation": "OPERA Manual 2025"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+<html>
+<body>
+<h1>TEST Consensus Acute Toxicity (v5.2.0)</h1>
+<br/>
+<h2>Summary</h2>
+<ul>
+<li>**Schema Version:** 1.0</li>
+<li>**Model Type:** QSAR</li>
+<li>**Release Date:** 2025-01-15</li>
+</ul>
+<br/>
+<h2>Intended Use</h2>
+<p>Supports screening-level acute aquatic toxicity assessments for organic chemicals.</p>
+<br/>
+<h3>In Scope</h3>
+<ul>
+<li>Non-ionic organic chemicals</li>
+<li>Screening-level prioritization</li>
+</ul>
+<br/>
+<h3>Out of Scope</h3>
+<ul>
+<li>Ionic species</li>
+<li>Metals</li>
+</ul>
+<br/>
+<h3>Limitations</h3>
+<ul>
+<li>Do not apply to mixtures without expert review.</li>
+</ul>
+<br/>
+<h2>Applicability Domain</h2>
+<p>Combines leverage thresholds with descriptor range checks.</p>
+<br/>
+<h3>Enforcement Policy</h3>
+<ul>
+<li>**Policy:** BLOCK</li>
+<li>**Error Codes:** TEST_AD_FAIL</li>
+</ul>
+<br/>
+<h3>Criteria</h3>
+<ul>
+<li>**Descriptor Range:** All descriptors must fall within 5th-95th percentile of training set.</li>
+<li>percentileLower: 0.05</li>
+<li>percentileUpper: 0.95</li>
+<li>**Similarity:** Tanimoto similarity to nearest neighbor must exceed 0.65.</li>
+<li>threshold: 0.65</li>
+</ul>
+<br/>
+<h3>Confidence Bands</h3>
+<ul>
+<li>**High** (min 0.8):</li>
+<li>Eligible for automated workflow</li>
+<li>**Moderate** (min 0.6):</li>
+<li>Requires SME review</li>
+</ul>
+<br/>
+<h3>Guardrail Definition (metadata/applicability_domains)</h3>
+<ul>
+<li>**Policy:** BLOCK</li>
+<li>**Error Code:** TEST_AD_FAIL</li>
+<li>**Criteria:**</li>
+<li>Descriptor Range: {"descriptors": ["logS", "logP", "LUMO", "polarSurfaceArea"], "range": {"lowerPercentile": 0.05, "upperPercentile": 0.95}}</li>
+<li>Similarity: {"metric": "tanimoto", "threshold": 0.65, "fingerprint": "pubchem"}</li>
+</ul>
+<br/>
+<h2>Performance Metrics</h2>
+<h3>Training / Validation</h3>
+<ul>
+<li>R2: 0.81 | dataset=training</li>
+</ul>
+<br/>
+<h3>External Validation</h3>
+<ul>
+<li>Q2: 0.74 | dataset=external</li>
+<li>RMSE: 0.45 | units=log10</li>
+</ul>
+<br/>
+<h2>Provenance</h2>
+<ul>
+<li>**Source Repositories:**</li>
+<li>https://github.com/epa/test</li>
+<li>**Approval Date:** 2025-02-01</li>
+<li>**Approved By:** Regulatory Affairs</li>
+<li>**Checksum:** SHA256 4a2a288f4f9b15727ea63a2c70a786844bab608d75d0d70fd0d0d7e0dad32f90</li>
+</ul>
+</body>
+</html>

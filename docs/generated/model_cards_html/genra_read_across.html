@@ -1,0 +1,90 @@
+<html>
+<body>
+<h1>GenRA Read-Across Workflow (v2.1.0)</h1>
+<br/>
+<h2>Summary</h2>
+<ul>
+<li>**Schema Version:** 1.0</li>
+<li>**Model Type:** Read-Across</li>
+<li>**Release Date:** 2025-03-05</li>
+</ul>
+<br/>
+<h2>Intended Use</h2>
+<p>Supports regulatory read-across decisions for data gap filling and hazard assessment.</p>
+<br/>
+<h3>In Scope</h3>
+<ul>
+<li>Organic chemicals with available ToxCast/ToxVal analogues</li>
+</ul>
+<br/>
+<h3>Out of Scope</h3>
+<ul>
+<li>Chemicals lacking sufficient analogue coverage</li>
+<li>Mixtures</li>
+</ul>
+<br/>
+<h3>Limitations</h3>
+<ul>
+<li>Requires SME review when analogue similarity < 0.7.</li>
+</ul>
+<br/>
+<h2>Applicability Domain</h2>
+<p>Composite checks for analogue similarity, data completeness, and evidence diversity.</p>
+<br/>
+<h3>Enforcement Policy</h3>
+<ul>
+<li>**Policy:** BLOCK</li>
+<li>**Error Codes:** GENRA_AD_FAIL</li>
+</ul>
+<br/>
+<h3>Criteria</h3>
+<ul>
+<li>**Similarity:** At least three structural analogues with Tanimoto similarity >= 0.7.</li>
+<li>threshold: 0.7</li>
+<li>minAnalogues: 3</li>
+<li>**Coverage:** Analogues must span at least two evidence domains (in vivo, in vitro, in silico).</li>
+<li>minDomains: 2</li>
+<li>**Expert Rule:** Mode-of-action tags must align across selected analogues.</li>
+<li>allowableMismatch: 1</li>
+</ul>
+<br/>
+<h3>Confidence Bands</h3>
+<ul>
+<li>**Robust** (min 0.8):</li>
+<li>Eligible for automated dossier generation</li>
+<li>**Limited** (min 0.5):</li>
+<li>Requires SME justification and documentation</li>
+</ul>
+<br/>
+<h3>Guardrail Definition (metadata/applicability_domains)</h3>
+<ul>
+<li>**Policy:** BLOCK</li>
+<li>**Error Code:** GENRA_AD_FAIL</li>
+<li>**Criteria:**</li>
+<li>Similarity: {"metric": "tanimoto", "threshold": 0.7, "minAnalogues": 3}</li>
+<li>Coverage: {"requirements": ["in vivo", "in vitro"], "minimumDomains": 2}</li>
+<li>Expert Rule: {"rule": "Mode of action tags must align", "allowableMismatch": 1}</li>
+</ul>
+<br/>
+<h2>Performance Metrics</h2>
+<h3>Training / Validation</h3>
+<ul>
+<li>Coverage: 0.78 | dataset=historical read-across cases</li>
+</ul>
+<br/>
+<h3>External Validation</h3>
+<ul>
+<li>Accuracy: 0.72 | dataset=case studies</li>
+<li>Precision: 0.69 | dataset=case studies</li>
+</ul>
+<br/>
+<h2>Provenance</h2>
+<ul>
+<li>**Source Repositories:**</li>
+<li>https://github.com/epa/genra</li>
+<li>**Approval Date:** 2025-03-10</li>
+<li>**Approved By:** Regulatory Affairs Read-Across Committee</li>
+<li>**Checksum:** SHA256 3ce4ec4983d3e7c6b2089b967679f5fc293096750293eb98d2b211f780a1f95e</li>
+</ul>
+</body>
+</html>

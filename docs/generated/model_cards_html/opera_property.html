@@ -1,0 +1,88 @@
+<html>
+<body>
+<h1>OPERA Property Predictions (v3.6.1)</h1>
+<br/>
+<h2>Summary</h2>
+<ul>
+<li>**Schema Version:** 1.0</li>
+<li>**Model Type:** QSAR</li>
+<li>**Release Date:** 2025-02-20</li>
+</ul>
+<br/>
+<h2>Intended Use</h2>
+<p>Supports exposure assessment workflows requiring physicochemical property estimates for organic chemicals.</p>
+<br/>
+<h3>In Scope</h3>
+<ul>
+<li>Neutral organic chemicals</li>
+<li>Screening-level exposure modelling</li>
+</ul>
+<br/>
+<h3>Out of Scope</h3>
+<ul>
+<li>Inorganic substances</li>
+<li>Highly ionized species</li>
+</ul>
+<br/>
+<h3>Limitations</h3>
+<ul>
+<li>Predictions outside training descriptor ranges may be unreliable.</li>
+</ul>
+<br/>
+<h2>Applicability Domain</h2>
+<p>Descriptor range checks plus nearest-neighbor similarity enforced before prediction delivery.</p>
+<br/>
+<h3>Enforcement Policy</h3>
+<ul>
+<li>**Policy:** WARN</li>
+<li>**Error Codes:** OPERA_AD_WARN</li>
+</ul>
+<br/>
+<h3>Criteria</h3>
+<ul>
+<li>**Descriptor Range:** Each descriptor must fall within training min/max after scaling.</li>
+<li>mode: min_max</li>
+<li>**Similarity:** Average Tanimoto similarity to top 5 training neighbors >= 0.6.</li>
+<li>threshold: 0.6</li>
+<li>neighbors: 5</li>
+</ul>
+<br/>
+<h3>Confidence Bands</h3>
+<ul>
+<li>**High** (min 0.75):</li>
+<li>Auto-approve</li>
+<li>**Low** (min 0.5):</li>
+<li>Escalate to SME</li>
+</ul>
+<br/>
+<h3>Guardrail Definition (metadata/applicability_domains)</h3>
+<ul>
+<li>**Policy:** WARN</li>
+<li>**Error Code:** OPERA_AD_WARN</li>
+<li>**Criteria:**</li>
+<li>Descriptor Range: {"descriptors": ["atomCount", "bondCount", "polarSurfaceArea"], "range": {"mode": "min_max"}}</li>
+<li>Similarity: {"metric": "tanimoto", "threshold": 0.6, "neighbors": 5}</li>
+</ul>
+<br/>
+<h2>Performance Metrics</h2>
+<h3>Training / Validation</h3>
+<ul>
+<li>R2: 0.92 | dataset=training</li>
+</ul>
+<br/>
+<h3>External Validation</h3>
+<ul>
+<li>RMSE: 0.31 | dataset=external | units=log</li>
+<li>RMSE: 0.45 | dataset=external | units=log mol/L</li>
+</ul>
+<br/>
+<h2>Provenance</h2>
+<ul>
+<li>**Source Repositories:**</li>
+<li>https://github.com/kmansouri/OPERA</li>
+<li>**Approval Date:** n/a</li>
+<li>**Approved By:** Pending</li>
+<li>**Checksum:** SHA256 79af18b3515e9a1d69037e2a154c7c6088cf3fae8c388ff901abdadf5a304a52</li>
+</ul>
+</body>
+</html>

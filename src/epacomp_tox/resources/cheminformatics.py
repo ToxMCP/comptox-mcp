@@ -103,9 +103,9 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes.
         """
+        from epacomp_tox.validators import to_serializable
         results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemical))
-        # Convert DataFrame to dictionary for JSON serialization
-        return results.to_dict()
+        return to_serializable(results)
     
     def batch_search_toxprints(self, chemicals: List[str]) -> Dict[str, Any]:
         """
@@ -117,6 +117,6 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes for multiple chemicals.
         """
+        from epacomp_tox.validators import to_serializable
         results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemicals))
-        # Convert DataFrame to dictionary for JSON serialization
-        return results.to_dict()
+        return to_serializable(results)

@@ -1,202 +1,216 @@
-# EPAComp Tox Model Context Protocol (MCP)
+# EPA CompTox MCP Server
 
-A Model Context Protocol implementation for EPA's Computational Toxicology and Exposure APIs, designed for integration with LLM agents through the Agentic SDK.
+**Public MCP endpoint for the EPA Computational Toxicology (CompTox) API.**  
+Expose CompTox resources, predictive services, and guardrailed workflows to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
 
-## Overview
+## Why this project exists
 
-This package provides a standardized interface for LLM agents to access and interact with the EPA's Computational Toxicology and Exposure data. It follows the Model Context Protocol (MCP) architecture, which defines a client-server pattern for providing context to LLMs.
+Regulatory and research teams rely on the CompTox API for high-quality chemical, exposure, and hazard data. Traditional workflows involve bespoke scripts or manual dashboard exports that are hard to share with AI copilots.  
 
-## Features
+The EPA CompTox MCP server wraps those workflows in a **secure, programmable interface**:
 
-- **Standardized API**: Access EPA CompTox data through a consistent interface
-- **LLM Agent Integration**: Designed for use with the Agentic SDK
-- **Comprehensive Coverage**: Includes Chemical, Exposure, Hazard, ChemicalList, and Cheminformatics data
-- **Tool Definitions**: Predefined tools for LLM agents to use
-- **Authentication Handling**: Manages EPA API authentication
+- **One MCP surface (`/mcp` HTTP + `/mcp/ws` WebSocket)** delivers discovery and execution across chemical, exposure, hazard, and metadata catalogues.
+- **Guardrails + provenance** – Applicability-domain policies, audit bundles, and metadata attachments are available to downstream automations.
+- **Agent friendly** – tested with Codex CLI, Gemini CLI, and Claude (see [integration guide](docs/integration_guides/mcp_integration.md)).
 
-## Installation
+> Looking for the orchestrator or Agentic SDK samples? The MCP server reuses the same components but packages them for any MCP-compatible agent instead of the bespoke SDK clients.
+
+---
+
+## Feature snapshot
+
+| Capability | Description |
+| --- | --- |
+| 🌐 **Dual MCP Transports** | JSON-RPC over HTTP (`/mcp`) and WebSocket (`/mcp/ws`) with identical tool catalogues. |
+| 🧬 **CompTox Tooling** | Chemical, exposure, hazard, metadata, and predictive helpers mapped to structured MCP tools. |
+| 🛡️ **Guardrail Enforcement** | Applicability-domain policies, audit logging, and provenance bundles returned alongside tool data. |
+| ⚙️ **Configurable by Design** | Pydantic settings with `.env` support for API keys, retries, auth bypass, transport tuning, and observability. |
+| 🤖 **Agent Ready** | Verified with Codex CLI, Gemini CLI, and Claude Code; includes quick-start config snippets. |
+
+---
+
+## Table of contents
+
+1. [Quick start](#quick-start)
+2. [Configuration](#configuration)
+3. [Tool catalog](#tool-catalog)
+4. [Running the server](#running-the-server)
+5. [Integrating with coding agents](#integrating-with-coding-agents)
+6. [Output artifacts](#output-artifacts)
+7. [Security checklist](#security-checklist)
+8. [Development notes](#development-notes)
+9. [Roadmap](#roadmap)
+10. [License](#license)
+
+---
+
+## Quick start
 
 ```bash
-pip install epacomp-tox-mcp
+git clone https://github.com/your-org/mcp_epacomp_tox.git
+cd mcp_epacomp_tox
+pip install -e .
+cp .env.example .env
+uvicorn epacomp_tox.transport.websocket:app --reload
 ```
 
-## Usage
+> **Important:** The server needs a valid EPA CompTox API key. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` in `.env` before starting the transport.
 
-### Server Setup
+With the server running, MCP clients can connect to `http://localhost:8000/mcp` (HTTP) or `ws://localhost:8000/mcp/ws` (WebSocket).
 
-```python
-from epacomp_tox.server import MCPServer
+---
 
-# Initialize the server with your EPA CompTox API key
-server = MCPServer(api_key="your-api-key")
+## Configuration
 
-# Get available resources
-resources = server.get_resources()
-print(resources)
+Settings are resolved via [`pydantic-settings`](https://docs.pydantic.dev/latest/concepts/settings/) with `.env`/`.env.local` support. Key environment variables:
 
-# Get available tools for LLM agents
-tools = server.get_tools()
-print(tools)
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `CTX_API_KEY` | ✅ | – | CompTox API key used for all downstream requests. Fallbacks: `EPA_COMPTOX_API_KEY`, `ctx_x_api_key`. |
+| `CTX_API_BASE_URL` | Optional | `https://comptox.epa.gov/ctx-api` | Base URL for CompTox API. |
+| `CTX_USE_LEGACY` | Optional | `0` | Set to `1` to use the legacy `https://api-ccte.epa.gov` endpoint. |
+| `CTX_RETRY_ATTEMPTS` | Optional | `3` | Number of retry attempts for transient errors. |
+| `CTX_RETRY_BASE` | Optional | `0.5` | Base sleep (seconds) used in exponential backoff. |
+| `ENVIRONMENT` | Optional | `development` | Controls defaults like permissive CORS. |
+| `LOG_LEVEL` | Optional | `INFO` | Application log level. |
+| `BYPASS_AUTH` | Optional | `0` | Set to `1` to disable auth (development only). |
+| `CORS_ALLOW_ORIGINS` | Optional | – | Comma-separated origins for HTTP transport. Defaults to `*` in development. |
+| `EPACOMP_MCP_HEARTBEAT_TIMEOUT_SECONDS` | Optional | `120` | Minimum heartbeat timeout negotiated with WebSocket clients. |
+| `EPACOMP_MCP_HANDSHAKE_TIMEOUT_SECONDS` | Optional | `30` | Minimum handshake timeout negotiated with WebSocket clients. |
+| `EPACOMP_MCP_METRICS_ENABLED` | Optional | `1` | Toggle `/metrics` endpoint exposure. |
 
-# Execute a tool
-result = server.execute_tool(
-    "search_chemical", 
-    {"query": "toluene", "search_type": "equals"}
-)
-print(result)
+See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and expanded configuration.
+
+---
+
+## Tool catalog
+
+| Category | Highlight tools | Notes |
+| --- | --- | --- |
+| Chemical discovery | `search_chemical`, `batch_search_chemical`, `get_chemical_details` | Resolve identifiers, structures, and details with CTX retry/backoff baked in. |
+| Exposure & hazard | `exposure_list_programs`, `hazard_list_assays`, `hazard_get_assay_details` | Navigate exposure programs and hazard endpoints ready for agent summarisation. |
+| Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and audit metadata. |
+| Predictive services | `predictive_run_test`, `predictive_run_opera`, `predictive_run_genra` (via orchestrator helpers) | Trigger guardrailed predictive runs and receive provenance detail alongside outputs. |
+| Utility helpers | `canonicalize_structure`, `structure_connectivity`, `download_supporting_document` | Provide supporting conversions and file downloads for downstream automations. |
+
+Full schema definitions (input and output) are returned via the MCP `tools/list` call. See [`tests/test_resources.py`](tests/test_resources.py) for examples of exercising each category.
+
+---
+
+## Running the server
+
+### Local development
+
+```bash
+# install and start the dual-transport server
+pip install -e .
+uvicorn epacomp_tox.transport.websocket:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Client Setup
+The FastAPI app exposes both transports:
 
-```python
-from epacomp_tox.client import MCPClient
+- HTTP JSON-RPC: `http://localhost:8000/mcp`
+- WebSocket JSON-RPC: `ws://localhost:8000/mcp/ws`
 
-# Initialize the client with the server URL
-client = MCPClient(server_url="http://localhost:8000")
+Quick handshake + tool discovery via HTTP:
 
-# Get available tools
-tools = client.get_tools()
-print(tools)
+```bash
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}'
 
-# Execute a tool
-result = client.execute_tool(
-    "search_chemical", 
-    {"query": "toluene", "search_type": "equals"}
-)
-print(result)
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | jq '.result.tools | length'
 ```
 
-### Integration with Agentic SDK
+### Production deployment
 
-```python
-from agentic_sdk import Agent
-from epacomp_tox.client import MCPClient
+- Run via Gunicorn: `gunicorn epacomp_tox.transport.websocket:app -c deploy/gunicorn_conf.py`
+- Container image: see [`deploy/Dockerfile`](deploy/Dockerfile) for a hardened, non-root runtime.
+- Probes: `/healthz` (liveness) and `/readyz` (performs CTX connectivity check). Non-200 responses should trigger restarts.
+- Metrics: `/metrics` exposes Prometheus gauges derived from `MCPServer.get_transport_metrics()`. Sample scrape/OTEL configs live in `deploy/prometheus_scrape.yaml` and `deploy/otel_collector_metrics.yaml`.
+- Additional rollout guidance (TLS, ingress, scaling) lives in [`docs/deployment.md`](docs/deployment.md).
 
-# Initialize the MCP client
-mcp_client = MCPClient(server_url="http://localhost:8000")
+---
 
-# Get the tools
-tools = mcp_client.get_tools()
+## Integrating with coding agents
 
-# Initialize the agent with the tools
-agent = Agent(tools=tools)
+The repository includes step-by-step instructions in [`docs/integration_guides/mcp_integration.md`](docs/integration_guides/mcp_integration.md). Highlights:
 
-# Use the agent
-response = agent.run("Find information about the chemical toluene")
-print(response)
+- **Codex CLI**: add an HTTP provider pointing to `http://localhost:8000/mcp` with the `Authorization: Bearer <token>` header when auth is enabled.
+- **Gemini CLI**: configure the provider transport to `http` with the same endpoint and optional headers.
+- **Claude Code / Cursor**: update the MCP provider JSON to point to the HTTP endpoint; WebSocket is optional when streaming events are required.
+
+Each guide covers tool listing, sample calls, binary payload handling, and troubleshooting tips (timeouts, auth failures, unexpected 4xx responses).
+
+---
+
+## Output artifacts
+
+Every successful tool invocation returns structured payloads designed for agents:
+
+- `content`: human-readable JSON wrapped as text for chat surfaces.
+- `structuredContent.data`: machine-readable results (lists, dicts, or arrays) for programmatic chaining.
+- `structuredContent.metadata`: when available, includes rate-limit information, applicability-domain context, audit bundle references, and session metadata.
+- Predictive tools return additional provenance such as model version, policy enforcement outcome, and attachments (e.g. audit bundle IDs).
+
+---
+
+## Security checklist
+
+- Disable `BYPASS_AUTH` and front the MCP server with OAuth/OIDC once deployed beyond local development.
+- Restrict `CORS_ALLOW_ORIGINS` to approved hosts when exposing the HTTP transport.
+- Rotate `CTX_API_KEY` regularly and store secrets outside the repository (e.g. cloud secret manager or OS keychain).
+- Monitor `/metrics` for negotiated capability changes and unexpected spikes in `tools/call` failures.
+- Enable HTTPS/TLS at the ingress or reverse proxy layer.
+
+---
+
+## Development notes
+
+### Architecture snapshot
+
+```
+┌────────────────┐       ┌─────────────────────────┐       ┌──────────────────────┐
+│ MCP Client     │  MCP  │ FastAPI App             │  CQRS │ CompTox Orchestrator │
+│ (CLI / IDE)    │──────▶│ HTTP (/mcp) & WS (/mcp/ws)│ ────▶│ + Predictive services│
+└────────────────┘       │ • tool registry         │       │ • guardrails/audit    │
+       │                 │ • JSON-RPC dispatch     │◀──────│ • audit bundle store  │
+       ▼                 └─────────────────────────┘       └──────────────────────┘
 ```
 
-## API Reference
+### Guardrails & governance
 
-### Server
+- Applicability-domain definitions, policy defaults, and remediation steps live under `metadata/` with JSON Schema validation.
+- Predictive invocations persist audit bundles that can be fetched via metadata tools.
+- Governance workflows (SME review, policy approval, publication) are documented in `docs/model_cards_and_policies.md`.
 
-The `MCPServer` class provides the core functionality for the MCP server.
+### Testing & quality gates
 
-```python
-MCPServer(api_key=None)
-```
+- `tests/test_mcp_conformance_suite.py` covers handshake, catalog discovery, and streaming behaviours.
+- `tests/test_predictive_regression.py` exercises guardrail outcomes and predictive routing.
+- `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
+- `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
+- Documentation builds (`scripts/build_docs.sh`) and CI workflows keep diagrams and links healthy.
+- The regression matrix in [`docs/testing_matrix.md`](docs/testing_matrix.md) summarizes the expected checks across transports and predictive workflows.
 
-- `api_key`: EPA CompTox API key. If not provided, resolves in order: `CTX_API_KEY` (preferred) → `EPA_COMPTOX_API_KEY` → `ctx_x_api_key`.
+---
 
-Migration env vars
-- `CTX_API_BASE_URL` (default: `https://comptox.epa.gov/ctx-api`)
-- `CTX_USE_LEGACY=1` switches to `https://api-ccte.epa.gov` (until 2025-10-01)
-- For ctx-python compatibility, the server also sets `ctx_api_host`, `ctx_api_accept`, and `ctx_x_api_key` envs at runtime.
+## Roadmap
 
-Methods:
+- Expand predictive coverage beyond current TEST/OPERA/GenRA helpers.
+- Surface additional analytics (latency histograms, rate-limit breaches) through `/metrics`.
+- Optional SSE transport once MCP spec finalises streaming semantics.
 
-- `get_resources()`: Get a list of all available resources.
-- `get_tools()`: Get a list of all available tools for LLM agents.
-- `execute_tool(tool_name, parameters)`: Execute a tool with the given parameters.
-
-### Client
-
-The `MCPClient` class provides the client interface for connecting to the MCP server.
-
-```python
-MCPClient(server_url=None, api_key=None)
-```
-
-- `server_url`: URL of the MCP server. If not provided, will attempt to use environment variable `MCP_EPACOMP_TOX_SERVER_URL`.
-- `api_key`: API key for the MCP server, if required. If not provided, will attempt to use environment variable `MCP_EPACOMP_TOX_API_KEY`.
-
-Methods:
-
-- `get_tools()`: Get a list of all available tools for LLM agents.
-- `execute_tool(tool_name, parameters)`: Execute a tool with the given parameters.
-
-### Authentication
-
-The `EPACompToxAuth` class handles authentication with the EPA CompTox APIs.
-
-```python
-EPACompToxAuth(api_key=None)
-```
-
-- `api_key`: EPA CompTox API key.
-
-Methods:
-
-- `get_headers()`: Get authentication headers for EPA CompTox API requests.
-- `get_api_key()`: Get the API key.
-
-## Available Tools
-
-The MCP provides the following tools for LLM agents:
-
-### Chemical Tools
-
-- `search_chemical`: Search for chemicals by name, CAS-RN, or other identifiers.
-- `get_chemical_details`: Get detailed information about a chemical.
-- `search_msready`: Search for chemicals by MS-ready properties.
-
-### Exposure Tools
-
-- `search_cpdat`: Search for chemical product and use data from CPDat.
-- `search_httk`: Search for high-throughput toxicokinetics data.
-- `get_cpdat_vocabulary`: Get controlled vocabulary from CPDat.
-- `search_qsurs`: Search for functional use predictions from QSUR models.
-- `search_exposures`: Search for exposure pathway predictions or SEEM framework estimates.
-
-### Hazard Tools
-
-- `search_hazard`: Search for chemical hazard data from ToxValDB.
-- `batch_search_hazard`: Search for hazard data for multiple chemicals.
-
-### ChemicalList Tools
-
-- `get_public_list_names`: Get names of available public chemical lists.
-- `get_full_list`: Get all chemicals in a specific list.
-
-### Cheminformatics Tools
-
-- `search_toxprints`: Search for ToxPrint chemotypes for a chemical.
-- `batch_search_toxprints`: Search for ToxPrint chemotypes for multiple chemicals.
-
-## Customizing API Integration
-
-You can customize the API integration by modifying the `EPACompToxAuth` class:
-
-```python
-from epacomp_tox.auth import EPACompToxAuth
-
-class CustomAuth(EPACompToxAuth):
-    def __init__(self, api_key=None, custom_param=None):
-        super().__init__(api_key)
-        self.custom_param = custom_param
-    
-    def get_headers(self):
-        headers = super().get_headers()
-        headers["Custom-Header"] = self.custom_param
-        return headers
-```
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
 
-- EPA's Center for Computational Toxicology and Exposure (CCTE) for providing the APIs
-- The ctx-python library for providing the Python wrapper for the EPA APIs
-- The Model Context Protocol for defining the standardized interface for LLM agents
+- EPA's Center for Computational Toxicology and Exposure (CCTE)
+- The ctx-python project for the official CompTox Python bindings
+- The Model Context Protocol community for defining the automation surface we target

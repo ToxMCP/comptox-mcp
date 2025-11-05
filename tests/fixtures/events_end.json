@@ -1,0 +1,10 @@
+{
+  "jsonrpc": "2.0",
+  "method": "events/end",
+  "params": {
+    "sessionId": "SESSION_ID",
+    "requestId": "REQUEST_ID",
+    "status": "ok",
+    "durationMs": 1234
+  }
+}

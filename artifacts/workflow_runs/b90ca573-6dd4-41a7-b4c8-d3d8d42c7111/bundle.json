@@ -1,0 +1,217 @@
+{
+  "bundleVersion": "0.1",
+  "ctxData": {
+    "cheminformatics": {
+      "toxprints": {
+        "toxprints": [
+          "FP_001",
+          "FP_057"
+        ]
+      }
+    },
+    "dataGaps": [],
+    "exposure": {
+      "cpdat:fc": [
+        {
+          "label": "Consumer product",
+          "vocab": "fc"
+        }
+      ],
+      "cpdat:puc": [
+        {
+          "label": "Consumer product",
+          "vocab": "puc"
+        }
+      ],
+      "httk": [
+        {
+          "kmp": 1.2,
+          "unit": "1/hr"
+        }
+      ],
+      "pathways": [
+        {
+          "dataset": "pathways",
+          "value": "offline"
+        }
+      ],
+      "seem": [
+        {
+          "dataset": "seem",
+          "value": "offline"
+        }
+      ]
+    },
+    "hazard": {
+      "all": [
+        {
+          "endpoint": "Acute toxicity",
+          "source": "Offline",
+          "value": "LD50"
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "confidenceBand": "Limited",
+    "narrative": "Confidence band: Limited. Analogue coverage=0.88, evidence quality=0.74, predictive agreement=0.85.",
+    "recommendedActions": [
+      "Seek SME review",
+      "Augment analogue set or supporting evidence"
+    ],
+    "scores": {
+      "analogue_coverage": 0.88,
+      "evidence_quality": 0.74,
+      "predictive_agreement": 0.85
+    }
+  },
+  "guardrails": [],
+  "options": {},
+  "predictive": {
+    "results": [
+      {
+        "ad": {
+          "confidence": 0.85,
+          "details": {
+            "analogues": 4
+          },
+          "in_domain": true
+        },
+        "error": null,
+        "label": null,
+        "metadata": {
+          "analogueCoverage": 0.88,
+          "evidenceQuality": 0.74,
+          "identifier": "DTXSID0000001",
+          "identifier_type": "dtxsid",
+          "model": "Offline GenRA",
+          "model_version": "0.1",
+          "predictiveAgreement": 0.85
+        },
+        "prediction": {
+          "confidence": 0.82,
+          "prediction": "Read-across suggests low concern."
+        },
+        "request": {
+          "chemical_identifier": "DTXSID0000001",
+          "identifier_type": "dtxsid"
+        },
+        "scenario": "exposure_prioritization",
+        "service": "offline_genra",
+        "status": "success"
+      }
+    ]
+  },
+  "scenarios": [
+    "exposure_prioritization"
+  ],
+  "status": "success",
+  "target": {
+    "casrn": "50-00-0",
+    "dtxsid": "DTXSID0000001",
+    "inputIdentifier": {
+      "type": "casrn",
+      "value": "50-00-0"
+    },
+    "preferredName": "Offline Example",
+    "synonyms": [
+      "Formaldehyde",
+      "Methanal"
+    ],
+    "warnings": []
+  },
+  "timeline": [
+    {
+      "metadata": [
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "chemical.search:equals"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "chemical.details"
+        }
+      ],
+      "stage": "NormalizeIdentifier"
+    },
+    {
+      "metadata": [
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "hazard:all"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "exposure:httk"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "exposure:pathways"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "exposure:seem"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "exposure:cpdat:fc"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "exposure:cpdat:puc"
+        },
+        {
+          "metadata": {
+            "status": 200
+          },
+          "step": "cheminformatics:toxprints"
+        }
+      ],
+      "stage": "AssembleCtxData"
+    },
+    {
+      "metadata": [
+        {
+          "ad": {
+            "confidence": 0.85,
+            "details": {
+              "analogues": 4
+            },
+            "in_domain": true
+          },
+          "label": null,
+          "metadata": {
+            "analogueCoverage": 0.88,
+            "evidenceQuality": 0.74,
+            "identifier": "DTXSID0000001",
+            "identifier_type": "dtxsid",
+            "model": "Offline GenRA",
+            "model_version": "0.1",
+            "predictiveAgreement": 0.85
+          },
+          "scenario": "exposure_prioritization",
+          "service": "offline_genra",
+          "status": "success"
+        }
+      ],
+      "stage": "RunPredictiveModels"
+    }
+  ],
+  "workflowRunId": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111"
+}

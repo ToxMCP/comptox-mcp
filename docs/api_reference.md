@@ -14,11 +14,12 @@ Migration Notes
 The `MCPServer` class is the core component of the MCP implementation. It handles communication with the EPA CompTox APIs and exposes the data through a standardized interface.
 
 ```python
-MCPServer(api_key=None)
+MCPServer(api_key=None, validate_health=False)
 ```
 
 **Parameters:**
 - `api_key` (str, optional): EPA CompTox API key. If not provided, server resolves in order: `CTX_API_KEY` (preferred) → `EPA_COMPTOX_API_KEY` → `ctx_x_api_key`.
+- `validate_health` (bool, optional): When `True`, perform a connectivity probe during initialization and raise immediately if the CTX API is unreachable.
 
 **Methods:**
 
@@ -55,6 +56,19 @@ Execute a tool with the given parameters.
 
 **Raises:**
 - `ValueError`: If the tool is not found or parameters are invalid
+
+#### check_health(timeout=5.0)
+
+Run a lightweight connectivity check against the configured CTX base URL.
+
+**Parameters:**
+- `timeout` (float, optional): Request timeout in seconds for each probe attempt.
+
+**Returns:**
+- Dictionary containing probe metadata with keys such as `ok`, `status`, and `url`.
+
+**Raises:**
+- `RuntimeError`: If all probe attempts fail or return 5xx errors.
 
 ## Client API
 
@@ -199,44 +213,58 @@ The `ChemicalResource` class provides access to chemical structures, nomenclatur
 Search for chemicals by name, CAS-RN, or other identifiers.
 
 **Parameters:**
-- `query` (str): Search term
-- `search_type` (str): Type of search (equals, starts-with, contains)
+- `query` (str): Search term.
+- `search_type` (str): Type of search (`equals`, `starts-with`, `contains`).
 
 **Returns:**
-- List of matching chemicals
+- List of matching chemicals.
 
-#### get_chemical_details(id, id_type)
+#### batch_search_chemical(identifiers)
 
-Get detailed information about a chemical.
+Batch search for chemicals using the CTX batch endpoint.
 
 **Parameters:**
-- `id` (str): Chemical identifier
-- `id_type` (str): Type of identifier (dtxsid or dtxcid)
+- `identifiers` (list[str]): Identifiers to resolve (DTXSID, DTXCID, CASRN, etc.).
 
 **Returns:**
-- Chemical details
+- List of matching chemicals.
 
-#### search_msready(search_type, query)
+#### get_chemical_details(identifier, id_type, subset='default')
 
-Search for chemicals by MS-ready properties.
+Get detailed information about a chemical with optional projections.
 
 **Parameters:**
-- `search_type` (str): Type of MS-ready search (dtxcid or formula)
-- `query` (str): Search term
+- `identifier` (str): Chemical identifier.
+- `id_type` (str): Type of identifier (`dtxsid` or `dtxcid`).
+- `subset` (str, optional): Projection selector (`default`, `all`, `details`, `identifiers`, `structures`, `nta`).
 
 **Returns:**
-- List of matching chemicals
+- Chemical details dictionary.
 
-#### search_msready_mass(start, end)
+#### batch_get_chemical_details(identifiers, id_type, subset='default')
 
-Search for chemicals by mass range.
+Retrieve detail projections for multiple identifiers at once.
 
 **Parameters:**
-- `start` (float): Start of mass range
-- `end` (float): End of mass range
+- `identifiers` (list[str]): Chemical identifiers.
+- `id_type` (str): Identifier type (`dtxsid` or `dtxcid`).
+- `subset` (str, optional): Projection selector.
 
 **Returns:**
-- List of matching chemicals
+- List of chemical detail dictionaries.
+
+#### search_msready(search_type, query=None, mass_start=None, mass_end=None)
+
+Search for chemicals by MS-ready properties or mass range.
+
+**Parameters:**
+- `search_type` (str): Selector (`dtxcid`, `formula`, `mass-range`).
+- `query` (str, optional): Search term for `dtxcid` or `formula`.
+- `mass_start` (float, optional): Start of mass range (when `search_type` is `mass-range`).
+- `mass_end` (float, optional): End of mass range (when `search_type` is `mass-range`).
+
+**Returns:**
+- List of matching chemicals.
 
 ### ExposureResource
 
@@ -244,57 +272,61 @@ The `ExposureResource` class provides access to chemical exposure data, CPDat, a
 
 **Methods:**
 
-#### search_cpdat(vocab_name, dtxsid)
+#### search_cpdat(vocab_name, dtxsid=None, dtxsids=None)
 
 Search for chemical product and use data from CPDat.
 
 **Parameters:**
-- `vocab_name` (str): Vocabulary name (fc, puc, lpk)
-- `dtxsid` (str): Chemical identifier
+- `vocab_name` (str): Vocabulary name (`fc`, `puc`, `lpk`).
+- `dtxsid` (str, optional): Single chemical identifier.
+- `dtxsids` (list[str], optional): Multiple chemical identifiers.
 
 **Returns:**
-- List of matching data
+- List of matching data.
 
-#### search_httk(dtxsid)
+#### search_httk(dtxsid=None, dtxsids=None)
 
 Search for high-throughput toxicokinetics data.
 
 **Parameters:**
-- `dtxsid` (str): Chemical identifier
+- `dtxsid` (str, optional): Single chemical identifier.
+- `dtxsids` (list[str], optional): Multiple chemical identifiers.
 
 **Returns:**
-- HTTK data
+- List of HTTK records.
 
 #### get_cpdat_vocabulary(vocab_name)
 
 Get controlled vocabulary from CPDat.
 
 **Parameters:**
-- `vocab_name` (str): Vocabulary name (fc, puc, lpk)
+- `vocab_name` (str): Vocabulary name (fc functional use, puc product use categories, lpk list presence keywords)
 
 **Returns:**
 - List of vocabulary terms
 
-#### search_qsurs(dtxsid)
+#### search_qsurs(dtxsid=None, dtxsids=None)
 
 Search for functional use predictions from QSUR models.
 
 **Parameters:**
-- `dtxsid` (str): Chemical identifier
+- `dtxsid` (str, optional): Single chemical identifier.
+- `dtxsids` (list[str], optional): Multiple chemical identifiers.
 
 **Returns:**
-- QSUR predictions
+- List of QSUR predictions.
 
-#### search_exposures(data_type, dtxsid)
+#### search_exposures(data_type, dtxsid=None, dtxsids=None)
 
-Search for exposure pathway predictions or SEEM framework estimates.
+Search for exposure datasets (MMDB aggregates or SEEM predictions).
 
 **Parameters:**
-- `data_type` (str): Type of exposure data (pathways or seem)
-- `dtxsid` (str): Chemical identifier
+- `data_type` (str): Dataset selector (`pathways`, `mmdb-single`, `seem`, `seem-demographic`).
+- `dtxsid` (str, optional): Single chemical identifier.
+- `dtxsids` (list[str], optional): Multiple chemical identifiers.
 
 **Returns:**
-- Exposure data
+- List of exposure data records.
 
 ### HazardResource
 
@@ -307,24 +339,24 @@ The `HazardResource` class provides access to human and ecotoxicology data from 
 Search for chemical hazard data from ToxValDB.
 
 **Parameters:**
-- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox)
+- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref)
 - `dtxsid` (str): Chemical identifier
 - `summary` (bool, optional): Whether to return summary data only. Defaults to True.
 
 **Returns:**
-- List of hazard data
+- List of hazard data (always normalized to list form).
 
 #### batch_search_hazard(data_type, dtxsids, summary=True)
 
 Search for hazard data for multiple chemicals.
 
 **Parameters:**
-- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox)
+- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref)
 - `dtxsids` (list): List of chemical identifiers
 - `summary` (bool, optional): Whether to return summary data only. Defaults to True.
 
 **Returns:**
-- Dictionary mapping DTXSIDs to hazard data
+- Dictionary mapping DTXSIDs to hazard data lists (each entry normalized to a list).
 
 ### ChemicalListResource
 
@@ -337,7 +369,7 @@ The `ChemicalListResource` class provides access to chemical lists and collectio
 Get names of available public chemical lists.
 
 **Returns:**
-- List of chemical list names
+- List of chemical list names (normalized to string list).
 
 #### get_full_list(list_name)
 
@@ -347,7 +379,7 @@ Get all chemicals in a specific list.
 - `list_name` (str): Name of the chemical list
 
 **Returns:**
-- List of chemicals
+- List of chemicals (normalized to list-of-dict output).
 
 ### CheminformaticsResource
 

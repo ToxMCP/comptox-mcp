@@ -1,239 +1,137 @@
-# EPAComp Tox MCP Integration with Agentic SDK
+# Agentic SDK Integration Guide
 
-This document provides a guide for integrating the EPAComp Tox Model Context Protocol (MCP) with LLM agents using the Agentic SDK.
+This guide walks through connecting the EPA CompTox Phase 2 MCP transport to the Agentic SDK. It covers the end-to-end handshake, streaming tool calls, and how to adapt the transport’s event stream into an Agentic agent workflow. Use it together with the quickstart script in `samples/agentic_sdk/python_phase2_quickstart.py`.
 
-## Overview
+## 1. Prerequisites
 
-The EPAComp Tox MCP provides a standardized interface for LLM agents to access and interact with the EPA's Computational Toxicology and Exposure data. This guide explains how to integrate it with the Agentic SDK to enable LLM agents to use EPA CompTox data for toxicology-related tasks.
+- Python 3.10+
+- `pip install epacomp-tox-mcp websockets`
+- Optional: `pip install agentic-sdk` (for fully wiring into an Agentic agent)
+- EPA CompTox API key exported as `CTX_API_KEY`
 
-## Prerequisites
-
-- Python 3.7+
-- Agentic SDK
-- EPA CompTox API key
-
-## Integration Steps
-
-### 1. Install the EPAComp Tox MCP Package
+Start the transport in a separate terminal:
 
 ```bash
-pip install epacomp-tox-mcp
+uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
 ```
 
-### 2. Set Up the MCP Server
+## 2. Quickstart Script
 
-The MCP server handles communication with the EPA CompTox APIs and exposes the data through a standardized interface.
+Run the provided sample to exercise the MCP handshake, discover tools, and stream a tool call:
 
-```python
-from epacomp_tox.server import MCPServer
-
-# Initialize the server with your EPA CompTox API key
-server = MCPServer(api_key="your-api-key")
-
-# Start the server (implementation depends on your deployment strategy)
-# For example, using Flask:
-from flask import Flask, request, jsonify
-import json
-
-app = Flask(__name__)
-
-@app.route("/resources", methods=["GET"])
-def get_resources():
-    return jsonify(server.get_resources())
-
-@app.route("/tools", methods=["GET"])
-def get_tools():
-    return jsonify(server.get_tools())
-
-@app.route("/execute", methods=["POST"])
-def execute_tool():
-    data = request.json
-    tool_name = data.get("tool_name")
-    parameters = data.get("parameters", {})
-    result = server.execute_tool(tool_name, parameters)
-    return jsonify(result)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+```bash
+python samples/agentic_sdk/python_phase2_quickstart.py
 ```
 
-### 3. Configure the MCP Client
+What it does:
+- Performs `initialize` with protocol `2025-06-18` and streaming capabilities enabled.
+- Calls `tools/list` and `resources/list` to mirror Agentic SDK discovery.
+- Executes `tools/call` for `search_chemical`, streaming `events/log`, `events/result`, and `events/end`.
+- Prints each event, demonstrating the payloads you can feed into an agent’s tool adapters.
 
-The MCP client connects to the server and provides the interface for LLM agents.
+Review the script to learn how JSON-RPC requests/responses and streaming events are handled over the WebSocket session. You can reuse the `MCPWebSocketSession` helper inside Agentic SDK adapters.
 
-```python
-from epacomp_tox.client import MCPClient
-
-# Initialize the client with the server URL
-client = MCPClient(server_url="http://localhost:8000")
-```
-
-### 4. Integrate with Agentic SDK
-
-The Agentic SDK allows you to create LLM agents that can use the MCP tools.
+## 3. Wiring Into Agentic SDK (Python)
 
 ```python
-from agentic_sdk import Agent, Tool
+import asyncio
+from agentic_sdk import Agent
+from agentic_sdk.adapters import ToolStreamAdapter
 
-# Get the tools from the MCP client
-mcp_tools_response = client.get_tools()
-mcp_tools = mcp_tools_response["tools"]
+from samples.agentic_sdk.python_phase2_quickstart import MCPWebSocketSession
 
-# Convert MCP tools to Agentic SDK tools
-agentic_tools = []
-for tool in mcp_tools:
-    agentic_tools.append(
-        Tool(
-            name=tool["name"],
-            description=tool["description"],
-            parameters=tool["parameters"],
-            function=lambda name=tool["name"], params: client.execute_tool(name, params)
+
+class MCPToolAdapter(ToolStreamAdapter):
+    """Minimal bridge from MCP events to Agentic SDK tool responses."""
+
+    def __init__(self, session: MCPWebSocketSession, tool_name: str):
+        super().__init__(name=tool_name)
+        self._session = session
+
+    async def invoke(self, *, arguments: dict, request_id: str):
+        # Kick off the MCP call (returns when JSON-RPC response is received).
+        await self._session.call_tool(self.name, arguments, request_id=request_id)
+        # Stream MCP events back to the Agentic SDK runtime.
+        async for event in self._session.stream_events():
+            if event.typ == "events/result":
+                await self.emit_delta(event.payload)
+            elif event.typ == "events/error":
+                await self.emit_error(event.payload)
+            elif event.typ == "events/end":
+                return
+
+
+async def setup_agent():
+    async with MCPWebSocketSession("ws://127.0.0.1:8000/mcp/ws") as session:
+        await session.initialize()
+        chemical_tool = MCPToolAdapter(session, "search_chemical")
+
+        agent = Agent(name="CompToxAgent")
+        agent.register_tool(chemical_tool)
+
+        await agent.run_task(
+            "Find analogues for toluene and summarise AD guardrails.",
+            tool_arguments={"search_chemical": {"query": "toluene", "search_type": "equals"}},
         )
-    )
 
-# Create an agent with the tools
-agent = Agent(tools=agentic_tools)
 
-# Use the agent
-response = agent.run("Find information about the toxicity of toluene")
-print(response)
+asyncio.run(setup_agent())
 ```
 
-### 5. Advanced Integration: Custom Tool Execution
+Key integration points:
+- Derive a custom `ToolStreamAdapter` (or equivalent) that turns MCP `events/result` chunks into Agentic SDK deltas.
+- Pass the Agentic request identifier (`request_id`) through to `tools/call` so streams correlate back to the Agentic task.
+- Handle `events/error` and `events/log` to provide agent-facing explanations or structured error handling.
 
-For more control over tool execution, you can implement custom handlers:
+## 4. TypeScript Outline
 
-```python
-def execute_chemical_search(params):
-    """Custom handler for chemical search tool."""
-    result = client.execute_tool("search_chemical", params)
-    # Process the result as needed
-    return result
+```ts
+import { Agent } from "agentic-sdk";
+import { MCPWebSocket } from "./mcp_websocket"; // copy helper from samples/agentic_sdk/ts_phase2_quickstart.ts
 
-# Create a tool with the custom handler
-chemical_search_tool = Tool(
-    name="search_chemical",
-    description="Search for chemicals by name, CAS-RN, or other identifiers",
-    parameters={
-        "type": "object",
-        "properties": {
-            "query": {
-                "type": "string",
-                "description": "Search term"
-            },
-            "search_type": {
-                "type": "string",
-                "description": "Search type: equals, starts-with, or contains",
-                "enum": ["equals", "starts-with", "contains"]
-            }
-        },
-        "required": ["query", "search_type"]
-    },
-    function=execute_chemical_search
-)
+const session = await MCPWebSocket.connect("ws://127.0.0.1:8000/mcp/ws", {
+  headers: { "x-api-key": process.env.CTX_API_KEY ?? "" },
+  protocolVersion: "2025-06-18",
+});
 
-# Create an agent with the custom tool
-agent = Agent(tools=[chemical_search_tool])
+await session.initialize();
+
+const agent = new Agent({ name: "CompToxAgent" });
+
+agent.registerTool({
+  name: "search_chemical",
+  async invoke(args, ctx) {
+    await session.callTool("search_chemical", args, ctx.requestId);
+    for await (const event of session.streamEvents()) {
+      if (event.event === "events/result") {
+        ctx.emitDelta(event.payload);
+      } else if (event.event === "events/error") {
+        ctx.emitError(event.payload);
+      } else if (event.event === "events/end") {
+        break;
+      }
+    }
+  },
+});
+
+await agent.run("Find PFAS analogues with AD summaries.");
 ```
 
-## Example Use Cases
+> Copy `MCPWebSocket` (including JSON-RPC helpers) from `samples/agentic_sdk/ts_phase2_quickstart.ts` into your project, or publish it as a shared utility inside your Agentic workspace.
 
-### 1. Chemical Hazard Assessment
+Reuse the JSON-RPC logic from the Python helper or the TypeScript quickstart to integrate with other runtimes.
 
-```python
-prompt = """
-Assess the potential hazards of benzene based on EPA CompTox data. 
-Include information about:
-1. Human health hazards
-2. Environmental hazards
-3. Exposure pathways
-"""
+## 5. Testing & Troubleshooting
 
-response = agent.run(prompt)
-print(response)
-```
+- Use `scripts/mcp_ws_client.py --record` to capture raw event streams when debugging agent integrations.
+- Verify guardrail enforcement by calling predictive tools; `events/error` will include AD rationale (also persisted in audit bundles).
+- Heartbeat/ping failures appear as WebSocket close codes. Ensure the Agentic SDK reconnect logic respects MCP idle timeouts.
+- If you see `-32602` or `-32001` errors, confirm tool schemas and initialization sequence match the MCP spec.
 
-### 2. Chemical Comparison
+## 6. Next Steps
 
-```python
-prompt = """
-Compare the toxicological profiles of toluene and xylene based on EPA CompTox data.
-Focus on:
-1. Hazard data
-2. Exposure potential
-3. Key differences in health effects
-"""
+1. Extend the Tool adapter pattern to include additional CTX tools (exposure, hazard, metadata, orchestrator workflows).
+2. Wrap guardrail/error payloads with user-friendly text inside the agent responses.
+3. Wire QA smoke tests (see `docs/qa/`) into your CI to ensure the Agentic integration stays healthy after upgrades.
 
-response = agent.run(prompt)
-print(response)
-```
-
-### 3. Chemical Identification
-
-```python
-prompt = """
-I have a chemical with the following properties:
-- Molecular formula: C8H10
-- Mass: 106.165 g/mol
-- Used as a solvent
-
-Identify this chemical and provide toxicological information from EPA CompTox.
-"""
-
-response = agent.run(prompt)
-print(response)
-```
-
-## Customizing the API Integration
-
-You can customize the API integration by replacing the placeholder in `auth.py` with your own implementation:
-
-```python
-from epacomp_tox.auth import EPACompToxAuth
-
-class CustomAuth(EPACompToxAuth):
-    """Custom authentication handler for EPA CompTox APIs."""
-    
-    def __init__(self, api_key=None, additional_param=None):
-        """
-        Initialize with API key and additional parameters.
-        
-        Args:
-            api_key: EPA CompTox API key.
-            additional_param: Additional parameter for custom authentication.
-        """
-        super().__init__(api_key)
-        self.additional_param = additional_param
-        
-    def get_headers(self):
-        """
-        Get authentication headers with custom modifications.
-        
-        Returns:
-            Dictionary of headers including the API key and custom headers.
-        """
-        headers = super().get_headers()
-        headers["X-Custom-Header"] = self.additional_param
-        return headers
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Authentication Errors**: Ensure your EPA CompTox API key is valid and properly configured.
-2. **Connection Errors**: Verify that the MCP server is running and accessible from the client.
-3. **Tool Execution Errors**: Check that the tool parameters match the expected format.
-
-### Debugging
-
-Enable debug logging to get more information about the MCP client-server communication:
-
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-## Conclusion
-
-By following this guide, you've integrated the EPAComp Tox MCP with the Agentic SDK, enabling LLM agents to access and utilize EPA's computational toxicology and exposure data. This integration allows for sophisticated toxicology-related tasks to be performed by LLM agents, enhancing their capabilities in environmental and health domains.
+For a deeper architecture view, read `docs/architecture_overview.md` and the guardrail details in `docs/model_cards_and_policies.md`.

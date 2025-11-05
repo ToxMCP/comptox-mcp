@@ -55,12 +55,27 @@ class ChemicalResource(BaseResource):
                 }
             },
             {
+                "name": "batch_search_chemical",
+                "description": "Batch search for chemicals using a list of identifiers",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "identifiers": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Identifiers to search (DTXSIDs, CASRNs, names, etc.)"
+                        }
+                    },
+                    "required": ["identifiers"]
+                }
+            },
+            {
                 "name": "get_chemical_details",
                 "description": "Get detailed information about a chemical",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "id": {
+                        "identifier": {
                             "type": "string",
                             "description": "Chemical identifier (DTXSID or DTXCID)"
                         },
@@ -68,9 +83,41 @@ class ChemicalResource(BaseResource):
                             "type": "string",
                             "description": "Type of identifier",
                             "enum": ["dtxsid", "dtxcid"]
+                        },
+                        "subset": {
+                            "type": "string",
+                            "description": "Optional subset selector for details",
+                            "enum": ["default", "all", "details", "identifiers", "structures", "nta"],
+                            "default": "default"
                         }
                     },
-                    "required": ["id", "id_type"]
+                    "required": ["identifier", "id_type"]
+                }
+            },
+            {
+                "name": "batch_get_chemical_details",
+                "description": "Get detailed information about multiple chemicals",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "identifiers": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of chemical identifiers"
+                        },
+                        "id_type": {
+                            "type": "string",
+                            "description": "Type of identifier",
+                            "enum": ["dtxsid", "dtxcid"]
+                        },
+                        "subset": {
+                            "type": "string",
+                            "description": "Optional subset selector for details",
+                            "enum": ["default", "all", "details", "identifiers", "structures", "nta"],
+                            "default": "default"
+                        }
+                    },
+                    "required": ["identifiers", "id_type"]
                 }
             },
             {
@@ -82,7 +129,7 @@ class ChemicalResource(BaseResource):
                         "search_type": {
                             "type": "string",
                             "description": "Type of MS-ready search",
-                            "enum": ["dtxcid", "formula", "mass"]
+                            "enum": ["dtxcid", "formula", "mass-range"]
                         },
                         "query": {
                             "type": "string",
@@ -90,11 +137,11 @@ class ChemicalResource(BaseResource):
                         },
                         "mass_start": {
                             "type": "number",
-                            "description": "Start of mass range for mass search"
+                            "description": "Start of mass range for mass-range search"
                         },
                         "mass_end": {
                             "type": "number",
-                            "description": "End of mass range for mass search"
+                            "description": "End of mass range for mass-range search"
                         }
                     },
                     "required": ["search_type"]
@@ -119,76 +166,78 @@ class ChemicalResource(BaseResource):
         if tool_name == "search_chemical":
             return self.search_chemical(
                 query=parameters["query"],
-                search_type=parameters["search_type"]
+                search_type=parameters["search_type"],
             )
-        elif tool_name == "get_chemical_details":
+        if tool_name == "batch_search_chemical":
+            return self.batch_search_chemical(
+                identifiers=parameters["identifiers"],
+            )
+        if tool_name == "get_chemical_details":
             return self.get_chemical_details(
-                id=parameters["id"],
-                id_type=parameters["id_type"]
+                identifier=parameters["identifier"],
+                id_type=parameters["id_type"],
+                subset=parameters.get("subset", "default"),
             )
-        elif tool_name == "search_msready":
-            search_type = parameters["search_type"]
-            if search_type == "mass":
-                return self.search_msready_mass(
-                    start=parameters.get("mass_start"),
-                    end=parameters.get("mass_end")
-                )
-            else:
-                return self.search_msready(
-                    search_type=search_type,
-                    query=parameters.get("query")
-                )
-        else:
-            raise ValueError(f"Unknown tool: {tool_name}")
+        if tool_name == "batch_get_chemical_details":
+            return self.batch_get_chemical_details(
+                identifiers=parameters["identifiers"],
+                id_type=parameters["id_type"],
+                subset=parameters.get("subset", "default"),
+            )
+        if tool_name == "search_msready":
+            return self.search_msready(
+                search_type=parameters["search_type"],
+                query=parameters.get("query"),
+                mass_start=parameters.get("mass_start"),
+                mass_end=parameters.get("mass_end"),
+            )
+        raise ValueError(f"Unknown tool: {tool_name}")
     
     def search_chemical(self, query: str, search_type: str) -> List[Dict[str, Any]]:
-        """
-        Search for chemicals by name, CAS-RN, or other identifiers.
-        
-        Args:
-            query: Search term.
-            search_type: Type of search (equals, starts-with, contains).
-            
-        Returns:
-            List of matching chemicals.
-        """
-        return self._with_retry(lambda: self.client.search(by=search_type, word=query))
-    
-    def get_chemical_details(self, id: str, id_type: str) -> Dict[str, Any]:
-        """
-        Get detailed information about a chemical.
-        
-        Args:
-            id: Chemical identifier.
-            id_type: Type of identifier (dtxsid or dtxcid).
-            
-        Returns:
-            Chemical details.
-        """
-        return self._with_retry(lambda: self.client.details(by=id_type, word=id))
-    
-    def search_msready(self, search_type: str, query: str) -> List[Dict[str, Any]]:
-        """
-        Search for chemicals by MS-ready properties.
-        
-        Args:
-            search_type: Type of MS-ready search (dtxcid or formula).
-            query: Search term.
-            
-        Returns:
-            List of matching chemicals.
-        """
-        return self._with_retry(lambda: self.client.msready(by=search_type, word=query))
-    
-    def search_msready_mass(self, start: float, end: float) -> List[Dict[str, Any]]:
-        """
-        Search for chemicals by mass range.
-        
-        Args:
-            start: Start of mass range.
-            end: End of mass range.
-            
-        Returns:
-            List of matching chemicals.
-        """
-        return self._with_retry(lambda: self.client.msready(by="mass", start=start, end=end))
+        """Search for chemicals by name, CAS-RN, or other identifiers."""
+        result = self._with_retry(lambda: self.client.search(by=search_type, word=query))
+        return self._ensure_list(result)
+
+    def batch_search_chemical(self, identifiers: List[str]) -> List[Dict[str, Any]]:
+        """Batch search for multiple chemical identifiers."""
+        identifiers = [item for item in identifiers if item]
+        if not identifiers:
+            return []
+        result = self._with_retry(lambda: self.client.search(by="batch", word=identifiers))
+        return self._ensure_list(result)
+
+    def get_chemical_details(self, identifier: str, id_type: str, subset: str = "default") -> Dict[str, Any]:
+        """Get detailed information about a single chemical."""
+        result = self._with_retry(
+            lambda: self.client.details(by=id_type, word=identifier, subset=subset)
+        )
+        return self._ensure_object(result)
+
+    def batch_get_chemical_details(
+        self, identifiers: List[str], id_type: str, subset: str = "default"
+    ) -> List[Dict[str, Any]]:
+        """Get detailed information about multiple chemicals."""
+        identifiers = [item for item in identifiers if item]
+        if not identifiers:
+            return []
+        result = self._with_retry(
+            lambda: self.client.details(by="batch", word=identifiers, subset=subset)
+        )
+        return self._ensure_list(result)
+
+    def search_msready(
+        self,
+        search_type: str,
+        query: Optional[str] = None,
+        mass_start: Optional[float] = None,
+        mass_end: Optional[float] = None,
+    ) -> List[Dict[str, Any]]:
+        """Search for chemicals by MS-ready properties or mass range."""
+        normalized = search_type.strip().lower()
+        if normalized == "mass-range":
+            result = self._with_retry(
+                lambda: self.client.msready(by="mass", start=mass_start, end=mass_end)
+            )
+        else:
+            result = self._with_retry(lambda: self.client.msready(by=search_type, word=query))
+        return self._ensure_list(result)

@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+from unittest import mock
+
+from fastapi.testclient import TestClient
+
+from epacomp_tox.resources.base import BaseResource
+from epacomp_tox.server import MCPServer
+from epacomp_tox.transport.websocket import create_app
+
+
+class NoopResource(BaseResource):
+    @property
+    def name(self) -> str:
+        return "noop"
+
+    @property
+    def description(self) -> str:
+        return "No-op resource"
+
+    def __init__(self, api_key: str = "dummy"):
+        super().__init__(api_key)
+
+    def get_tools(self) -> list[Dict[str, Any]]:
+        return []
+
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:  # pragma: no cover - unused
+        raise NotImplementedError
+
+
+class HealthServer(MCPServer):
+    def _initialize_resources(self) -> Dict[str, BaseResource]:
+        return {"noop": NoopResource()}
+
+
+def test_healthz_returns_ok() -> None:
+    server = HealthServer(api_key="dummy")
+    app = create_app(server=server)
+    client = TestClient(app)
+
+    response = client.get("/healthz")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+
+
+def test_readyz_returns_ok_when_health_passes() -> None:
+    server = HealthServer(api_key="dummy")
+    app = create_app(server=server)
+    client = TestClient(app)
+    with mock.patch.object(server, "check_health", return_value={"ok": True, "status": 200}):
+        response = client.get("/readyz")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["ctx"]["ok"] is True
+
+
+def test_readyz_returns_503_when_server_unavailable() -> None:
+    server = HealthServer(api_key="dummy")
+    app = create_app(server=server)
+    app.state.mcp_server_error = RuntimeError("boom")
+    app.state.mcp_server = None
+    client = TestClient(app)
+
+    response = client.get("/readyz")
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "MCP server not initialized"

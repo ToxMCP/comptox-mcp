@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional, Sequence
 import ctxpy as ctx
 from .base import BaseResource
 
@@ -43,15 +43,20 @@ class ExposureResource(BaseResource):
                     "properties": {
                         "vocab_name": {
                             "type": "string",
-                            "description": "Vocabulary name: fc (function categories), puc (product use categories), or lpk (list presence keywords)",
+                            "description": "Vocabulary name: fc (functional use), puc (product use categories), or lpk (list presence keywords)",
                             "enum": ["fc", "puc", "lpk"]
                         },
                         "dtxsid": {
                             "type": "string",
                             "description": "Chemical identifier (DTXSID)"
+                        },
+                        "dtxsids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of DTXSIDs for batch queries"
                         }
                     },
-                    "required": ["vocab_name", "dtxsid"]
+                    "required": ["vocab_name"]
                 }
             },
             {
@@ -63,9 +68,14 @@ class ExposureResource(BaseResource):
                         "dtxsid": {
                             "type": "string",
                             "description": "Chemical identifier (DTXSID)"
+                        },
+                        "dtxsids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of DTXSIDs for batch queries"
                         }
                     },
-                    "required": ["dtxsid"]
+                    "required": []
                 }
             },
             {
@@ -76,7 +86,7 @@ class ExposureResource(BaseResource):
                     "properties": {
                         "vocab_name": {
                             "type": "string",
-                            "description": "Vocabulary name: fc (function categories), puc (product use categories), or lpk (list presence keywords)",
+                            "description": "Vocabulary name: fc (functional use categories), puc (product use categories), or lpk (list presence keywords)",
                             "enum": ["fc", "puc", "lpk"]
                         }
                     },
@@ -92,9 +102,14 @@ class ExposureResource(BaseResource):
                         "dtxsid": {
                             "type": "string",
                             "description": "Chemical identifier (DTXSID)"
+                        },
+                        "dtxsids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of DTXSIDs for batch queries"
                         }
                     },
-                    "required": ["dtxsid"]
+                    "required": []
                 }
             },
             {
@@ -105,18 +120,38 @@ class ExposureResource(BaseResource):
                     "properties": {
                         "data_type": {
                             "type": "string",
-                            "description": "Type of exposure data: pathways or seem",
-                            "enum": ["pathways", "seem"]
+                            "description": "Exposure dataset to query: pathways (MMDB aggregate), mmdb-single, seem (SEEM general), or seem-demographic",
+                            "enum": ["pathways", "mmdb-single", "seem", "seem-demographic"]
                         },
                         "dtxsid": {
                             "type": "string",
                             "description": "Chemical identifier (DTXSID)"
+                        },
+                        "dtxsids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of DTXSIDs for batch queries"
                         }
                     },
-                    "required": ["data_type", "dtxsid"]
+                    "required": ["data_type"]
                 }
             }
         ]
+
+    def _resolve_identifiers(
+        self,
+        single: Optional[str],
+        multiple: Optional[Sequence[str]],
+    ) -> List[str]:
+        identifiers: List[str] = []
+        if multiple:
+            identifiers.extend([item for item in multiple if item])
+        if single:
+            identifiers.append(single)
+        identifiers = [item for item in identifiers if item]
+        if not identifiers:
+            raise ValueError("At least one DTXSID must be provided.")
+        return identifiers
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """
@@ -133,54 +168,81 @@ class ExposureResource(BaseResource):
             ValueError: If the tool is not found or parameters are invalid.
         """
         if tool_name == "search_cpdat":
+            identifiers = self._resolve_identifiers(
+                parameters.get("dtxsid"),
+                parameters.get("dtxsids"),
+            )
             return self.search_cpdat(
                 vocab_name=parameters["vocab_name"],
-                dtxsid=parameters["dtxsid"]
+                dtxsids=identifiers,
             )
-        elif tool_name == "search_httk":
-            return self.search_httk(
-                dtxsid=parameters["dtxsid"]
+        if tool_name == "search_httk":
+            identifiers = self._resolve_identifiers(
+                parameters.get("dtxsid"),
+                parameters.get("dtxsids"),
             )
-        elif tool_name == "get_cpdat_vocabulary":
+            return self.search_httk(dtxsids=identifiers)
+        if tool_name == "get_cpdat_vocabulary":
             return self.get_cpdat_vocabulary(
                 vocab_name=parameters["vocab_name"]
             )
-        elif tool_name == "search_qsurs":
-            return self.search_qsurs(
-                dtxsid=parameters["dtxsid"]
+        if tool_name == "search_qsurs":
+            identifiers = self._resolve_identifiers(
+                parameters.get("dtxsid"),
+                parameters.get("dtxsids"),
             )
-        elif tool_name == "search_exposures":
+            return self.search_qsurs(dtxsids=identifiers)
+        if tool_name == "search_exposures":
+            identifiers = self._resolve_identifiers(
+                parameters.get("dtxsid"),
+                parameters.get("dtxsids"),
+            )
             return self.search_exposures(
                 data_type=parameters["data_type"],
-                dtxsid=parameters["dtxsid"]
+                dtxsids=identifiers,
             )
-        else:
-            raise ValueError(f"Unknown tool: {tool_name}")
+        raise ValueError(f"Unknown tool: {tool_name}")
     
-    def search_cpdat(self, vocab_name: str, dtxsid: str) -> List[Dict[str, Any]]:
+    def search_cpdat(self, vocab_name: str, dtxsids: Sequence[str]) -> List[Dict[str, Any]]:
         """
         Search for chemical product and use data from CPDat.
         
         Args:
             vocab_name: Vocabulary name (fc, puc, lpk).
-            dtxsid: Chemical identifier.
+            dtxsids: Chemical identifier(s).
             
         Returns:
             List of matching data.
         """
-        return self._with_retry(lambda: self.client.search_cpdat(vocab_name=vocab_name, dtxsid=dtxsid))
+        if not dtxsids:
+            raise ValueError("At least one DTXSID must be provided.")
+
+        results: List[Dict[str, Any]] = []
+        for sid in dtxsids:
+            payload = self._with_retry(
+                lambda sid=sid: self.client.search_cpdat(vocab_name=vocab_name, dtxsid=sid)
+            )
+            results.extend(self._ensure_list(payload))
+        return results
     
-    def search_httk(self, dtxsid: str) -> Dict[str, Any]:
+    def search_httk(self, dtxsids: Sequence[str]) -> List[Dict[str, Any]]:
         """
         Search for high-throughput toxicokinetics data.
         
         Args:
-            dtxsid: Chemical identifier.
+            dtxsids: Chemical identifier(s).
             
         Returns:
             HTTK data.
         """
-        return self._with_retry(lambda: self.client.search_httk(dtxsid=dtxsid))
+        if not dtxsids:
+            raise ValueError("At least one DTXSID must be provided.")
+
+        results: List[Dict[str, Any]] = []
+        for sid in dtxsids:
+            payload = self._with_retry(lambda sid=sid: self.client.search_httk(dtxsid=sid))
+            results.extend(self._ensure_list(payload))
+        return results
     
     def get_cpdat_vocabulary(self, vocab_name: str) -> List[Dict[str, Any]]:
         """
@@ -192,29 +254,44 @@ class ExposureResource(BaseResource):
         Returns:
             List of vocabulary terms.
         """
-        return self._with_retry(lambda: self.client.get_cpdat_vocabulary(vocab_name=vocab_name))
+        payload = self._with_retry(lambda: self.client.get_cpdat_vocabulary(vocab_name=vocab_name))
+        return self._ensure_list(payload)
     
-    def search_qsurs(self, dtxsid: str) -> Dict[str, Any]:
+    def search_qsurs(self, dtxsids: Sequence[str]) -> List[Dict[str, Any]]:
         """
         Search for functional use predictions from QSUR models.
         
         Args:
-            dtxsid: Chemical identifier.
+            dtxsids: Chemical identifier(s).
             
         Returns:
             QSUR predictions.
         """
-        return self._with_retry(lambda: self.client.search_qsurs(dtxsid=dtxsid))
+        if not dtxsids:
+            raise ValueError("At least one DTXSID must be provided.")
+
+        results: List[Dict[str, Any]] = []
+        for sid in dtxsids:
+            payload = self._with_retry(lambda sid=sid: self.client.search_qsurs(dtxsid=sid))
+            results.extend(self._ensure_list(payload))
+        return results
     
-    def search_exposures(self, data_type: str, dtxsid: str) -> Dict[str, Any]:
+    def search_exposures(self, data_type: str, dtxsids: Sequence[str]) -> List[Dict[str, Any]]:
         """
         Search for exposure pathway predictions or SEEM framework estimates.
         
         Args:
-            data_type: Type of exposure data (pathways or seem).
-            dtxsid: Chemical identifier.
+            data_type: Exposure dataset selector (pathways, mmdb-single, seem, or seem-demographic).
+            dtxsids: Chemical identifier(s).
             
         Returns:
             Exposure data.
         """
-        return self._with_retry(lambda: self.client.search_exposures(by=data_type, dtxsid=dtxsid))
+        if not dtxsids:
+            raise ValueError("At least one DTXSID must be provided.")
+
+        results: List[Dict[str, Any]] = []
+        for sid in dtxsids:
+            payload = self._with_retry(lambda sid=sid: self.client.search_exposures(by=data_type, dtxsid=sid))
+            results.extend(self._ensure_list(payload))
+        return results

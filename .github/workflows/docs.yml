@@ -1,0 +1,25 @@
+name: Docs
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project (editable)
+        run: pip install -e .
+
+      - name: Build and validate docs
+        run: bash scripts/build_docs.sh

@@ -15,29 +15,30 @@ Base URL
 
 Resource → Underlying ctxpy calls
 - chemical (src/epacomp_tox/resources/chemical.py:1):
-  - `search_chemical` → `ctx.Chemical.search(by, word)`
-  - `get_chemical_details` → `ctx.Chemical.details(by, word)`
-  - `search_msready` → `ctx.Chemical.msready(by, word)` or mass range variant
+  - `search_chemical`/`batch_search_chemical` → `/chemical/search/*` (batch sends newline-delimited identifiers)
+  - `get_chemical_details`/`batch_get_chemical_details` → `/chemical/detail/search/*` with optional projection query param
+  - `search_msready` → `/chemical/msready/search/(by-dtxcid|by-formula|by-mass)`
 - hazard (src/epacomp_tox/resources/hazard.py:1):
-  - `search_hazard` → `ctx.Hazard.search(by, dtxsid, summary)`
-  - `batch_search_hazard` → `ctx.Hazard.batch_search(by, dtxsid[], summary)`
+  - `search_hazard` → `/hazard/*` family (toxval, skin-eye, cancer, genetox, adme, toxref) based on `data_type`
+  - `batch_search_hazard` → Iterates `search_hazard` across DTXSIDs
 - exposure (src/epacomp_tox/resources/exposure.py:1):
-  - `search_cpdat` → `ctx.Exposure.search_cpdat(vocab_name, dtxsid)`
-  - `search_httk` → `ctx.Exposure.search_httk(dtxsid)`
-  - `get_cpdat_vocabulary` → `ctx.Exposure.get_cpdat_vocabulary(vocab_name)`
-  - `search_qsurs` → `ctx.Exposure.search_qsurs(dtxsid)`
-  - `search_exposures` → `ctx.Exposure.search_exposures(by, dtxsid)`
+  - `search_cpdat` → `/exposure/{functional-use|product-data|list-presence}/search/by-dtxsid/{id}`
+  - `search_httk` → `GET /exposure/httk/search/by-dtxsid/{id}`
+  - `get_cpdat_vocabulary` → `/exposure/{functional-use|product-data|list-presence}/(category|puc|tags)`
+  - `search_qsurs` → `GET /exposure/functional-use/probability/search/by-dtxsid/{id}`
+  - `search_exposures` → `/exposure/{mmdb|seem}/...` endpoints based on selector
 - chemical_list (src/epacomp_tox/resources/chemical_list.py:1):
-  - `get_public_list_names` → `ctx.ChemicalList.public_list_names()`
-  - `get_full_list` → `ctx.ChemicalList.get_full_list(list_name)`
+  - `get_public_list_names` → `GET /chemical/list/`
+  - `get_full_list` → `GET /chemical/list/chemicals/search/by-listname/{list}`
 - cheminformatics (src/epacomp_tox/resources/cheminformatics.py:1):
   - `search_toxprints` → `ctx.search_toxprints(chemical)` (returns DataFrame; code converts to dict)
 
 Notes
 - Method signatures and available calls extracted into `epa_comptox_api_structure.json:1` (generated via `extract_api_structure.py:1`).
-- No explicit retry/backoff or error normalization implemented yet. Those will be addressed in dedicated tasks.
+- Lightweight shim in `src/ctxpy/__init__.py` wraps GET/POST/batch, respects `ctx_api_host`, enforces batch chunking, and surfaces structured `CtxApiError` data (request id, rate limits, retry-after).
+- `_with_retry` now provides exponential backoff with jitter, retries only on retryable statuses, and exposes `get_last_metadata()` for downstream telemetry.
+- Cheminformatics/ToxPrint endpoints remain unavailable on comptox.epa.gov/ctx-api; shim raises migration warning.
 
 Gaps/Actions
-- Confirm ctxpy honors `ctx_api_host` for new base; if not, pass a host/base parameter directly when supported.
-- Add retry/backoff on 429/5xx at the resource call layer or via a thin wrapper.
+- Confirm maximum batch payload accepted by comptox host (shim currently assumes 200 identifiers per chunk).
 - Add smoke tests exercising 1–2 endpoints per domain using `CTX_API_KEY`.

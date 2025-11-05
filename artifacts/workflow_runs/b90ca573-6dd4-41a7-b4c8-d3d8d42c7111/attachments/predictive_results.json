@@ -1,0 +1,37 @@
+{
+  "guardrails": [],
+  "results": [
+    {
+      "ad": {
+        "confidence": 0.85,
+        "details": {
+          "analogues": 4
+        },
+        "in_domain": true
+      },
+      "error": null,
+      "label": null,
+      "metadata": {
+        "analogueCoverage": 0.88,
+        "evidenceQuality": 0.74,
+        "identifier": "DTXSID0000001",
+        "identifier_type": "dtxsid",
+        "model": "Offline GenRA",
+        "model_version": "0.1",
+        "predictiveAgreement": 0.85
+      },
+      "prediction": {
+        "confidence": 0.82,
+        "prediction": "Read-across suggests low concern."
+      },
+      "request": {
+        "chemical_identifier": "DTXSID0000001",
+        "identifier_type": "dtxsid"
+      },
+      "scenario": "exposure_prioritization",
+      "service": "offline_genra",
+      "status": "success"
+    }
+  ],
+  "succeeded": true
+}

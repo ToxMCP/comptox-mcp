@@ -1,0 +1,27 @@
+{
+  "attachments": [
+    {
+      "checksum": "161d6dac53dfd93f96a4d2d07700d900657f807d5221117fb8f050e889edb2fd",
+      "name": "ctx_data.json",
+      "path": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111/attachments/ctx_data.json",
+      "size": 1575
+    },
+    {
+      "checksum": "7aaaa11b0d6c11848170f2eb32df6cb90bab1b78655eb82e407df8c16973f857",
+      "name": "predictive_results.json",
+      "path": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111/attachments/predictive_results.json",
+      "size": 859
+    },
+    {
+      "checksum": "13d6534bf723756ddc2f057b057739997a052d0a1fb9023249dcc5e8938f85d8",
+      "name": "evidence.json",
+      "path": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111/attachments/evidence.json",
+      "size": 370
+    }
+  ],
+  "bundleChecksum": "4a0f4644bb411423430a57eb3023f02632162b284024230c8c24fd655270ce98",
+  "bundlePath": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111/bundle.json",
+  "createdAt": "2025-10-25T15:50:13.529745+00:00",
+  "retentionDays": null,
+  "workflowRunId": "b90ca573-6dd4-41a7-b4c8-d3d8d42c7111"
+}

@@ -1,0 +1,29 @@
+{
+  "model": "GenRA Read-Across Workflow",
+  "version": "2.1.0",
+  "criteria": [
+    {
+      "type": "similarity",
+      "metric": "tanimoto",
+      "threshold": 0.7,
+      "minAnalogues": 3
+    },
+    {
+      "type": "coverage",
+      "requirements": ["in vivo", "in vitro"],
+      "minimumDomains": 2
+    },
+    {
+      "type": "expert_rule",
+      "rule": "Mode of action tags must align",
+      "allowableMismatch": 1
+    }
+  ],
+  "policy": "block",
+  "errorCode": "GENRA_AD_FAIL",
+  "references": [
+    {
+      "citation": "GenRA Technical Manual 2025"
+    }
+  ]
+}

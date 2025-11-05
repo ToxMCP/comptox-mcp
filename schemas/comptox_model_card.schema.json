@@ -1,0 +1,658 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/comptox-model-card.schema.json",
+  "title": "CompTox ModelCard",
+  "description": "Machine-readable CompTox model card aligned with OECD QSAR validation principles and MCP requirements.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "modelDetails",
+    "intendedUse",
+    "oecdValidationPrinciples",
+    "trainingData",
+    "evaluationData",
+    "applicabilityDomain",
+    "ethicalConsiderations",
+    "provenance"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^v?\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "Semantic version of the CompTox model card schema used to validate this document."
+    },
+    "modelDetails": {
+      "type": "object",
+      "description": "Core identity and lifecycle information for the model.",
+      "required": [
+        "name",
+        "version",
+        "description",
+        "modelType",
+        "developers",
+        "organizations",
+        "releaseDate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Canonical model name (e.g., TEST Consensus Acute Toxicity)."
+        },
+        "version": {
+          "type": "string",
+          "description": "Model semantic version or tagged release identifier."
+        },
+        "modelType": {
+          "type": "string",
+          "description": "High-level classification for the model (e.g., QSAR, Read-Across, PBPK, Analogue-Search)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short overview of the model purpose and capabilities."
+        },
+        "developers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/person" },
+          "description": "Primary model developers or maintainers."
+        },
+        "organizations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Affiliated organizations sponsoring or maintaining the model."
+        },
+        "releaseDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when this model version was released to production."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the latest material update to this model card or implementation."
+        },
+        "license": {
+          "type": "string",
+          "description": "License governing model distribution or use."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Keywords describing the domain, endpoints, or regulatory programs."
+        },
+        "documentation": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" },
+          "description": "Links to human-readable technical documentation, publications, or SOPs."
+        }
+      }
+    },
+    "intendedUse": {
+      "type": "object",
+      "description": "Specific use cases, audiences, and limitations for the model.",
+      "required": ["summary", "inScope", "outOfScope"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Narrative summary of intended purpose and regulatory context."
+        },
+        "inScope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicitly supported use cases, decision contexts, or chemical classes."
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Use cases, populations, or chemicals for which the model should not be applied."
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Known scientific or technical limitations relevant to agents or reviewers."
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Cautionary statements that must be surfaced alongside predictions."
+        },
+        "regulatoryPrograms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Regulatory programs or guidance documents under which this model is accepted."
+        }
+      }
+    },
+    "oecdValidationPrinciples": {
+      "type": "object",
+      "description": "Compliance details for the OECD five principles of QSAR validation.",
+      "required": [
+        "definedEndpoint",
+        "unambiguousAlgorithm",
+        "definedApplicabilityDomain",
+        "goodnessOfFitMetrics",
+        "mechanisticInterpretation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "definedEndpoint": {
+          "type": "object",
+          "required": ["description", "unit"],
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Precise description of the biological or physicochemical endpoint predicted by the model."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Measurement unit associated with the endpoint, if applicable."
+            },
+            "speciesOrSystem": {
+              "type": "string",
+              "description": "Species, biological system, or experimental context used to measure the endpoint."
+            },
+            "references": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/reference" },
+              "description": "Supporting references defining the endpoint."
+            }
+          }
+        },
+        "unambiguousAlgorithm": {
+          "type": "object",
+          "required": ["summary"],
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "Concise description of the algorithm, statistical method, or machine learning architecture."
+            },
+            "methodClass": {
+              "type": "string",
+              "description": "High-level classification (e.g., linear regression, random forest, k-NN, read-across)."
+            },
+            "implementation": {
+              "type": "string",
+              "description": "Primary implementation reference (e.g., software package, repository URL)."
+            },
+            "references": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/reference" },
+              "description": "Peer-reviewed publications or technical reports detailing the algorithm."
+            }
+          }
+        },
+        "definedApplicabilityDomain": {
+          "type": "object",
+          "description": "Summary of AD approach; detailed machine-readable definition is in the top-level applicabilityDomain section.",
+          "required": ["summary"],
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "Narrative summary of the applicability domain technique(s)."
+            },
+            "references": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/reference" },
+              "description": "Citations supporting the AD methodology."
+            },
+            "relatedTools": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Names of MCP tools that enforce this AD (e.g., test.check_applicability_domain)."
+            }
+          }
+        },
+        "goodnessOfFitMetrics": {
+          "type": "object",
+          "description": "Quantitative performance metrics for internal and external validation.",
+          "additionalProperties": false,
+          "properties": {
+            "internalValidation": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/metric" },
+              "description": "Metrics derived from training or cross-validation."
+            },
+            "externalValidation": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/metric" },
+              "description": "Metrics derived from external or hold-out datasets."
+            },
+            "applicabilityDomainMetrics": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/metric" },
+              "description": "Metrics specific to AD performance (coverage, false positive rate, etc.)."
+            }
+          }
+        },
+        "mechanisticInterpretation": {
+          "type": "object",
+          "required": ["summary"],
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "Explanation of mechanistic plausibility or descriptor relevance."
+            },
+            "confidence": {
+              "type": "string",
+              "description": "Assessment of strength of mechanistic evidence (e.g., strong, moderate, speculative)."
+            },
+            "references": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/reference" },
+              "description": "Supporting publications or expert assessments."
+            }
+          }
+        }
+      }
+    },
+    "trainingData": {
+      "type": "object",
+      "description": "Provenance and characteristics of the training dataset.",
+      "required": ["dataset", "records", "chemicalCount"],
+      "additionalProperties": false,
+      "properties": {
+        "dataset": { "$ref": "#/$defs/dataset" },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of records (rows) used for training."
+        },
+        "chemicalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unique chemicals represented."
+        },
+        "descriptorCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of descriptors/features used by the model."
+        },
+        "preprocessing": {
+          "type": "string",
+          "description": "Data curation and preprocessing steps applied prior to model training."
+        },
+        "classBalance": {
+          "type": "string",
+          "description": "Summary of class balance or distribution characteristics, if applicable."
+        }
+      }
+    },
+    "evaluationData": {
+      "type": "object",
+      "description": "Details for external validation datasets and methodologies.",
+      "required": ["datasets", "validationApproach", "metrics"],
+      "additionalProperties": false,
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/dataset" },
+          "description": "External datasets used for validation."
+        },
+        "validationApproach": {
+          "type": "string",
+          "description": "Description of the validation methodology (e.g., k-fold CV, external test set)."
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/metric" },
+          "description": "Quantitative performance metrics derived from evaluation datasets."
+        },
+        "applicabilityDomainCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of evaluation dataset predictions that fell within the applicability domain."
+        }
+      }
+    },
+    "applicabilityDomain": {
+      "type": "object",
+      "description": "Machine-readable applicability domain definition used to enforce guardrails.",
+      "required": ["summary", "criteria", "enforcement"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Overall description of the AD methodology and its role in the workflow."
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/applicabilityCriterion" },
+          "description": "List of criteria that define the applicability domain boundaries."
+        },
+        "enforcement": {
+          "type": "object",
+          "required": ["mcpTools"],
+          "additionalProperties": false,
+          "properties": {
+            "mcpTools": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Names of MCP tools responsible for enforcing the AD checks."
+            },
+            "policy": {
+              "type": "string",
+              "description": "Policy guidance controlling how out-of-domain results are handled (e.g., block, warn)."
+            },
+            "errorCodes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Expected error codes or statuses emitted when AD checks fail."
+            }
+          }
+        },
+        "confidenceBands": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/confidenceBand" },
+          "description": "Optional mapping of AD confidence to downstream decision guidance."
+        },
+        "references": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" },
+          "description": "Citations describing the AD algorithm or validation."
+        }
+      }
+    },
+    "ethicalConsiderations": {
+      "type": "object",
+      "description": "Bias, fairness, or ethical implications of the model.",
+      "required": ["risks"],
+      "additionalProperties": false,
+      "properties": {
+        "risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Known ethical or bias-related risks to surface to users."
+        },
+        "mitigations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Mitigation strategies or guidance for interpreting model outputs."
+        },
+        "humanOversight": {
+          "type": "string",
+          "description": "Description of required human oversight or SME review."
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Provenance, version control, and audit metadata.",
+      "required": ["sourceRepositories", "build", "checksum"],
+      "additionalProperties": false,
+      "properties": {
+        "sourceRepositories": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" },
+          "description": "Repositories, data stores, or registries containing canonical model assets."
+        },
+        "build": {
+          "type": "object",
+          "required": ["id", "timestamp"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Build identifier or commit hash used to produce the deployable artifact."
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp when the build was produced."
+            },
+            "environment": {
+              "type": "string",
+              "description": "Description of build environment (e.g., GitHub Actions workflow, container digest)."
+            }
+          }
+        },
+        "checksum": {
+          "type": "object",
+          "required": ["algorithm", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "description": "Hash algorithm used (e.g., SHA256)."
+            },
+            "value": {
+              "type": "string",
+              "description": "Checksum value for the model artifact or dataset bundle."
+            }
+          }
+        },
+        "versionHistory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["version", "changes"],
+            "additionalProperties": false,
+            "properties": {
+              "version": { "type": "string" },
+              "changes": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          },
+          "description": "Chronological record of major updates to the model or card."
+        },
+        "reviewStatus": {
+          "type": "object",
+          "properties": {
+            "approvedBy": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/person" },
+              "description": "Stakeholders who have reviewed/approved the model card."
+            },
+            "approvalDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes or additional context not captured elsewhere."
+    }
+  },
+  "$defs": {
+    "person": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the person."
+        },
+        "affiliation": {
+          "type": "string",
+          "description": "Organization or institution."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email for follow-up questions."
+        },
+        "orcid": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$",
+          "description": "ORCID identifier, if available."
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "required": ["citation"],
+      "additionalProperties": false,
+      "properties": {
+        "citation": {
+          "type": "string",
+          "description": "Human-readable citation."
+        },
+        "doi": {
+          "type": "string",
+          "description": "Digital object identifier."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Resolvable URL for the reference."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Context or relevance of the reference."
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "required": ["name", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Metric name (e.g., R2, RMSE, MAE)."
+        },
+        "value": {
+          "type": "number",
+          "description": "Numeric value for the metric."
+        },
+        "dataset": {
+          "type": "string",
+          "description": "Dataset name or split associated with the metric."
+        },
+        "units": {
+          "type": "string",
+          "description": "Measurement units, if applicable."
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional context for the metric calculation."
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "required": ["name", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Dataset name or identifier."
+        },
+        "source": {
+          "type": "string",
+          "description": "Data source or repository from which the dataset was obtained."
+        },
+        "description": {
+          "type": "string",
+          "description": "Narrative description of the dataset contents."
+        },
+        "accessUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL where the dataset can be accessed or requested."
+        },
+        "license": {
+          "type": "string",
+          "description": "License governing dataset usage."
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of records in the dataset."
+        },
+        "timeRange": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "type": "string",
+              "format": "date"
+            },
+            "end": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "applicabilityCriterion": {
+      "type": "object",
+      "required": ["type", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["descriptor_range", "similarity", "distance", "coverage", "expert_rule", "other"],
+          "description": "Category of applicability domain criterion."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of the criterion."
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Machine-readable parameters defining the criterion (thresholds, descriptor names, etc.)."
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Primary numeric threshold, when applicable."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit associated with the threshold."
+        },
+        "references": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" },
+          "description": "References backing the criterion rationale."
+        }
+      }
+    },
+    "confidenceBand": {
+      "type": "object",
+      "required": ["label", "minConfidence", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Human-readable label for the confidence band (e.g., High, Moderate, Low)."
+        },
+        "minConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum confidence score (0-1) included in the band."
+        },
+        "actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Recommended actions or policy guidance when a prediction falls in this band."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "requiredTools": [
+    "search_chemical",
+    "batch_search_chemical",
+    "search_cpdat",
+    "search_httk",
+    "search_hazard",
+    "get_public_list_names",
+    "get_full_list",
+    "search_toxprints"
+  ],
+  "requiredResources": [
+    "chemical",
+    "exposure",
+    "hazard",
+    "chemical_list",
+    "cheminformatics"
+  ]
+}

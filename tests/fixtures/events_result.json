@@ -1,0 +1,25 @@
+{
+  "jsonrpc": "2.0",
+  "method": "events/result",
+  "params": {
+    "sessionId": "SESSION_ID",
+    "requestId": "REQUEST_ID",
+    "result": {
+      "structuredContent": {
+        "data": {
+          "example": true
+        },
+        "metadata": {
+          "resource": "demo"
+        }
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Rendered payload"
+        }
+      ],
+      "isError": false
+    }
+  }
+}

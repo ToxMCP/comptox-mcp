@@ -1,0 +1,39 @@
+# Example OpenTelemetry Collector configuration that scrapes the MCP transport
+# Prometheus endpoint and forwards metrics to an OTLP endpoint (e.g. Datadog,
+# New Relic, or self-hosted OTEL backend). Fill in the exporter endpoint and
+# credentials that match your observability stack.
+
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "epa-comp-tox-mcp"
+          scrape_interval: 30s
+          metrics_path: "/metrics"
+          static_configs:
+            - targets:
+                - "mcp-transport.default.svc.cluster.local:8000"
+              labels:
+                env: "staging"
+                service: "mcp-transport"
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+
+exporters:
+  otlphttp:
+    endpoint: "https://observability.example.com/v1/metrics"
+    headers:
+      Authorization: "Bearer <token>"
+
+service:
+  telemetry:
+    metrics:
+      level: "basic"
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [otlphttp]

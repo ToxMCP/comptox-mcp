@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "method": "events/error",
+  "params": {
+    "sessionId": "SESSION_ID",
+    "requestId": "REQUEST_ID",
+    "message": "Tool call cancelled",
+    "code": -32800,
+    "data": {
+      "requestId": "REQUEST_ID"
+    }
+  }
+}

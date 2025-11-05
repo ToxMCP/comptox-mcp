@@ -1,0 +1,234 @@
+{
+  "bundleVersion": "0.1",
+  "workflowRunId": "64797618-eb38-42ec-abf5-a709a7c4d912",
+  "status": "success",
+  "scenarios": [
+    "acute_toxicity"
+  ],
+  "options": {},
+  "guardrails": [],
+  "timeline": [
+    {
+      "stage": "NormalizeIdentifier",
+      "metadata": [
+        {
+          "step": "chemical.search:equals",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "chemical.details",
+          "metadata": {
+            "status": 200
+          }
+        }
+      ]
+    },
+    {
+      "stage": "AssembleCtxData",
+      "metadata": [
+        {
+          "step": "hazard:all",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "hazard:eco",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "hazard:human",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "exposure:httk",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "exposure:cpdat:fc",
+          "metadata": {
+            "status": 200
+          }
+        },
+        {
+          "step": "cheminformatics:toxprints",
+          "metadata": {
+            "status": 200
+          }
+        }
+      ]
+    },
+    {
+      "stage": "RunPredictiveModels",
+      "metadata": [
+        {
+          "service": "offline_genra",
+          "status": "success",
+          "scenario": "acute_toxicity",
+          "label": null,
+          "metadata": {
+            "identifier": "DTXSID0000001",
+            "identifier_type": "dtxsid",
+            "model": "Offline GenRA",
+            "model_version": "0.1",
+            "analogueCoverage": 0.88,
+            "evidenceQuality": 0.74,
+            "predictiveAgreement": 0.85
+          },
+          "ad": {
+            "in_domain": true,
+            "confidence": 0.85,
+            "details": {
+              "analogues": 4
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "target": {
+    "dtxsid": "DTXSID0000001",
+    "inputIdentifier": {
+      "value": "50-00-0",
+      "type": "casrn"
+    },
+    "preferredName": "Offline Example",
+    "casrn": "50-00-0",
+    "synonyms": [
+      "Formaldehyde",
+      "Methanal"
+    ],
+    "warnings": []
+  },
+  "ctxData": {
+    "hazard": {
+      "all": [
+        {
+          "endpoint": "Acute toxicity",
+          "value": "LD50",
+          "source": "Offline"
+        }
+      ],
+      "eco": [
+        {
+          "endpoint": "Acute toxicity",
+          "value": "LD50",
+          "source": "Offline"
+        }
+      ],
+      "human": [
+        {
+          "endpoint": "Acute toxicity",
+          "value": "LD50",
+          "source": "Offline"
+        }
+      ]
+    },
+    "exposure": {
+      "httk": [
+        {
+          "kmp": 1.2,
+          "unit": "1/hr"
+        }
+      ],
+      "cpdat:fc": [
+        {
+          "vocab": "fc",
+          "label": "Consumer product"
+        }
+      ]
+    },
+    "cheminformatics": {
+      "toxprints": {
+        "toxprints": [
+          "FP_001",
+          "FP_057"
+        ]
+      }
+    },
+    "dataGaps": []
+  },
+  "predictive": {
+    "results": [
+      {
+        "service": "offline_genra",
+        "status": "success",
+        "scenario": "acute_toxicity",
+        "label": null,
+        "request": {
+          "chemical_identifier": "DTXSID0000001",
+          "identifier_type": "dtxsid"
+        },
+        "ad": {
+          "in_domain": true,
+          "confidence": 0.85,
+          "details": {
+            "analogues": 4
+          }
+        },
+        "prediction": {
+          "prediction": "Read-across suggests low concern.",
+          "confidence": 0.82
+        },
+        "metadata": {
+          "identifier": "DTXSID0000001",
+          "identifier_type": "dtxsid",
+          "model": "Offline GenRA",
+          "model_version": "0.1",
+          "analogueCoverage": 0.88,
+          "evidenceQuality": 0.74,
+          "predictiveAgreement": 0.85
+        },
+        "error": null
+      }
+    ]
+  },
+  "evidence": {
+    "confidenceBand": "Limited",
+    "scores": {
+      "analogue_coverage": 0.88,
+      "evidence_quality": 0.74,
+      "predictive_agreement": 0.85
+    },
+    "narrative": "Confidence band: Limited. Analogue coverage=0.88, evidence quality=0.74, predictive agreement=0.85.",
+    "recommendedActions": [
+      "Seek SME review",
+      "Augment analogue set or supporting evidence"
+    ]
+  },
+  "storage": {
+    "workflowRunId": "64797618-eb38-42ec-abf5-a709a7c4d912",
+    "createdAt": "2025-10-25T15:50:13.527847+00:00",
+    "bundlePath": "64797618-eb38-42ec-abf5-a709a7c4d912/bundle.json",
+    "bundleChecksum": "df5a57c2854b40f456e6d58a3fb306f1ff7f06ac0539aecb9df2d3b4ef9fac1c",
+    "attachments": [
+      {
+        "name": "ctx_data.json",
+        "path": "64797618-eb38-42ec-abf5-a709a7c4d912/attachments/ctx_data.json",
+        "size": 1423,
+        "checksum": "a9767ef9999319a03369d1e97bd41b9cf72b3e6f1f1f67efe7025a98663b17ce"
+      },
+      {
+        "name": "predictive_results.json",
+        "path": "64797618-eb38-42ec-abf5-a709a7c4d912/attachments/predictive_results.json",
+        "size": 850,
+        "checksum": "3be9f5245277d6a2cd6cb90c20dbcfbe4dfc3128e4eaa919573514a178213f10"
+      },
+      {
+        "name": "evidence.json",
+        "path": "64797618-eb38-42ec-abf5-a709a7c4d912/attachments/evidence.json",
+        "size": 370,
+        "checksum": "13d6534bf723756ddc2f057b057739997a052d0a1fb9023249dcc5e8938f85d8"
+      }
+    ],
+    "retentionDays": null
+  }
+}

@@ -43,8 +43,8 @@ class HazardResource(BaseResource):
                     "properties": {
                         "data_type": {
                             "type": "string",
-                            "description": "Type of hazard data: all, human, eco, skin-eye, cancer, or genetox",
-                            "enum": ["all", "human", "eco", "skin-eye", "cancer", "genetox"]
+                            "description": "Type of hazard data: all, human, eco, skin-eye, cancer, genetox, adme, or toxref",
+                            "enum": ["all", "human", "eco", "skin-eye", "cancer", "genetox", "adme", "toxref"]
                         },
                         "dtxsid": {
                             "type": "string",
@@ -67,8 +67,8 @@ class HazardResource(BaseResource):
                     "properties": {
                         "data_type": {
                             "type": "string",
-                            "description": "Type of hazard data: all, human, eco, skin-eye, cancer, or genetox",
-                            "enum": ["all", "human", "eco", "skin-eye", "cancer", "genetox"]
+                            "description": "Type of hazard data: all, human, eco, skin-eye, cancer, genetox, adme, or toxref",
+                            "enum": ["all", "human", "eco", "skin-eye", "cancer", "genetox", "adme", "toxref"]
                         },
                         "dtxsids": {
                             "type": "array",
@@ -122,25 +122,28 @@ class HazardResource(BaseResource):
         Search for chemical hazard data from ToxValDB.
         
         Args:
-            data_type: Type of hazard data (all, human, eco, skin-eye, cancer, genetox).
+            data_type: Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref).
             dtxsid: Chemical identifier.
             summary: Whether to return summary data only.
             
         Returns:
             List of hazard data.
         """
-        return self._with_retry(lambda: self.client.search(by=data_type, dtxsid=dtxsid, summary=summary))
+        result = self._with_retry(lambda: self.client.search(by=data_type, dtxsid=dtxsid, summary=summary))
+        return self._ensure_list(result)
     
     def batch_search_hazard(self, data_type: str, dtxsids: List[str], summary: bool = True) -> Dict[str, List[Dict[str, Any]]]:
         """
         Search for hazard data for multiple chemicals.
         
         Args:
-            data_type: Type of hazard data (all, human, eco, skin-eye, cancer, genetox).
+            data_type: Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref).
             dtxsids: List of chemical identifiers.
             summary: Whether to return summary data only.
             
         Returns:
             Dictionary mapping DTXSIDs to hazard data.
         """
-        return self._with_retry(lambda: self.client.batch_search(by=data_type, dtxsid=dtxsids, summary=summary))
+        payload = self._with_retry(lambda: self.client.batch_search(by=data_type, dtxsid=dtxsids, summary=summary))
+        normalized = self._ensure_object(payload)
+        return {key: self._ensure_list(value) for key, value in normalized.items()}

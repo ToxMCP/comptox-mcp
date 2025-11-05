@@ -7,6 +7,7 @@ if [[ -z "${CTX_API_KEY:-}" && -z "${EPA_COMPTOX_API_KEY:-}" ]]; then
 fi
 
 export CTX_API_BASE_URL="${CTX_API_BASE_URL:-https://comptox.epa.gov/ctx-api}"
+export PYTHONPATH="${PYTHONPATH:-}:$(pwd)/src"
 
 python - <<'PY'
 import os

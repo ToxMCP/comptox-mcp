@@ -1,0 +1,24 @@
+{
+  "protocolVersion": "2025-06-18",
+  "capabilities": {
+    "tools": {
+      "listChanged": false,
+      "streams": true,
+      "cancel": true
+    },
+    "resources": {
+      "listChanged": false,
+      "subscribe": false
+    },
+    "logging": {}
+  },
+  "serverInfo": {
+    "name": "epa-comp-tox-mcp",
+    "title": "EPA CompTox MCP Server"
+  },
+  "instructions": "Use tools/list to discover available CTX tools, then tools/call to invoke them.",
+  "transport": {
+    "heartbeatMs": 120000,
+    "handshakeTimeoutMs": 30000
+  }
+}

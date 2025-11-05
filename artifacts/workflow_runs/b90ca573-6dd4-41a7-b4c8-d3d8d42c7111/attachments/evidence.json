@@ -1,0 +1,13 @@
+{
+  "confidence_band": "Limited",
+  "narrative": "Confidence band: Limited. Analogue coverage=0.88, evidence quality=0.74, predictive agreement=0.85.",
+  "recommended_actions": [
+    "Seek SME review",
+    "Augment analogue set or supporting evidence"
+  ],
+  "scores": {
+    "analogue_coverage": 0.88,
+    "evidence_quality": 0.74,
+    "predictive_agreement": 0.85
+  }
+}

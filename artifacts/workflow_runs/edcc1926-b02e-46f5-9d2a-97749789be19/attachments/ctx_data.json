@@ -1,0 +1,76 @@
+{
+  "cache_hit": false,
+  "cheminformatics": {
+    "toxprints": {
+      "toxprints": [
+        "FP_001",
+        "FP_057"
+      ]
+    }
+  },
+  "data_gaps": [],
+  "dtxsid": "DTXSID0000001",
+  "exposure": {
+    "cpdat:fc": [
+      {
+        "label": "Consumer product",
+        "vocab": "fc"
+      }
+    ],
+    "httk": [
+      {
+        "kmp": 1.2,
+        "unit": "1/hr"
+      }
+    ],
+    "qsurs": [
+      {
+        "probability": 0.42
+      }
+    ]
+  },
+  "hazard": {
+    "all": [
+      {
+        "endpoint": "Acute toxicity",
+        "source": "Offline",
+        "value": "LD50"
+      }
+    ]
+  },
+  "scenarios": [
+    "genra_read_across"
+  ],
+  "trace": [
+    {
+      "metadata": {
+        "status": 200
+      },
+      "step": "hazard:all"
+    },
+    {
+      "metadata": {
+        "status": 200
+      },
+      "step": "exposure:httk"
+    },
+    {
+      "metadata": {
+        "status": 200
+      },
+      "step": "exposure:qsurs"
+    },
+    {
+      "metadata": {
+        "status": 200
+      },
+      "step": "exposure:cpdat:fc"
+    },
+    {
+      "metadata": {
+        "status": 200
+      },
+      "step": "cheminformatics:toxprints"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Example Prometheus scrape configuration for the EPA CompTox MCP transport.
+#
+# Adjust the `targets` block to match your deployment (Kubernetes service,
+# EC2 hostname, etc.). Update the `env` label to reflect your environment.
+scrape_configs:
+  - job_name: "epa-comp-tox-mcp"
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: "/metrics"
+    scheme: http
+    static_configs:
+      - targets:
+          - "mcp-transport.default.svc.cluster.local:8000"
+        labels:
+          env: "staging"
+          service: "mcp-transport"
+          component: "transport"
+
+    relabel_configs:
+      # Drop the default instance label so Prometheus uses the transport service
+      # name instead of IP:port when rendering dashboards.
+      - source_labels: [__address__]
+        regex: "(.+)"
+        target_label: instance
+        replacement: "mcp-transport"

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "1.0",
+  "modelDetails": {
+    "name": "TEST Consensus Acute Toxicity",
+    "version": "5.2.0",
+    "modelType": "QSAR",
+    "description": "Predicts acute aquatic toxicity using consensus of TEST models.",
+    "developers": [
+      {
+        "name": "EPA Computational Toxicology"
+      }
+    ],
+    "organizations": [
+      "US EPA"
+    ],
+    "releaseDate": "2025-01-15",
+    "license": "EPA Terms of Use"
+  },
+  "intendedUse": {
+    "summary": "Supports screening-level acute aquatic toxicity assessments for organic chemicals.",
+    "inScope": [
+      "Non-ionic organic chemicals",
+      "Screening-level prioritization"
+    ],
+    "outOfScope": [
+      "Ionic species",
+      "Metals"
+    ],
+    "limitations": [
+      "Do not apply to mixtures without expert review."
+    ],
+    "warnings": [
+      "Use applicability domain checks prior to decision-making."
+    ],
+    "regulatoryPrograms": [
+      "TSCA New Chemicals"
+    ]
+  },
+  "oecdValidationPrinciples": {
+    "definedEndpoint": {
+      "description": "96-hour fathead minnow LC50",
+      "unit": "mg/L",
+      "speciesOrSystem": "Pimephales promelas"
+    },
+    "unambiguousAlgorithm": {
+      "summary": "Consensus of multiple QSAR models combining regression and classification outputs.",
+      "methodClass": "Ensemble",
+      "implementation": "TEST v5.2",
+      "references": [
+        {
+          "citation": "TEST user manual 2024"
+        }
+      ]
+    },
+    "definedApplicabilityDomain": {
+      "summary": "Leverage and descriptor range checks against training set.",
+      "references": [
+        {
+          "citation": "Mansouri et al. 2018",
+          "doi": "10.1021/acs.jcim.7b00524"
+        }
+      ],
+      "relatedTools": [
+        "test.check_applicability_domain"
+      ]
+    },
+    "goodnessOfFitMetrics": {
+      "internalValidation": [
+        {
+          "name": "R2",
+          "value": 0.81,
+          "dataset": "training"
+        }
+      ],
+      "externalValidation": [
+        {
+          "name": "Q2",
+          "value": 0.74,
+          "dataset": "external"
+        },
+        {
+          "name": "RMSE",
+          "value": 0.45,
+          "units": "log10"
+        }
+      ]
+    },
+    "mechanisticInterpretation": {
+      "summary": "Descriptors capture hydrophobicity and molecular size consistent with narcosis mode of action.",
+      "confidence": "moderate"
+    }
+  },
+  "trainingData": {
+    "dataset": {
+      "name": "TEST Training Set 2024",
+      "source": "EPA CompTox",
+      "description": "Curated LC50 dataset for freshwater species"
+    },
+    "records": 580,
+    "chemicalCount": 560,
+    "descriptorCount": 35,
+    "preprocessing": "Standardization of chemical identifiers and removal of salts."
+  },
+  "evaluationData": {
+    "datasets": [
+      {
+        "name": "Fathead Minnow External",
+        "source": "EPA AQUIRE",
+        "description": "Independent validation dataset"
+      }
+    ],
+    "validationApproach": "Hold-out external validation",
+    "metrics": [
+      {
+        "name": "RMSE",
+        "value": 0.52,
+        "dataset": "external",
+        "units": "log10"
+      }
+    ],
+    "applicabilityDomainCoverage": 0.88
+  },
+  "applicabilityDomain": {
+    "summary": "Combines leverage thresholds with descriptor range checks.",
+    "criteria": [
+      {
+        "type": "descriptor_range",
+        "description": "All descriptors must fall within 5th-95th percentile of training set.",
+        "parameters": {
+          "percentileLower": 0.05,
+          "percentileUpper": 0.95
+        }
+      },
+      {
+        "type": "similarity",
+        "description": "Tanimoto similarity to nearest neighbor must exceed 0.65.",
+        "parameters": {
+          "threshold": 0.65
+        }
+      }
+    ],
+    "enforcement": {
+      "mcpTools": [
+        "test.check_applicability_domain"
+      ],
+      "policy": "block",
+      "errorCodes": [
+        "TEST_AD_FAIL"
+      ]
+    },
+    "confidenceBands": [
+      {
+        "label": "High",
+        "minConfidence": 0.8,
+        "actions": [
+          "Eligible for automated workflow"
+        ]
+      },
+      {
+        "label": "Moderate",
+        "minConfidence": 0.6,
+        "actions": [
+          "Requires SME review"
+        ]
+      }
+    ]
+  },
+  "ethicalConsiderations": {
+    "risks": [
+      "Model is biased toward narcosis-class chemicals."
+    ],
+    "mitigations": [
+      "Flag predictions with low similarity for SME review."
+    ],
+    "humanOversight": "Regulatory reviewer must approve high-impact predictions."
+  },
+  "provenance": {
+    "sourceRepositories": [
+      "https://github.com/epa/test"
+    ],
+    "build": {
+      "id": "build-2025-01-15",
+      "timestamp": "2025-01-15T10:00:00Z",
+      "environment": "GitHub Actions"
+    },
+    "checksum": {
+      "algorithm": "SHA256",
+      "value": "4a2a288f4f9b15727ea63a2c70a786844bab608d75d0d70fd0d0d7e0dad32f90"
+    },
+    "reviewStatus": {
+      "approvedBy": [
+        {
+          "name": "Regulatory Affairs"
+        }
+      ],
+      "approvalDate": "2025-02-01"
+    }
+  }
+}

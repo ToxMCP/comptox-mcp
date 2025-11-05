@@ -1,0 +1,11 @@
+{
+  "jsonrpc": "2.0",
+  "method": "events/log",
+  "params": {
+    "sessionId": "SESSION_ID",
+    "requestId": "REQUEST_ID",
+    "level": "info",
+    "message": "Invoking tool",
+    "timestamp": 0.0
+  }
+}

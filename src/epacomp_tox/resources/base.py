@@ -2,9 +2,9 @@ from typing import Dict, List, Any, Optional, Callable
 from abc import ABC, abstractmethod
 import time
 import random
-
-DEFAULT_RETRIES = int(os.environ.get("CTX_RETRY_ATTEMPTS", 3)) if 'os' in globals() else 3
-DEFAULT_BASE_DELAY = float(os.environ.get("CTX_RETRY_BASE", 0.5)) if 'os' in globals() else 0.5
+from ctxpy import CtxApiError
+from epacomp_tox.config import get_retry_config
+from epacomp_tox.validators import ensure_list, ensure_object, to_serializable
 
 class BaseResource(ABC):
     """
@@ -22,17 +22,37 @@ class BaseResource(ABC):
             api_key: EPA CompTox API key.
         """
         self.api_key = api_key
+        self._last_metadata: Dict[str, Any] = {}
 
-    def _with_retry(self, fn: Callable[[], Any], *, retries: int = DEFAULT_RETRIES, base_delay: float = DEFAULT_BASE_DELAY) -> Any:
+    def _with_retry(self, fn: Callable[[], Any], *, retries: Optional[int] = None, base_delay: Optional[float] = None) -> Any:
         """
         Call a function with basic exponential backoff and jitter on transient errors.
 
         Retries on generic Exceptions to avoid tight coupling to underlying HTTP client types.
         """
+        if retries is None or base_delay is None:
+            r, b = get_retry_config()
+            retries = retries if retries is not None else r
+            base_delay = base_delay if base_delay is not None else b
         attempt = 0
         while True:
             try:
-                return fn()
+                result = fn()
+                self._capture_last_metadata()
+                return result
+            except CtxApiError as exc:
+                self._last_metadata = {
+                    "status": exc.status,
+                    "request_id": exc.request_id,
+                    "rate_limit": exc.rate_limit,
+                    "retry_after": exc.retry_after,
+                }
+                attempt += 1
+                if attempt > retries or not exc.retryable:
+                    raise
+                sleep_for = base_delay * (2 ** (attempt - 1))
+                sleep_for = sleep_for * (0.8 + random.random() * 0.4)
+                time.sleep(sleep_for)
             except Exception as e:
                 attempt += 1
                 if attempt > retries:
@@ -41,6 +61,25 @@ class BaseResource(ABC):
                 sleep_for = base_delay * (2 ** (attempt - 1))
                 sleep_for = sleep_for * (0.8 + random.random() * 0.4)
                 time.sleep(sleep_for)
+
+    def _ensure_list(self, value: Any) -> List[Any]:
+        """Normalize value into a list that is JSON-serializable."""
+        serialized = to_serializable(value)
+        return ensure_list(serialized)
+
+    def _ensure_object(self, value: Any, *, allow_list: bool = False) -> Dict[str, Any]:
+        """Normalize value into a mapping; optionally wrap list responses."""
+        serialized = to_serializable(value)
+        return ensure_object(serialized, allow_list=allow_list)
+
+    def _capture_last_metadata(self) -> None:
+        client = getattr(self, "client", None)
+        if client is not None and hasattr(client, "last_metadata"):
+            self._last_metadata = client.last_metadata
+
+    def get_last_metadata(self) -> Dict[str, Any]:
+        """Return metadata captured from the most recent CTX API call."""
+        return self._last_metadata
     
     @property
     @abstractmethod

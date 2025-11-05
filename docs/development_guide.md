@@ -6,30 +6,30 @@ This document provides guidance for developers who want to extend or modify the 
 
 ```
 mcp_epacomp_tox/
-├── src/
-│   └── epacomp_tox/
-│       ├── __init__.py
-│       ├── server.py         # MCP server implementation
-│       ├── client.py         # MCP client implementation
-│       ├── auth.py           # Authentication handler
-│       └── resources/        # Resource implementations
-│           ├── __init__.py
-│           ├── base.py       # Base resource class
-│           ├── chemical.py   # Chemical resource
-│           ├── exposure.py   # Exposure resource
-│           ├── hazard.py     # Hazard resource
-│           ├── chemical_list.py  # ChemicalList resource
-│           └── cheminformatics.py  # Cheminformatics resource
+├── src/epacomp_tox/
+│   ├── transport/            # Phase 2 MCP transport (FastAPI WebSocket)
+│   ├── orchestrator/         # GenRA orchestrator, workflow stages, audit writers
+│   ├── predictive/           # Predictive micro-server harness & services
+│   ├── metadata/             # Model cards, applicability-domain stores, validators
+│   ├── resources/            # CTX REST resource adapters (chemical, exposure, etc.)
+│   ├── health.py             # Liveness/readiness probes
+│   ├── server.py             # MCP server façade with tool/catalog wiring
+│   ├── client.py             # Lightweight MCP client for offline usage
+│   └── config.py             # Central configuration helpers (env parsing)
+├── scripts/
+│   ├── mcp_ws_client.py      # Manual MCP conformance/smoke harness
+│   ├── smoke_ctx.sh          # CTX live smoke tests
+│   └── build_docs.sh         # MkDocs build wrapper (added in Task 7.6)
+├── docs/                     # Markdown guides, architecture diagrams, runbooks
+├── metadata/                 # JSON model cards, applicability domains, audit policy files
+├── schemas/                  # JSON Schemas (model cards, policy definitions)
 ├── tests/
-│   ├── __init__.py
-│   ├── test_mcp.py           # Tests for server, client, and auth
-│   ├── test_resources.py     # Tests for resources
-│   └── integration_test.py   # Integration tests
-├── docs/
-│   ├── api_reference.md      # API reference documentation
-│   └── agentic_sdk_integration.md  # Guide for Agentic SDK integration
-├── setup.py                  # Package setup file
-└── README.md                 # Project README
+│   ├── test_mcp_conformance_suite.py
+│   ├── test_predictive_regression.py
+│   ├── test_transport_health_endpoints.py
+│   └── ... (see repository for full coverage)
+├── pyproject.toml            # Build + dependency metadata
+└── README.md                 # Project overview and quickstarts
 ```
 
 ## Development Setup
@@ -46,26 +46,21 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install the package in development mode:
+3. Install the package with development extras:
 ```bash
-pip install -e .
-```
-
-4. Install development dependencies:
-```bash
-pip install pytest pytest-cov black isort mypy
+pip install -e .[dev]
 ```
 
 ## Running Tests
 
-Run the tests using pytest:
+Run the full test suite with pytest (includes HTTP/WebSocket transport coverage):
 ```bash
 pytest
 ```
 
-Run tests with coverage:
+Generate coverage and stricter MCP transport checks:
 ```bash
-pytest --cov=epacomp_tox
+pytest --cov=epacomp_tox tests/test_http_transport.py tests/test_websocket_transport.py
 ```
 
 ## Code Style
@@ -78,7 +73,7 @@ isort src tests
 
 ## Adding a New Resource
 
-To add a new resource to the MCP:
+Phase 2 routes tool execution through the orchestrator, but resource adapters remain the preferred place to implement low-level CTX calls. To add a new resource:
 
 1. Create a new file in the `src/epacomp_tox/resources/` directory:
 ```python
@@ -171,28 +166,18 @@ class NewResource(BaseResource):
         return {"result": f"Processed {param1}"}
 ```
 
-2. Add the new resource to the server's `_initialize_resources` method in `src/epacomp_tox/server.py`:
+2. Register the resource inside the server/orchestrator wiring (e.g., `_initialize_resources` in `src/epacomp_tox/server.py` and any orchestrator stage that consumes it):
 ```python
 def _initialize_resources(self) -> Dict[str, Any]:
-    """Initialize and return all available resources."""
-    from .resources.chemical import ChemicalResource
-    from .resources.exposure import ExposureResource
-    from .resources.hazard import HazardResource
-    from .resources.chemical_list import ChemicalListResource
-    from .resources.cheminformatics import CheminformaticsResource
-    from .resources.new_resource import NewResource  # Add this line
-    
-    return {
-        "chemical": ChemicalResource(self.api_key),
-        "exposure": ExposureResource(self.api_key),
-        "hazard": HazardResource(self.api_key),
-        "chemical_list": ChemicalListResource(self.api_key),
-        "cheminformatics": CheminformaticsResource(self.api_key),
-        "new_resource": NewResource(self.api_key),  # Add this line
-    }
+    ...
+    from .resources.new_resource import NewResource
+    resources["new_resource"] = NewResource(self.api_key)
+    return resources
 ```
 
-3. Add tests for the new resource in `tests/test_resources.py`.
+3. Add schema definitions for new tools, update `tests/test_resources.py`, and extend `tests/test_mcp_conformance_suite.py` or orchestrator workflow tests if the resource participates in higher-level flows.
+
+Refer to `docs/architecture_overview.md` for how resources plug into the orchestrator and guardrail pipeline.
 
 ## Adding a New Tool to an Existing Resource
 
@@ -341,10 +326,11 @@ if __name__ == "__main__":
 
 To distribute the package:
 
-1. Update the version in `setup.py`.
-2. Build the package:
+1. Update the version in `pyproject.toml`.
+2. Build the package (requires `build`):
 ```bash
-python setup.py sdist bdist_wheel
+python -m pip install --upgrade build
+python -m build
 ```
 
 3. Upload to PyPI:
@@ -352,6 +338,15 @@ python setup.py sdist bdist_wheel
 pip install twine
 twine upload dist/*
 ```
+
+### Updating dependency pins
+
+1. Edit `pyproject.toml` to adjust the desired version ranges.
+2. Reinstall the project with dev extras to pick up the changes:
+   ```bash
+   pip install -e .[dev] --upgrade
+   ```
+3. Run the test suite (`pytest`) to confirm compatibility.
 
 ## Contributing
 
