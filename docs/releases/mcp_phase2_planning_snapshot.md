@@ -1,6 +1,6 @@
-# MCP Phase 2 Taskmaster Snapshot (2025-10-25)
+# MCP Phase 2 Planning Snapshot (2025-10-25)
 
-This snapshot captures the Taskmaster state after completing the MCP Phase 2 rollout and associated CTX migration tasks.
+This snapshot captures the planning workspace state after completing the MCP Phase 2 rollout and associated CTX migration tasks.
 
 ## Summary
 - Snapshot taken on 2025-10-25 after running live CTX smoke (`scripts/smoke_ctx.sh`) and offline workflow harness (`scripts/run_workflow_scenarios.py --mode offline`).
@@ -23,5 +23,4 @@ This snapshot captures the Taskmaster state after completing the MCP Phase 2 rol
 
 ## Next Steps
 - Use this snapshot as the baseline before opening any Phase 3 or post-launch backlog items.
-- Retain `.taskmaster/tasks/tasks.json` in version control to preserve completed history; branch new planning contexts from fresh tags if needed.
-
+- Retain the historical planning archive in version control to preserve completed history; branch new planning contexts from fresh tags if needed.

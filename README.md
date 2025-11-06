@@ -88,7 +88,7 @@ See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and
 | Category | Highlight tools | Notes |
 | --- | --- | --- |
 | Chemical discovery | `search_chemical`, `batch_search_chemical`, `get_chemical_details` | Resolve identifiers, structures, and details with CTX retry/backoff baked in. |
-| Exposure & hazard | `exposure_list_programs`, `hazard_list_assays`, `hazard_get_assay_details` | Navigate exposure programs and hazard endpoints ready for agent summarisation. |
+| Exposure & hazard | `search_hazard`, `get_hazard_toxval`, `get_hazard_toxref` | Batch-normalized access to CTX exposure datasets plus granular hazard endpoints (ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC). |
 | Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and audit metadata. |
 | Predictive services | `predictive_run_test`, `predictive_run_opera`, `predictive_run_genra` (via orchestrator helpers) | Trigger guardrailed predictive runs and receive provenance detail alongside outputs. |
 | Utility helpers | `canonicalize_structure`, `structure_connectivity`, `download_supporting_document` | Provide supporting conversions and file downloads for downstream automations. |
@@ -123,6 +123,24 @@ curl -s http://localhost:8000/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | jq '.result.tools | length'
 ```
+
+### Hazard smoke test
+
+Validate the hazard suite once transports are online:
+
+```bash
+# Bisphenol A toxval summary (expect a 40 mg/kg-day NOEL among the records)
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"epa-comptox/search_hazard","arguments":{"data_type":"toxval","dtxsid":"DTXSID7020182","summary":true}}}' | jq '.result.structuredContent.data[0]'
+
+# Perfluorooctanoic acid cancer classification (expect CalEPA and IARC calls)
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"epa-comptox/search_hazard","arguments":{"data_type":"cancer","dtxsid":"DTXSID8031865","summary":true}}}' | jq '.result.structuredContent.data'
+```
+
+Bisphenol A should return HESS and HPVIS toxicity values (including the 40 mg/kg-day NOEL), while Perfluorooctanoic acid surfaces the ATSDR MRL alongside CalEPA and IARC cancer classifications. Errors typically indicate missing API credentials or upstream CompTox outages; inspect the returned metadata for rate-limit status when troubleshooting.
 
 ### Production deployment
 
@@ -207,7 +225,7 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
 

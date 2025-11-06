@@ -35,4 +35,4 @@
 1. Draft architecture and workflow updates aligning with latest code structure.
 2. Produce integration quickstart for the Agentic SDK, referencing offline orchestrator.
 3. Build operations runbook template and populate with current processes.
-4. Schedule doc review session with stakeholders; track tasks in Taskmaster for implementation.
+4. Schedule doc review session with stakeholders; track tasks in the project tracker for implementation.

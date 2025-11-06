@@ -20,7 +20,7 @@
 ## First Contribution
 - [ ] Run `pytest` (ensure green baseline).
 - [ ] Implement or update a doc/example; open PR and request DX/QA review.
-- [ ] Follow commit conventions and reference Taskmaster task IDs in PR description.
+- [ ] Follow commit conventions and reference tracking IDs in PR description.
 
 ## Release Readiness Awareness
 - [ ] Understand doc publishing pipeline (`scripts/build_docs.sh`, `.github/workflows/docs.yml` once configured).

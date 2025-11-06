@@ -43,7 +43,7 @@ All failures produce guardrail events stored via `orchestrator_get_audit_bundle`
 
 1. **Draft** – Update JSON model card and AD definitions. Run `python scripts/render_model_cards.py` to regenerate human-readable artefacts.
 2. **Validation** – Execute `scripts/smoke_ctx.sh` and the predictive regression tests to confirm guardrails still enforce policy outcomes.
-3. **Review** – Circulate Markdown or HTML summaries to SMEs, Regulatory Affairs, and Platform for review. Capture comments in Taskmaster tasks or an RFC.
+3. **Review** – Circulate Markdown or HTML summaries to SMEs, Regulatory Affairs, and Platform for review. Capture comments in the issue tracker or an RFC.
 4. **Approval** – Obtain documented approval (sign-off recorded in `provenance.reviewStatus` within the JSON card). Update audit bundle runbooks if policies changed.
 5. **Publish** – Commit regenerated docs, bump versions if required, and ensure CI (`.github/workflows/docs.yml`) passes to validate documentation and link health.
 6. **Archive** – Store signed checklists and rendered artefacts alongside release notes (see `docs/qa/` for checklist templates).
