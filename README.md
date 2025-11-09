@@ -23,7 +23,7 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 | --- | --- |
 | 🌐 **Dual MCP Transports** | JSON-RPC over HTTP (`/mcp`) and WebSocket (`/mcp/ws`) with identical tool catalogues. |
 | 🧬 **CompTox Tooling** | Chemical, exposure, hazard, metadata, and predictive helpers mapped to structured MCP tools. |
-| 🛡️ **Guardrail Enforcement** | Applicability-domain policies, audit logging, and provenance bundles returned alongside tool data. |
+| 🛡️ **Guardrail Enforcement** | Applicability-domain policies, audit logging, JSON Schema response validation, and provenance bundles returned alongside tool data. |
 | ⚙️ **Configurable by Design** | Pydantic settings with `.env` support for API keys, retries, auth bypass, transport tuning, and observability. |
 | 🤖 **Agent Ready** | Verified with Codex CLI, Gemini CLI, and Claude Code; includes quick-start config snippets. |
 
@@ -203,6 +203,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - Applicability-domain definitions, policy defaults, and remediation steps live under `metadata/` with JSON Schema validation.
 - Predictive invocations persist audit bundles that can be fetched via metadata tools.
 - Governance workflows (SME review, policy approval, publication) are documented in `docs/model_cards_and_policies.md`.
+- Response contracts live under `docs/contracts/schemas/` and are enforced before MCP responses are returned; upstream failover policies are summarized in `docs/contracts/endpoint-matrix.md`.
 
 ### Testing & quality gates
 

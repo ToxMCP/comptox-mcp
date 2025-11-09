@@ -12,6 +12,7 @@ from epacomp_tox import audit
 from epacomp_tox.config import configure_ctx_env, get_api_key, get_base_url
 from epacomp_tox.settings import settings
 from epacomp_tox.health import check_ctx_health
+from epacomp_tox.contracts import SchemaValidationError, validate_payload
 from epacomp_tox.tools.registry import ToolRegistry
 from epacomp_tox.validators import to_serializable
 
@@ -63,6 +64,7 @@ class MCPServer:
         
     def _initialize_resources(self) -> Dict[str, Any]:
         """Initialize and return all available resources."""
+        from .resources.bioactivity import BioactivityResource
         from .resources.chemical import ChemicalResource
         from .resources.exposure import ExposureResource
         from .resources.hazard import HazardResource
@@ -72,6 +74,7 @@ class MCPServer:
         
         return {
             "chemical": ChemicalResource(self.api_key),
+            "bioactivity": BioactivityResource(self.api_key),
             "exposure": ExposureResource(self.api_key),
             "hazard": HazardResource(self.api_key),
             "chemical_list": ChemicalListResource(self.api_key),
@@ -129,7 +132,17 @@ class MCPServer:
         """
         for resource in self.resources.values():
             if resource.has_tool(tool_name):
-                return resource.execute_tool(tool_name, parameters)
+                result = resource.execute_tool(tool_name, parameters)
+                registration = self.tool_registry.get_registration(tool_name)
+                if registration.response_schema_ref:
+                    namespace, name = registration.response_schema_ref
+                    try:
+                        validate_payload(result, namespace=namespace, name=name)
+                    except SchemaValidationError as exc:
+                        raise SchemaValidationError(
+                            f"Tool '{tool_name}' response failed schema validation: {exc}"
+                        ) from exc
+                return result
         
         raise ValueError(f"Tool '{tool_name}' not found.")
 

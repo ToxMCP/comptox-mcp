@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "common.object_or_list.response",
+  "description": "Schema allowing tools to return either an object or an array of records.",
+  "anyOf": [
+    {
+      "type": "object",
+      "additionalProperties": true
+    },
+    {
+      "type": "array",
+      "items": {}
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "common.list_generic.response",
+  "description": "Generic array schema used for MCP tools that return lists of records or scalar values.",
+  "type": "array",
+  "items": {}
+}

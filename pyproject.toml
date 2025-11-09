@@ -7,7 +7,7 @@ name = "epacomp-tox-mcp"
 version = "0.1.0"
 description = "Model Context Protocol server for the EPA CompTox API"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [
     { name = "EPA CompTox MCP Maintainers" }
 ]
@@ -19,6 +19,7 @@ dependencies = [
     "prometheus-client>=0.17,<0.21",
     "pydantic>=2.7,<3.0",
     "pydantic-settings>=2.3,<3.0",
+    "jsonschema>=4.21,<5.0",
 ]
 
 [project.optional-dependencies]
