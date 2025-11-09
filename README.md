@@ -155,7 +155,7 @@ The script pings each endpoint listed in `docs/contracts/endpoint-matrix.md` and
 
 ### Endpoint automation
 
-A scheduled GitHub Action (`.github/workflows/endpoint-check.yml`) runs `python scripts/check_endpoints.py --json` every day at 06:00 UTC using the `CTX_API_KEY` secret. The workflow uploads `endpoint_status.json` as an artifact so operators can review upstream availability without rerunning the checker locally.
+A scheduled GitHub Action (`.github/workflows/endpoint-check.yml`) runs `python scripts/check_endpoints.py --json` every day at 06:00 UTC using the `CTX_API_KEY` secret. The workflow uploads `endpoint_status.json` as an artifact so operators can review upstream availability without rerunning the checker locally. Maintainers can also trigger the workflow for a specific pull request by applying the `run-endpoint-check` label (the job only executes for internal branches so secrets stay protected).
 
 ### Production deployment
 
