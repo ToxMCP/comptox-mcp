@@ -1,18 +1,25 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
-try:
-    import pandas as pd  # type: ignore
-except Exception:  # pragma: no cover - optional dependency at runtime
-    pd = None  # type: ignore
+
+def _is_pandas_dataframe(obj: Any) -> bool:
+    module = getattr(obj.__class__, "__module__", "")
+    name = getattr(obj.__class__, "__name__", "")
+    return module.startswith("pandas") and name == "DataFrame"
+
+
+def _is_pandas_series(obj: Any) -> bool:
+    module = getattr(obj.__class__, "__module__", "")
+    name = getattr(obj.__class__, "__name__", "")
+    return module.startswith("pandas") and name == "Series"
 
 
 def to_serializable(obj: Any) -> Any:
     """Normalize common return types (e.g., pandas DataFrame) to JSON-serializable values."""
-    if pd is not None and isinstance(obj, pd.DataFrame):
+    if _is_pandas_dataframe(obj):
         return obj.to_dict(orient="records")
-    if pd is not None and isinstance(obj, pd.Series):
+    if _is_pandas_series(obj):
         return obj.to_dict()
     if hasattr(obj, "to_dict"):
         try:

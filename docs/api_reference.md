@@ -330,33 +330,195 @@ Search for exposure datasets (MMDB aggregates or SEEM predictions).
 
 ### HazardResource
 
-The `HazardResource` class provides access to human and ecotoxicology data from ToxValDB.
+The `HazardResource` class exposes the full CTX hazard catalog, including ToxValDB, ToxRefDB, cancer and genetox datasets, ADME/IVIVE, IRIS, PPRTV, and HAWC link mappers. Every method applies consistent list/dict normalization and surfaces the latest request metadata.
 
 **Methods:**
 
 #### search_hazard(data_type, dtxsid, summary=True)
 
-Search for chemical hazard data from ToxValDB.
+Fetch hazard data via a selector that spans multiple CTX datasets.
 
 **Parameters:**
-- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref)
-- `dtxsid` (str): Chemical identifier
-- `summary` (bool, optional): Whether to return summary data only. Defaults to True.
+- `data_type` (str): Dataset selector (`all`, `hazard`, `toxval`, `human`, `eco`, `skin-eye`, `cancer`, `genetox`, `adme`, `toxref`, `iris`, `pprtv`, `hawc`).
+- `dtxsid` (str): Chemical identifier.
+- `summary` (bool, optional): Whether to request summary records when the underlying dataset offers both summary/detail responses. Defaults to True.
 
 **Returns:**
-- List of hazard data (always normalized to list form).
+- List of hazard records associated with the requested dataset.
 
 #### batch_search_hazard(data_type, dtxsids, summary=True)
 
-Search for hazard data for multiple chemicals.
+Fetch hazard data for multiple chemicals using the same dataset selector.
 
 **Parameters:**
-- `data_type` (str): Type of hazard data (all, human, eco, skin-eye, cancer, genetox, adme, toxref)
-- `dtxsids` (list): List of chemical identifiers
-- `summary` (bool, optional): Whether to return summary data only. Defaults to True.
+- `data_type` (str): Dataset selector (see `search_hazard`).
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are ignored.
+- `summary` (bool, optional): Whether to request summary records when supported. Defaults to True.
 
 **Returns:**
-- Dictionary mapping DTXSIDs to hazard data lists (each entry normalized to a list).
+- Dictionary mapping each DTXSID to a list of hazard records.
+
+#### get_hazard_toxval(dtxsid)
+
+Retrieve full ToxValDB records for a single chemical.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of ToxValDB records.
+
+#### batch_get_hazard_toxval(dtxsids)
+
+Retrieve ToxValDB records for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- Combined list of ToxValDB records.
+
+#### get_hazard_skin_eye(dtxsid)
+
+Retrieve skin and eye hazard metadata for a chemical.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of skin/eye hazard records.
+
+#### batch_get_hazard_skin_eye(dtxsids)
+
+Retrieve skin and eye hazard metadata for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- List of skin/eye hazard records across all requested chemicals.
+
+#### get_hazard_cancer_summary(dtxsid)
+
+Retrieve cancer hazard summaries for a chemical.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of cancer hazard summary records.
+
+#### batch_get_hazard_cancer_summary(dtxsids)
+
+Retrieve cancer hazard summaries for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- List of cancer hazard summary records across all requested chemicals.
+
+#### get_hazard_genetox_summary(dtxsid)
+
+Retrieve genotoxicity summary data for a chemical.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of genetox summary records.
+
+#### batch_get_hazard_genetox_summary(dtxsids)
+
+Retrieve genotoxicity summary data for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- List of genetox summary records across all requested chemicals.
+
+#### get_hazard_genetox_details(dtxsid)
+
+Retrieve genotoxicity detailed data for a chemical.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of genetox detail records (e.g., study-level findings).
+
+#### batch_get_hazard_genetox_details(dtxsids)
+
+Retrieve genotoxicity detailed data for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- List of genetox detail records across all requested chemicals.
+
+#### get_hazard_adme_ivive(dtxsid)
+
+Retrieve ADME / IVIVE hazard data (High-Throughput Toxicokinetics).
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of ADME/IVIVE records for the chemical.
+
+#### get_hazard_pprtv(dtxsid)
+
+Retrieve Provisional Peer-Reviewed Toxicity Value (PPRTV) data.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of PPRTV records for the chemical.
+
+#### get_hazard_iris(dtxsid)
+
+Retrieve IRIS toxicity assessment data.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of IRIS records for the chemical.
+
+#### get_hazard_hawc(dtxsid)
+
+Retrieve HAWC link mapper data for integrated risk assessment.
+
+**Parameters:**
+- `dtxsid` (str): Chemical identifier.
+
+**Returns:**
+- List of HAWC link records for the chemical.
+
+#### get_hazard_toxref(dataset, lookup_type, value)
+
+Retrieve ToxRefDB data using dataset/lookup selectors.
+
+**Parameters:**
+- `dataset` (str): ToxRefDB dataset to query (`summary`, `data`, `effects`, `observations`).
+- `lookup_type` (str): Lookup mode (`dtxsid`, `study-id`, `study-type`).
+- `value` (str): Identifier corresponding to the lookup type.
+
+**Returns:**
+- List of ToxRefDB records.
+
+#### batch_get_hazard_toxref(dtxsids)
+
+Retrieve summary ToxRefDB data for multiple chemicals.
+
+**Parameters:**
+- `dtxsids` (list[str]): Chemical identifiers; empty/whitespace values are skipped.
+
+**Returns:**
+- List of ToxRefDB records aggregated across the requested chemicals.
 
 ### ChemicalListResource
 

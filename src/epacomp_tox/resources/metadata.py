@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from epacomp_tox.contracts import schema_ref
 from epacomp_tox.metadata import ModelCardFilter, ModelCardStore
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.resources.base import BaseResource
@@ -54,8 +55,8 @@ class MetadataResource(BaseResource):
                         "nextCursor": {"type": ["string", "null"]},
                     },
                 },
-            }
-,
+                "responseSchemaRef": schema_ref("metadata", "model_cards.response.schema"),
+            },
             {
                 "name": "metadata_list_applicability_domain",
                 "description": "List applicability domain reference definitions",
@@ -73,6 +74,7 @@ class MetadataResource(BaseResource):
                         "nextCursor": {"type": ["string", "null"]},
                     },
                 },
+                "responseSchemaRef": schema_ref("metadata", "applicability_list.response.schema"),
             },
             {
                 "name": "metadata_get_applicability_domain",
@@ -95,6 +97,7 @@ class MetadataResource(BaseResource):
                         "references": {"type": "array"},
                     },
                 },
+                "responseSchemaRef": schema_ref("metadata", "applicability_detail.response.schema"),
             },
         ]
 

@@ -19,8 +19,18 @@ Resource → Underlying ctxpy calls
   - `get_chemical_details`/`batch_get_chemical_details` → `/chemical/detail/search/*` with optional projection query param
   - `search_msready` → `/chemical/msready/search/(by-dtxcid|by-formula|by-mass)`
 - hazard (src/epacomp_tox/resources/hazard.py:1):
-  - `search_hazard` → `/hazard/*` family (toxval, skin-eye, cancer, genetox, adme, toxref) based on `data_type`
-  - `batch_search_hazard` → Iterates `search_hazard` across DTXSIDs
+  - `search_hazard` → `ctx.Hazard.search` shim selecting `/hazard/{dataset}` routes (toxval, skin-eye, cancer, genetox, adme-ivive, toxref, iris, pprtv, hawc)
+  - `batch_search_hazard` → Reuses `ctx.Hazard.batch_search` to iterate the selector for each DTXSID
+  - `get_hazard_toxval` / `batch_get_hazard_toxval` → `/hazard/toxval/search/by-dtxsid/{id}` (single + newline-delimited batch)
+  - `get_hazard_skin_eye` / `batch_get_hazard_skin_eye` → `/hazard/skin-eye/search/by-dtxsid/{id}`
+  - `get_hazard_cancer_summary` / `batch_get_hazard_cancer_summary` → `/hazard/cancer-summary/search/by-dtxsid/{id}`
+  - `get_hazard_genetox_summary` / `batch_get_hazard_genetox_summary` → `/hazard/genetox/summary/search/by-dtxsid/{id}`
+  - `get_hazard_genetox_details` / `batch_get_hazard_genetox_details` → `/hazard/genetox/details/search/by-dtxsid/{id}`
+  - `get_hazard_adme_ivive` → `/hazard/adme-ivive/search/by-dtxsid/{id}`
+  - `get_hazard_pprtv` → `/hazard/pprtv/search/by-dtxsid/{id}`
+  - `get_hazard_iris` → `/hazard/iris/search/by-dtxsid/{id}`
+  - `get_hazard_hawc` → `/hazard/hawc/search/by-dtxsid/{id}`
+  - `get_hazard_toxref` / `batch_get_hazard_toxref` → `/hazard/toxref/{dataset}/search/{lookup}/{value}` + `/hazard/toxref/search/by-dtxsid/`
 - exposure (src/epacomp_tox/resources/exposure.py:1):
   - `search_cpdat` → `/exposure/{functional-use|product-data|list-presence}/search/by-dtxsid/{id}`
   - `search_httk` → `GET /exposure/httk/search/by-dtxsid/{id}`

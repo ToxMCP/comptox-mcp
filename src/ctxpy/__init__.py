@@ -350,55 +350,332 @@ class Chemical(_BaseCtxClient):
         return super().batch(suffix, word, batch_size, bracketed)
 
 
+class Bioactivity(_BaseCtxClient):
+    _SEARCH_MAP = {
+        "equal": "bioactivity/search/equal/",
+        "equals": "bioactivity/search/equal/",
+        "starts-with": "bioactivity/search/start-with/",
+        "start-with": "bioactivity/search/start-with/",
+        "startswith": "bioactivity/search/start-with/",
+        "contain": "bioactivity/search/contain/",
+        "contains": "bioactivity/search/contain/",
+    }
+
+    def _encode(self, value: Any) -> str:
+        return urllib.parse.quote(str(value))
+
+    def _json_batch(self, suffix: str, identifiers: Iterable[str]) -> List[Any]:
+        return super().batch(suffix, identifiers, self._default_batch_size, bracketed=True)
+
+    def search(self, search_type: str, value: str) -> Any:
+        norm = (search_type or "").strip().lower()
+        suffix = self._SEARCH_MAP.get(norm)
+        if not suffix:
+            raise ValueError(f"Unsupported bioactivity search type '{search_type}'")
+        return self._request("GET", f"{suffix}{self._encode(value)}") or []
+
+    def models_by_dtxsid_and_name(self, dtxsid: str, model: str) -> Any:
+        params = {"dtxsid": dtxsid, "model": model}
+        return self._request("GET", "bioactivity/models/search/", params=params) or []
+
+    def models_by_dtxsid(self, dtxsid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/models/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def data_summary_by_dtxsid(self, dtxsid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/data/summary/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def data_summary_by_aeid(self, aeid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/data/summary/search/by-aeid/{self._encode(aeid)}",
+        ) or []
+
+    def data_summary_by_tissue(self, dtxsid: str, tissue: str) -> Any:
+        params = {"dtxsid": dtxsid, "tissue": tissue}
+        return self._request("GET", "bioactivity/data/summary/search/by-tissue/", params=params) or []
+
+    def data_by_spid(self, spid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/data/search/by-spid/{self._encode(spid)}",
+        ) or []
+
+    def data_by_m4id(self, m4id: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/data/search/by-m4id/{self._encode(m4id)}",
+        ) or []
+
+    def data_by_dtxsid(self, dtxsid: str, *, projection: Optional[str] = None) -> Any:
+        params = {"projection": projection} if projection else None
+        return self._request(
+            "GET",
+            f"bioactivity/data/search/by-dtxsid/{self._encode(dtxsid)}",
+            params=params,
+        ) or []
+
+    def data_by_aeid(self, aeid: str, *, projection: Optional[str] = None) -> Any:
+        params = {"projection": projection} if projection else None
+        return self._request(
+            "GET",
+            f"bioactivity/data/search/by-aeid/{self._encode(aeid)}",
+            params=params,
+        ) or []
+
+    def data_batch(self, identifier_type: str, identifiers: Iterable[str]) -> Any:
+        norm = (identifier_type or "").strip().lower()
+        suffix_map = {
+            "spid": "bioactivity/data/search/by-spid/",
+            "m4id": "bioactivity/data/search/by-m4id/",
+            "dtxsid": "bioactivity/data/search/by-dtxsid/",
+            "aeid": "bioactivity/data/search/by-aeid/",
+        }
+        suffix = suffix_map.get(norm)
+        if not suffix:
+            raise ValueError(f"Unsupported bioactivity identifier type '{identifier_type}'")
+        return self._json_batch(suffix, identifiers)
+
+    def aed_by_dtxsid(self, dtxsid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/data/aed/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def aed_batch(self, dtxsids: Iterable[str]) -> Any:
+        return self._json_batch("bioactivity/data/aed/search/by-dtxsid", dtxsids)
+
+    def assays_all(self) -> Any:
+        return self._request("GET", "bioactivity/assay/") or []
+
+    def assay_by_aeid(self, aeid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/assay/search/by-aeid/{self._encode(aeid)}",
+        ) or []
+
+    def assay_single_conc_by_aeid(self, aeid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/assay/single-conc/search/by-aeid/{self._encode(aeid)}",
+        ) or []
+
+    def assay_by_gene(self, gene_symbol: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/assay/search/by-gene/{self._encode(gene_symbol)}",
+        ) or []
+
+    def assay_batch(self, aeids: Iterable[str]) -> Any:
+        return self._json_batch("bioactivity/assay/search/by-aeid/", aeids)
+
+    def assay_count(self) -> Any:
+        return self._request("GET", "bioactivity/assay/count") or {}
+
+    def assay_chemicals_by_aeid(self, aeid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/assay/chemicals/search/by-aeid/{self._encode(aeid)}",
+        ) or []
+
+    def aop_by_toxcast_aeid(self, toxcast_aeid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/aop/search/by-toxcast-aeid/{self._encode(toxcast_aeid)}",
+        ) or []
+
+    def aop_by_event_number(self, event_number: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/aop/search/by-event-number/{self._encode(event_number)}",
+        ) or []
+
+    def aop_by_entrez_gene(self, entrez_gene_id: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/aop/search/by-entrez-gene-id/{self._encode(entrez_gene_id)}",
+        ) or []
+
+    def analytical_qc_by_dtxsid(self, dtxsid: str) -> Any:
+        return self._request(
+            "GET",
+            f"bioactivity/analyticalqc/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+
 class Hazard(_BaseCtxClient):
     _HUMAN_TAGS = ("human", "human health")
     _ECO_TAGS = ("eco", "ecotoxicology")
+    _TOXREF_SEGMENTS = {
+        "summary": "summary",
+        "data": "data",
+        "effects": "effects",
+        "observations": "observations",
+    }
+    _TOXREF_LOOKUPS = {
+        "dtxsid": "by-dtxsid",
+        "study-id": "by-study-id",
+        "study-type": "by-study-type",
+    }
+
+    def _encode(self, value: Any) -> str:
+        return urllib.parse.quote(str(value))
+
+    def _json_batch(self, suffix: str, identifiers: Iterable[str]) -> List[Any]:
+        return super().batch(suffix, identifiers, self._default_batch_size, bracketed=True)
+
+    def toxval(self, dtxsid: str) -> List[Any]:
+        return self._request("GET", f"hazard/toxval/search/by-dtxsid/{self._encode(dtxsid)}") or []
+
+    def toxval_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/toxval/search/by-dtxsid/", dtxsids)
+
+    def skin_eye(self, dtxsid: str) -> List[Any]:
+        return self._request("GET", f"hazard/skin-eye/search/by-dtxsid/{self._encode(dtxsid)}") or []
+
+    def skin_eye_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/skin-eye/search/by-dtxsid/", dtxsids)
+
+    def cancer_summary(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/cancer-summary/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def cancer_summary_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/cancer-summary/search/by-dtxsid/", dtxsids)
+
+    def genetox_summary(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/genetox/summary/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def genetox_summary_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/genetox/summary/search/by-dtxsid/", dtxsids)
+
+    def genetox_details(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/genetox/details/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def genetox_details_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/genetox/details/search/by-dtxsid/", dtxsids)
+
+    def adme_ivive(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/adme-ivive/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def pprtv(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/pprtv/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def iris(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/iris/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def hawc(self, dtxsid: str) -> List[Any]:
+        return self._request(
+            "GET",
+            f"hazard/hawc/search/by-dtxsid/{self._encode(dtxsid)}",
+        ) or []
+
+    def toxref(self, *, dataset: str, lookup: str, value: str) -> List[Any]:
+        dataset_key = self._TOXREF_SEGMENTS.get((dataset or "").strip().lower())
+        if not dataset_key:
+            raise ValueError(f"Unsupported toxref dataset '{dataset}'")
+        lookup_key = self._TOXREF_LOOKUPS.get((lookup or "").strip().lower())
+        if not lookup_key:
+            raise ValueError(f"Unsupported toxref lookup '{lookup}'")
+        if value is None or str(value).strip() == "":
+            raise ValueError("value is required for toxref lookups")
+        return self._request(
+            "GET",
+            f"hazard/toxref/{dataset_key}/search/{lookup_key}/{self._encode(value)}",
+        ) or []
+
+    def toxref_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("hazard/toxref/search/by-dtxsid/", dtxsids)
 
     def search(self, by: str, dtxsid: str, summary: bool = True) -> Any:
         norm = (by or "all").strip().lower()
-        quoted = urllib.parse.quote(str(dtxsid))
+        normalized_sid = (dtxsid or "").strip()
+        if not normalized_sid:
+            raise ValueError("dtxsid is required for hazard searches")
 
-        if norm in ("all", "human", "eco"):
-            records = self._request("GET", f"hazard/toxval/search/by-dtxsid/{quoted}") or []
-            if norm == "human":
-                filtered: List[Dict[str, Any]] = []
-                for rec in records:
-                    category = str(rec.get("humanEco", "")).lower()
-                    if category.startswith(self._HUMAN_TAGS) or "human" in category:
-                        filtered.append(rec)
-                return filtered
-            if norm == "eco":
-                filtered = []
-                for rec in records:
-                    category = str(rec.get("humanEco", "")).lower()
-                    if any(tag in category for tag in self._ECO_TAGS):
-                        filtered.append(rec)
-                return filtered
-            return records
+        if norm in ("all", "toxval", "hazard"):
+            return self.toxval(normalized_sid)
+
+        if norm in ("human", "human health"):
+            records = self.toxval(normalized_sid)
+            filtered: List[Dict[str, Any]] = []
+            for rec in records:
+                category = str(rec.get("humanEco", "")).lower()
+                if category.startswith(self._HUMAN_TAGS) or "human" in category:
+                    filtered.append(rec)
+            return filtered
+
+        if norm in ("eco", "ecotoxicology"):
+            records = self.toxval(normalized_sid)
+            filtered: List[Dict[str, Any]] = []
+            for rec in records:
+                category = str(rec.get("humanEco", "")).lower()
+                if any(tag in category for tag in self._ECO_TAGS):
+                    filtered.append(rec)
+            return filtered
 
         if norm == "skin-eye":
-            return self._request("GET", f"hazard/skin-eye/search/by-dtxsid/{quoted}") or []
+            return self.skin_eye(normalized_sid)
 
         if norm == "cancer":
-            return self._request("GET", f"hazard/cancer-summary/search/by-dtxsid/{quoted}") or []
+            return self.cancer_summary(normalized_sid)
 
         if norm == "genetox":
-            path = "hazard/genetox/summary/search/by-dtxsid" if summary else "hazard/genetox/details/search/by-dtxsid"
-            return self._request("GET", f"{path}/{quoted}") or []
+            return (
+                self.genetox_summary(normalized_sid)
+                if summary
+                else self.genetox_details(normalized_sid)
+            )
 
         if norm == "adme":
-            return self._request("GET", f"hazard/adme-ivive/search/by-dtxsid/{quoted}") or []
+            return self.adme_ivive(normalized_sid)
 
         if norm == "toxref":
-            base = "hazard/toxref/summary/search/by-dtxsid" if summary else "hazard/toxref/data/search/by-dtxsid"
-            return self._request("GET", f"{base}/{quoted}") or []
+            dataset = "summary" if summary else "data"
+            return self.toxref(dataset=dataset, lookup="dtxsid", value=normalized_sid)
+
+        if norm == "pprtv":
+            return self.pprtv(normalized_sid)
+
+        if norm == "iris":
+            return self.iris(normalized_sid)
+
+        if norm == "hawc":
+            return self.hawc(normalized_sid)
 
         raise ValueError(f"Unsupported hazard data_type '{by}'")
 
     def batch_search(self, by: str, dtxsid: Iterable[str], summary: bool = True) -> Dict[str, Any]:
         results: Dict[str, Any] = {}
         for sid in dtxsid:
-            results[sid] = self.search(by=by, dtxsid=sid, summary=summary)
+            if sid is None:
+                continue
+            normalized_sid = str(sid).strip()
+            if not normalized_sid:
+                continue
+            results[normalized_sid] = self.search(by=by, dtxsid=normalized_sid, summary=summary)
         return results
 
 

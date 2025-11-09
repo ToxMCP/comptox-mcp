@@ -142,6 +142,17 @@ curl -s http://localhost:8000/mcp \
 
 Bisphenol A should return HESS and HPVIS toxicity values (including the 40 mg/kg-day NOEL), while Perfluorooctanoic acid surfaces the ATSDR MRL alongside CalEPA and IARC cancer classifications. Errors typically indicate missing API credentials or upstream CompTox outages; inspect the returned metadata for rate-limit status when troubleshooting.
 
+### Endpoint smoke check
+
+Before exposing the MCP server, run the endpoint checker to verify the upstream CompTox APIs are reachable:
+
+```bash
+python scripts/check_endpoints.py
+# add --json for machine-readable output
+```
+
+The script pings each endpoint listed in `docs/contracts/endpoint-matrix.md` and reports latency plus HTTP status. Provide `CTX_API_KEY`/`EPA_COMPTOX_API_KEY` in the environment to avoid 401/403 responses.
+
 ### Production deployment
 
 - Run via Gunicorn: `gunicorn epacomp_tox.transport.websocket:app -c deploy/gunicorn_conf.py`

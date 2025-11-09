@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "metadata.get_model_card.response",
+  "type": "object",
+  "required": ["modelCards", "nextCursor"],
+  "properties": {
+    "modelCards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["card", "checksum", "lastModified"],
+        "properties": {
+          "card": {"type": "object"},
+          "checksum": {"type": "string"},
+          "lastModified": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "nextCursor": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}
