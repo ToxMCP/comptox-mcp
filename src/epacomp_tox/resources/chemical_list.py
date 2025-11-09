@@ -1,5 +1,9 @@
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List
+
 import ctxpy as ctx
+
+from epacomp_tox.contracts import schema_ref
+
 from .base import BaseResource
 
 class ChemicalListResource(BaseResource):
@@ -34,7 +38,7 @@ class ChemicalListResource(BaseResource):
         Returns:
             List of tool definitions.
         """
-        return [
+        tools: List[Dict[str, Any]] = [
             {
                 "name": "get_public_list_names",
                 "description": "Get names of available public chemical lists",
@@ -58,6 +62,14 @@ class ChemicalListResource(BaseResource):
                 }
             }
         ]
+        schema_map = {
+            "get_public_list_names": ("common", "list_generic.response.schema"),
+            "get_full_list": ("common", "list_generic.response.schema"),
+        }
+        for tool in tools:
+            namespace, name = schema_map[tool["name"]]
+            tool["responseSchemaRef"] = schema_ref(namespace, name)
+        return tools
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """

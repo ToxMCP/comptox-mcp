@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cheminformatics.toxprints.response",
+  "type": "object",
+  "description": "Generic mapping returned by ToxPrint searches; keys and shapes depend on upstream service.",
+  "additionalProperties": true
+}

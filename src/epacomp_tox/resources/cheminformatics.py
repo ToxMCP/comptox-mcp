@@ -1,5 +1,10 @@
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List
+
 import ctxpy as ctx
+
+from epacomp_tox.contracts import schema_ref
+from epacomp_tox.validators import to_serializable
+
 from .base import BaseResource
 
 class CheminformaticsResource(BaseResource):
@@ -34,7 +39,7 @@ class CheminformaticsResource(BaseResource):
         Returns:
             List of tool definitions.
         """
-        return [
+        tools: List[Dict[str, Any]] = [
             {
                 "name": "search_toxprints",
                 "description": "Search for ToxPrint chemotypes for a chemical",
@@ -67,6 +72,14 @@ class CheminformaticsResource(BaseResource):
                 }
             }
         ]
+        schema_map = {
+            "search_toxprints": ("cheminformatics", "toxprints.response.schema"),
+            "batch_search_toxprints": ("cheminformatics", "toxprints.response.schema"),
+        }
+        for tool in tools:
+            namespace, name = schema_map[tool["name"]]
+            tool["responseSchemaRef"] = schema_ref(namespace, name)
+        return tools
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """
@@ -103,7 +116,6 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes.
         """
-        from epacomp_tox.validators import to_serializable
         results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemical))
         return to_serializable(results)
     
@@ -117,6 +129,5 @@ class CheminformaticsResource(BaseResource):
         Returns:
             ToxPrint chemotypes for multiple chemicals.
         """
-        from epacomp_tox.validators import to_serializable
         results = self._with_retry(lambda: ctx.search_toxprints(chemical=chemicals))
         return to_serializable(results)
