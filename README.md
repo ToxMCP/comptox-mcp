@@ -153,6 +153,10 @@ python scripts/check_endpoints.py
 
 The script pings each endpoint listed in `docs/contracts/endpoint-matrix.md` and reports latency plus HTTP status. Provide `CTX_API_KEY`/`EPA_COMPTOX_API_KEY` in the environment to avoid 401/403 responses.
 
+### Endpoint automation
+
+A scheduled GitHub Action (`.github/workflows/endpoint-check.yml`) runs `python scripts/check_endpoints.py --json` every day at 06:00 UTC using the `CTX_API_KEY` secret. The workflow uploads `endpoint_status.json` as an artifact so operators can review upstream availability without rerunning the checker locally.
+
 ### Production deployment
 
 - Run via Gunicorn: `gunicorn epacomp_tox.transport.websocket:app -c deploy/gunicorn_conf.py`
