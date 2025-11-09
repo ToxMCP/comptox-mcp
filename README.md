@@ -214,7 +214,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - Applicability-domain definitions, policy defaults, and remediation steps live under `metadata/` with JSON Schema validation.
 - Predictive invocations persist audit bundles that can be fetched via metadata tools.
 - Governance workflows (SME review, policy approval, publication) are documented in `docs/model_cards_and_policies.md`.
-- Response contracts live under `docs/contracts/schemas/` and are enforced before MCP responses (and predictive HTTP endpoints) are returned; upstream failover policies are summarized in `docs/contracts/endpoint-matrix.md`.
+- Response contracts live under `docs/contracts/schemas/` (see `docs/contracts/README.md`) and are enforced before MCP responses (and predictive HTTP endpoints) are returned; upstream failover policies are summarized in `docs/contracts/endpoint-matrix.md`.
 
 ### Testing & quality gates
 
