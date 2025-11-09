@@ -10,6 +10,10 @@ from epacomp_tox.predictive.base import (
     PredictiveResponse,
     PredictiveServiceBase,
 )
+from epacomp_tox.contracts import validate_payload
+
+PREDICT_RESPONSE_SCHEMA = ("predictive", "predict.response.schema")
+AD_RESPONSE_SCHEMA = ("predictive", "ad_check.response.schema")
 
 
 def build_predictive_router(
@@ -33,7 +37,13 @@ def build_predictive_router(
         body: PredictiveRequest, service: PredictiveServiceBase = Depends(get_service)
     ) -> PredictiveResponse:
         try:
-            return service.predict(body)
+            response = service.predict(body)
+            validate_payload(
+                response.model_dump(),
+                namespace=PREDICT_RESPONSE_SCHEMA[0],
+                name=PREDICT_RESPONSE_SCHEMA[1],
+            )
+            return response
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
@@ -47,6 +57,12 @@ def build_predictive_router(
     async def ad_endpoint(
         body: PredictiveRequest, service: PredictiveServiceBase = Depends(get_service)
     ) -> ADCheckResult:
-        return service.check_applicability_domain(body)
+        result = service.check_applicability_domain(body)
+        validate_payload(
+            result.model_dump(),
+            namespace=AD_RESPONSE_SCHEMA[0],
+            name=AD_RESPONSE_SCHEMA[1],
+        )
+        return result
 
     return router

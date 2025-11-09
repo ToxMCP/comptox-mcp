@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, Dict
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -12,6 +13,7 @@ from epacomp_tox.predictive import (
     ADCheckResult,
     TestConsensusPredictiveService,
     OperaPropertyService,
+    PredictiveServiceBase,
     build_predictive_router,
 )
 from epacomp_tox.predictive.clients import PredictiveClient
@@ -47,6 +49,22 @@ def _write_ad(tmp_path: Path, name: str, policy: str, error_code: str | None = N
 
 def _create_client(app) -> TestClient:
     return TestClient(app)
+
+
+class _SchemaStubService(PredictiveServiceBase):
+    def __init__(self) -> None:
+        super().__init__(
+            config={
+                "name": "schema-stub",
+                "version": "0.0.1",
+            }
+        )
+
+    def _predict_impl(self, request: PredictiveRequest) -> Dict[str, Any]:
+        return {"value": 42, "identifier": request.chemical_identifier}
+
+    def _check_ad_impl(self, request: PredictiveRequest) -> ADCheckResult:
+        return ADCheckResult(in_domain=True, confidence=0.99, details={"policy": "allow"})
 
 
 def test_block_policy_returns_error(tmp_path: Path) -> None:
@@ -89,3 +107,26 @@ def test_warn_policy_allows_response(tmp_path: Path) -> None:
     body = response.json()
     assert body["metadata"]["adWarning"] is True
     assert "OPERA_AD_WARN" in body["metadata"]["adMessage"]
+
+
+def test_predictive_router_validates_responses(monkeypatch) -> None:
+    service = _SchemaStubService()
+    router = build_predictive_router(service_factory=lambda: service, prefix="/schema")
+    app = FastAPI()
+    app.include_router(router)
+    client = _create_client(app)
+
+    recorded: list[tuple[str, str]] = []
+
+    def _fake_validate(payload, *, namespace, name):  # type: ignore[override]
+        recorded.append((namespace, name))
+
+    monkeypatch.setattr("epacomp_tox.predictive.router.validate_payload", _fake_validate)
+
+    resp = client.post("/schema/predict", json={"chemical_identifier": "DTXSID3"})
+    assert resp.status_code == 200
+    ad_resp = client.post("/schema/check_applicability_domain", json={"chemical_identifier": "DTXSID3"})
+    assert ad_resp.status_code == 200
+
+    assert ("predictive", "predict.response.schema") in recorded
+    assert ("predictive", "ad_check.response.schema") in recorded
