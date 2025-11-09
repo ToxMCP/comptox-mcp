@@ -74,3 +74,64 @@ This architecture enables future models to plug in by implementing `PredictiveCl
 - `GenRAClient` integrates the GenRA analogue search and evidence weighting workflow.
 
 Shared applicability-domain enforcement is wired directly into the base service, so TEST/OPERA/GenRA all honor block/warn policies and surface metadata back to clients.
+
+## Schema-validated HTTP usage
+
+The predictive routers expose FastAPI endpoints that now validate every response against the JSON Schemas in `docs/contracts/schemas/predictive/`. This ensures downstream agents receive consistent envelopes regardless of which model produced the prediction.
+
+### Predict endpoint example
+
+Run the service locally (see quick-start instructions in the README), then issue:
+
+```bash
+curl -s http://localhost:8000/test/predict \
+  -H "Content-Type: application/json" \
+  -d '{"chemical_identifier": "DTXSID7020182"}' | jq
+```
+
+Sample response (truncated for brevity):
+
+```json
+{
+  "prediction": {
+    "endpoint": "LD50",
+    "value": 1.20,
+    "units": "log(mmol/kg)"
+  },
+  "applicability_domain": {
+    "in_domain": true,
+    "confidence": 0.86,
+    "details": {
+      "policy": "block"
+    }
+  },
+  "metadata": {
+    "identifier": "DTXSID7020182",
+    "identifier_type": "dtxsid",
+    "model": "TEST Consensus Acute Toxicity",
+    "model_version": "5.2.0"
+  }
+}
+```
+
+If the AD policy is `warn`, the router attaches `adWarning/adMessage` metadata; if the policy is `block`, the endpoint returns HTTP 400 with the policy error code.
+
+### Applicability-domain check
+
+```bash
+curl -s http://localhost:8000/test/check_applicability_domain \
+  -H "Content-Type: application/json" \
+  -d '{"chemical_identifier": "DTXSID7020182"}' | jq
+```
+
+```json
+{
+  "in_domain": true,
+  "confidence": 0.86,
+  "details": {
+    "policy": "block"
+  }
+}
+```
+
+Both responses are validated against `predictive/predict.response.schema.json` and `predictive/ad_check.response.schema.json` respectively, so any deviation from the contract is caught before the HTTP response is returned.
