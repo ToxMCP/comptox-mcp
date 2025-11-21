@@ -56,6 +56,13 @@ class MetadataResource(BaseResource):
                     },
                 },
                 "responseSchemaRef": schema_ref("metadata", "model_cards.response.schema"),
+                "outputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "modelCards": {"type": "array"},
+                        "nextCursor": {"type": ["string", "null"]},
+                    },
+                },
             },
             {
                 "name": "metadata_list_applicability_domain",
@@ -75,6 +82,13 @@ class MetadataResource(BaseResource):
                     },
                 },
                 "responseSchemaRef": schema_ref("metadata", "applicability_list.response.schema"),
+                "outputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "applicabilityDomains": {"type": "array"},
+                        "nextCursor": {"type": ["string", "null"]},
+                    },
+                },
             },
             {
                 "name": "metadata_get_applicability_domain",
@@ -98,6 +112,17 @@ class MetadataResource(BaseResource):
                     },
                 },
                 "responseSchemaRef": schema_ref("metadata", "applicability_detail.response.schema"),
+                "outputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "model": {"type": "string"},
+                        "version": {"type": "string"},
+                        "criteria": {"type": "array"},
+                        "policy": {"type": "string"},
+                        "errorCode": {"type": ["string", "null"]},
+                        "references": {"type": "array"},
+                    },
+                },
             },
         ]
 

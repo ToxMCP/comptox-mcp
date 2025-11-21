@@ -1,10 +1,13 @@
 from typing import Any, Dict, List, Optional, Sequence
+import logging
 
 import ctxpy as ctx
 
 from epacomp_tox.contracts import schema_ref
 
 from .base import BaseResource
+
+logger = logging.getLogger(__name__)
 
 
 class ExposureResource(BaseResource):
@@ -20,7 +23,16 @@ class ExposureResource(BaseResource):
 
     def __init__(self, api_key: str):
         super().__init__(api_key)
-        self.client = ctx.Exposure(x_api_key=api_key)
+        # Increase upstream timeout for slow queries
+        UPSTREAM_TIMEOUT = 120.0
+        try:
+            self.client = ctx.Exposure(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
+            logger.info(f"Successfully initialized ctx.Exposure with timeout={UPSTREAM_TIMEOUT}s")
+        except TypeError as e:
+            logger.warning(
+                f"Could not set timeout for ctx.Exposure (TypeError: {e}). Using default timeout."
+            )
+            self.client = ctx.Exposure(x_api_key=api_key)
 
     # ------------------------------------------------------------------
     # Tool catalog
@@ -171,6 +183,12 @@ class ExposureResource(BaseResource):
 
         for tool in tools:
             tool["responseSchemaRef"] = schema_ref("common", "list_generic.response.schema")
+            
+            # Ensure outputSchema is populated from the reference
+            if "responseSchemaRef" in tool:
+                from epacomp_tox.contracts import load_schema
+                ref = tool["responseSchemaRef"]
+                tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
 
         return tools
 

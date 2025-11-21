@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chemical.search_chemical.response",
+  "description": "A list of chemicals matching the search criteria.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A single chemical record from the search results.",
+    "properties": {
+      "dtxsid": {
+        "type": ["string", "null"],
+        "description": "DSSTox Substance Identifier - unique identifier for the chemical substance"
+      },
+      "dtxcid": {
+        "type": ["string", "null"],
+        "description": "DSSTox Chemical Identifier - unique identifier for the chemical structure"
+      },
+      "casrn": {
+        "type": ["string", "null"],
+        "description": "CAS Registry Number - Chemical Abstracts Service registry number"
+      },
+      "preferredName": {
+        "type": ["string", "null"],
+        "description": "Preferred chemical name in the database"
+      },
+      "smiles": {
+        "type": ["string", "null"],
+        "description": "SMILES (Simplified Molecular Input Line Entry System) representation of the chemical structure"
+      },
+      "hasStructureImage": {
+        "type": "integer",
+        "description": "Flag indicating if a structure image is available (1 = yes, 0 = no)"
+      },
+      "isMarkush": {
+        "type": "boolean",
+        "description": "Indicates if this is a Markush structure (generic chemical structure)"
+      },
+      "searchName": {
+        "type": "string",
+        "description": "The field name that was searched"
+      },
+      "searchValue": {
+        "type": "string",
+        "description": "The value that was searched for"
+      },
+      "rank": {
+        "type": "integer",
+        "description": "Search result ranking score"
+      }
+    },
+    "required": ["dtxsid", "preferredName", "rank"]
+  }
+}

@@ -98,8 +98,7 @@ def test_http_transport_initialize_and_list_and_call():
         )
         assert call_response.status_code == 200
         call_payload = call_response.json()["result"]
-        assert call_payload["isError"] is False
-        assert call_payload["structuredContent"]["data"]["echo"] == "hello"
+        assert call_payload["structuredContent"]["echo"] == "hello"
 
 
 def test_http_transport_method_not_found():

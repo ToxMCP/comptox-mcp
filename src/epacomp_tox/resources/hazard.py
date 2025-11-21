@@ -1,9 +1,12 @@
 from typing import Any, Dict, List
+import logging
 
 import ctxpy as ctx
 
 from epacomp_tox.contracts import schema_ref
 from .base import BaseResource
+
+logger = logging.getLogger(__name__)
 
 
 class HazardResource(BaseResource):
@@ -42,7 +45,16 @@ class HazardResource(BaseResource):
 
     def __init__(self, api_key: str):
         super().__init__(api_key)
-        self.client = ctx.Hazard(x_api_key=api_key)
+        # Increase upstream timeout for slow queries
+        UPSTREAM_TIMEOUT = 120.0
+        try:
+            self.client = ctx.Hazard(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
+            logger.info(f"Successfully initialized ctx.Hazard with timeout={UPSTREAM_TIMEOUT}s")
+        except TypeError as e:
+            logger.warning(
+                f"Could not set timeout for ctx.Hazard (TypeError: {e}). Using default timeout."
+            )
+            self.client = ctx.Hazard(x_api_key=api_key)
 
     def _clean_identifiers(self, identifiers: List[str]) -> List[str]:
         return [
@@ -333,6 +345,13 @@ class HazardResource(BaseResource):
                 else "list_generic.response.schema"
             )
             tool["responseSchemaRef"] = self._schema(schema_name)
+            
+            # Ensure outputSchema is populated from the reference
+            if "responseSchemaRef" in tool:
+                from epacomp_tox.contracts import load_schema
+                ref = tool["responseSchemaRef"]
+                tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
+                
         return tools
 
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:

@@ -62,7 +62,7 @@ class CtxApiError(RuntimeError):
 
 
 class _BaseCtxClient:
-    def __init__(self, x_api_key: str, base_url: Optional[str] = None):
+    def __init__(self, x_api_key: str, base_url: Optional[str] = None, timeout: float = 30.0):
         if not x_api_key:
             raise ValueError("x_api_key is required")
         env_base = (
@@ -74,6 +74,7 @@ class _BaseCtxClient:
         self.base_url = env_base.rstrip("/")
         self.api_key = x_api_key
         self._default_batch_size = 200
+        self._default_timeout = timeout
         self.last_metadata: Dict[str, Any] = {}
 
     def _extract_metadata(
@@ -117,8 +118,10 @@ class _BaseCtxClient:
         params: Optional[Dict[str, Any]] = None,
         data: Any = None,
         headers: Optional[Dict[str, str]] = None,
-        timeout: float = 30.0,
+        timeout: Optional[float] = None,
     ) -> Any:
+        # Use provided timeout, or fall back to instance default
+        effective_timeout = timeout if timeout is not None else self._default_timeout
         url = f"{self.base_url}/{path.lstrip('/')}"
         if params:
             encoded_params = urllib.parse.urlencode(
@@ -151,7 +154,7 @@ class _BaseCtxClient:
 
         req = urllib.request.Request(url, data=body, headers=request_headers, method=method.upper())
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as response:
+            with urllib.request.urlopen(req, timeout=effective_timeout) as response:
                 metadata = self._extract_metadata(response.headers, status=response.status)
                 self.last_metadata = metadata
                 content = response.read()
@@ -348,6 +351,42 @@ class Chemical(_BaseCtxClient):
         bracketed: bool = False,
     ) -> Any:
         return super().batch(suffix, word, batch_size, bracketed)
+
+    def fate_summary(self, dtxsid: str, prop_name: Optional[str] = None) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        path = f"chemical/fate/summary/search/by-dtxsid/{quoted}"
+        params = {"propertyName": prop_name} if prop_name else None
+        return self.get(path, params=params)
+
+    def fate_details(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        # Assuming 'chemical/fate/search/by-dtxsid/{dtxsid}' returns details
+        return self.get(f"chemical/fate/search/by-dtxsid/{quoted}")
+
+    def extra_data_batch(self, identifiers: Iterable[str]) -> List[Any]:
+        return self.batch("chemical/extra-data/batch", identifiers, self._default_batch_size, bracketed=True)
+
+    def ghs_check_batch(self, source: str, identifiers: Iterable[str]) -> Any:
+        # Assuming source is part of the path, or a query param. Placing it in path.
+        quoted_source = urllib.parse.quote(str(source))
+        return self.batch(f"chemical/ghs-check/batch/{quoted_source}", identifiers, self._default_batch_size, bracketed=True)
+
+    def opsin_convert(self, name: str, output: str) -> Any:
+        params = {"name": name, "output": output}
+        return self.get("cheminformatics/opsin-convert", params=params)
+
+    def indigo_convert(self, molfile: str, output: str) -> Any:
+        # Assuming POST for molfile and direct path for output
+        headers = {"Content-Type": "text/plain"}
+        return self.post(f"cheminformatics/indigo-convert/{output}", molfile, headers=headers)
+        
+    def structure_file(self, identifier_type: str, identifier: str, file_format: str, image_format: Optional[str] = None) -> Any:
+        quoted_identifier = urllib.parse.quote(str(identifier))
+        path = f"chemical/structure-file/{identifier_type}/{quoted_identifier}/{file_format}"
+        params = {"imageFormat": image_format} if image_format else None
+        return self.get(path, params=params)
+
+
 
 
 class Bioactivity(_BaseCtxClient):
@@ -727,6 +766,99 @@ class Exposure(_BaseCtxClient):
             return self._request("GET", f"exposure/seem/demographic/search/by-dtxsid/{quoted}") or []
 
         raise ValueError(f"Unsupported exposure data_type '{by}'")
+
+    def product_data(self, dtxsid: str) -> Any:
+        return self.search_cpdat("puc", dtxsid)
+
+    def product_data_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/product-data/search/by-dtxsid/", dtxsids)
+
+    def product_data_puc(self) -> Any:
+        return self.get_cpdat_vocabulary("puc")
+
+    def list_presence(self, dtxsid: str) -> Any:
+        return self.search_cpdat("lpk", dtxsid)
+
+    def list_presence_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/list-presence/search/by-dtxsid/", dtxsids)
+
+    def list_presence_tags(self) -> Any:
+        return self.get_cpdat_vocabulary("lpk")
+
+    def httk(self, dtxsid: str) -> Any:
+        return self.search_httk(dtxsid)
+
+    def httk_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/httk/search/by-dtxsid/", dtxsids)
+
+    def functional_use(self, dtxsid: str) -> Any:
+        return self.search_cpdat("fc", dtxsid)
+
+    def functional_use_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/functional-use/search/by-dtxsid/", dtxsids)
+
+    def functional_use_probability(self, dtxsid: str) -> Any:
+        return self.search_qsurs(dtxsid)
+
+    def functional_use_categories(self) -> Any:
+        return self.get_cpdat_vocabulary("fc")
+
+    def seem_general(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/seem/general/search/by-dtxsid/{quoted}")
+
+    def seem_general_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/seem/general/search/by-dtxsid/", dtxsids)
+
+    def seem_demographic(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/seem/demographic/search/by-dtxsid/{quoted}")
+
+    def seem_demographic_batch(self, dtxsids: Iterable[str]) -> List[Any]:
+        return self._json_batch("exposure/seem/demographic/search/by-dtxsid/", dtxsids)
+
+    def ccd_puc(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/puc/search/by-dtxsid/{quoted}")
+
+    def ccd_production_volume(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/production-volume/search/by-dtxsid/{quoted}")
+
+    def ccd_monitoring_data(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/monitoring-data/search/by-dtxsid/{quoted}")
+
+    def ccd_keywords(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/keywords/search/by-dtxsid/{quoted}")
+
+    def ccd_functional_use(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/functional-use/search/by-dtxsid/{quoted}")
+
+    def ccd_chem_weight_fractions(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/ccd/chemical-weight-fraction/search/by-dtxsid/{quoted}")
+
+    def mmdb_single_sample_by_medium(self, medium: str) -> Any:
+        quoted = urllib.parse.quote(str(medium))
+        return self.get(f"exposure/mmdb/single-sample/search/by-medium/{quoted}")
+
+    def mmdb_single_sample_by_dtxsid(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/mmdb/single-sample/search/by-dtxsid/{quoted}")
+
+    def mmdb_mediums(self) -> Any:
+        return self.get("exposure/mmdb/mediums")
+
+    def mmdb_aggregate_by_medium(self, medium: str) -> Any:
+        quoted = urllib.parse.quote(str(medium))
+        return self.get(f"exposure/mmdb/aggregate/search/by-medium/{quoted}")
+
+    def mmdb_aggregate_by_dtxsid(self, dtxsid: str) -> Any:
+        quoted = urllib.parse.quote(str(dtxsid))
+        return self.get(f"exposure/mmdb/aggregate/search/by-dtxsid/{quoted}")
 
 
 class ChemicalList(_BaseCtxClient):

@@ -35,6 +35,70 @@ CANCELLED_ERROR_CODE = -32800
 CAPABILITY_NOT_NEGOTIATED_ERROR_CODE = -32004
 
 
+def _coerce_value(value: Any) -> Any:
+    """Coerce string query values to bool/int/float when possible."""
+    if not isinstance(value, str):
+        return value
+
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    return value
+
+
+def _coerce_query_params(parsed_query: Dict[str, Any]) -> Dict[str, Any]:
+    """Flatten parse_qs output and coerce value types, with helpful defaults."""
+    coerced: Dict[str, Any] = {}
+    for key, values in parsed_query.items():
+        if len(values) == 1:
+            coerced[key] = _coerce_value(values[0])
+        else:
+            coerced[key] = [_coerce_value(v) for v in values]
+
+    # COMPAT: accept "search" as an alias for "query"
+    if "query" not in coerced and "search" in coerced:
+        coerced["query"] = coerced.get("search")
+
+    # COMPAT: default search_type when a query/search is provided
+    if "query" in coerced and "search_type" not in coerced:
+        coerced["search_type"] = "contains"
+
+    return coerced
+
+
+def _extract_legacy_tool(uri: str) -> tuple[Optional[str], Dict[str, Any]]:
+    """
+    Extract tool name and args from legacy resource URIs.
+
+    Supports:
+      - resource://<resource>/tool/<tool_name>?k=v
+      - resource://<resource>/<tool_name>?k=v
+    """
+    from urllib.parse import urlparse, parse_qs
+
+    parsed = urlparse(uri)
+    segments = [segment for segment in parsed.path.split("/") if segment]
+
+    tool_name: Optional[str] = None
+    if len(segments) >= 2 and segments[0] == "tool":
+        tool_name = segments[1]
+    elif len(segments) == 1:
+        tool_name = segments[0]
+
+    return tool_name, _coerce_query_params(parse_qs(parsed.query, keep_blank_values=True))
+
+
 class ToolExecutionError(Exception):
     """Exception raised when tool execution fails prior to MCP response."""
 
@@ -135,6 +199,8 @@ class MCPWebSocketSession:
             await self._handle_resources_list(message_id, params)
         elif method == "tools/call":
             await self._handle_tools_call(message_id, params)
+        elif method == "resources/read":
+            await self._handle_resources_read(message_id, params)
         elif method == "tools/cancel":
             await self._handle_tools_cancel(message_id, params)
         elif method == "ping":
@@ -258,6 +324,102 @@ class MCPWebSocketSession:
                 "jsonrpc": "2.0",
                 "id": message_id,
                 "result": {"resources": resources, "nextCursor": next_cursor},
+            }
+        )
+
+    async def _handle_resources_read(self, message_id: Any, params: Dict[str, Any]) -> None:
+        if message_id is None:
+            return
+        if not isinstance(params, dict):
+            await self._send_error(message_id, code=-32602, message="resources/read params must be an object")
+            return
+
+        uri = params.get("uri")
+        if not isinstance(uri, str) or not uri.startswith("resource://"):
+            await self._send_error(message_id, code=-32602, message="Invalid or missing resource URI")
+            return
+
+        # 1) Explicit tool name + arguments tunneled through resources/read
+        tool_name_param = params.get("name")
+        tool_args_param = params.get("arguments") or params.get("parameters")
+        if isinstance(tool_name_param, str):
+            arguments = tool_args_param if isinstance(tool_args_param, dict) else {}
+            await self._handle_tools_call(message_id, {"name": tool_name_param, "arguments": arguments})
+            return
+
+        # 2) Legacy URI forms (with or without /tool/ segment)
+        legacy_tool_name, legacy_args = _extract_legacy_tool(uri)
+        if legacy_tool_name:
+            await self._handle_tools_call(message_id, {"name": legacy_tool_name, "arguments": legacy_args})
+            return
+
+        # 3) Query-string based inference (resource://<resource>?q=...)
+        from urllib.parse import urlparse, parse_qs
+
+        parsed = urlparse(uri)
+        resource_name = parsed.netloc or ""
+        if parsed.query:
+            inferred_tool = {
+                "chemical": "search_chemical",
+                "hazard": "search_hazard",
+                "exposure": "search_exposure",
+                "bioactivity": "search_bioactivity",
+                "chemical_list": "search_chemical_list",
+            }.get(resource_name)
+
+            if inferred_tool:
+                arguments = _coerce_query_params(parse_qs(parsed.query, keep_blank_values=True))
+                try:
+                    await self._handle_tools_call(message_id, {"name": inferred_tool, "arguments": arguments})
+                except Exception as exc:  # pragma: no cover - defensive
+                    await self._send_error(message_id, code=-32602, message=f"Tool execution failed: {exc}")
+                return
+
+            available_tools = [
+                t["name"]
+                for t in self.server.tool_registry.list_definitions()
+                if t.get("annotations", {}).get("resource") == resource_name
+            ]
+            await self._send_error(
+                message_id,
+                code=-32602,
+                message=(
+                    f"Cannot infer tool for resource '{resource_name}'. Available tools: {', '.join(available_tools)}. "
+                    "Use tools/call with an explicit tool name."
+                ),
+            )
+            return
+
+        # 4) Standard resource description
+        resource_name = parsed.netloc or uri.replace("resource://", "").split("?")[0]
+        if resource_name not in self.server.resources:
+            await self._send_error(message_id, code=-32601, message=f"Resource not found: {resource_name}")
+            return
+        resource = self.server.resources[resource_name]
+        await self._send(
+            {
+                "jsonrpc": "2.0",
+                "id": message_id,
+                "result": {
+                    "contents": [
+                        {
+                            "uri": uri,
+                            "mimeType": "application/json",
+                            "text": json.dumps(
+                                {
+                                    "name": resource_name,
+                                    "description": resource.description,
+                                    "tools": [
+                                        tool
+                                        for tool in self.server.tool_registry.list_definitions()
+                                        if tool.get("annotations", {}).get("resource") == resource_name
+                                    ],
+                                },
+                                indent=2,
+                            ),
+                        }
+                    ]
+                },
             }
         )
 

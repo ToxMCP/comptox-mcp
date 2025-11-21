@@ -39,46 +39,8 @@ class CheminformaticsResource(BaseResource):
         Returns:
             List of tool definitions.
         """
-        tools: List[Dict[str, Any]] = [
-            {
-                "name": "search_toxprints",
-                "description": "Search for ToxPrint chemotypes for a chemical",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "chemical": {
-                            "type": "string",
-                            "description": "Chemical identifier (DTXSID, DTXCID, or SMILES)"
-                        }
-                    },
-                    "required": ["chemical"]
-                }
-            },
-            {
-                "name": "batch_search_toxprints",
-                "description": "Search for ToxPrint chemotypes for multiple chemicals",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "chemicals": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "List of chemical identifiers (DTXSIDs, DTXCIDs, or SMILES)"
-                        }
-                    },
-                    "required": ["chemicals"]
-                }
-            }
-        ]
-        schema_map = {
-            "search_toxprints": ("cheminformatics", "toxprints.response.schema"),
-            "batch_search_toxprints": ("cheminformatics", "toxprints.response.schema"),
-        }
-        for tool in tools:
-            namespace, name = schema_map[tool["name"]]
-            tool["responseSchemaRef"] = schema_ref(namespace, name)
+        tools: List[Dict[str, Any]] = []
+        # ToxPrint tools disabled: endpoints not available on new CTX API
         return tools
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
@@ -95,16 +57,7 @@ class CheminformaticsResource(BaseResource):
         Raises:
             ValueError: If the tool is not found or parameters are invalid.
         """
-        if tool_name == "search_toxprints":
-            return self.search_toxprints(
-                chemical=parameters["chemical"]
-            )
-        elif tool_name == "batch_search_toxprints":
-            return self.batch_search_toxprints(
-                chemicals=parameters["chemicals"]
-            )
-        else:
-            raise ValueError(f"Unknown tool: {tool_name}")
+        raise ValueError(f"Unknown tool: {tool_name}")
     
     def search_toxprints(self, chemical: str) -> Dict[str, Any]:
         """

@@ -29,7 +29,11 @@ node_modules/
 __pycache__/
 *.pyc
 *.egg-info/
+.pytest_cache/
 
 # Local automation artifacts
 .taskmaster/
 .cursor/
+
+# Runtime artifacts
+artifacts/

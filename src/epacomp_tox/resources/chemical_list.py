@@ -1,10 +1,13 @@
 from typing import Any, Dict, List
+import logging
 
 import ctxpy as ctx
 
 from epacomp_tox.contracts import schema_ref
 
 from .base import BaseResource
+
+logger = logging.getLogger(__name__)
 
 class ChemicalListResource(BaseResource):
     """
@@ -29,7 +32,16 @@ class ChemicalListResource(BaseResource):
             api_key: EPA CompTox API key.
         """
         super().__init__(api_key)
-        self.client = ctx.ChemicalList(x_api_key=api_key)
+        # Increase upstream timeout for slow queries
+        UPSTREAM_TIMEOUT = 120.0
+        try:
+            self.client = ctx.ChemicalList(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
+            logger.info(f"Successfully initialized ctx.ChemicalList with timeout={UPSTREAM_TIMEOUT}s")
+        except TypeError as e:
+            logger.warning(
+                f"Could not set timeout for ctx.ChemicalList (TypeError: {e}). Using default timeout."
+            )
+            self.client = ctx.ChemicalList(x_api_key=api_key)
     
     def get_tools(self) -> List[Dict[str, Any]]:
         """
@@ -69,6 +81,13 @@ class ChemicalListResource(BaseResource):
         for tool in tools:
             namespace, name = schema_map[tool["name"]]
             tool["responseSchemaRef"] = schema_ref(namespace, name)
+            
+            # Ensure outputSchema is populated from the reference
+            if "responseSchemaRef" in tool:
+                from epacomp_tox.contracts import load_schema
+                ref = tool["responseSchemaRef"]
+                tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
+                
         return tools
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:

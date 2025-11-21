@@ -203,17 +203,16 @@ def test_websocket_transport_flow():
             elif event["method"] == "events/result":
                 assert "result" in event["params"]
                 result_payload = event["params"]["result"]
-                assert result_payload["structuredContent"]["data"]["echo"] == "hello"
+                assert result_payload["structuredContent"]["echo"] == "hello"
             elif event["method"] == "events/end":
                 _assert_event_structure(event, "events_end.json")
 
         result_event = next(event for event in events if event["method"] == "events/result")
         structured = result_event["params"]["result"]["structuredContent"]
-        assert structured["data"]["echo"] == "hello"
+        assert structured["echo"] == "hello"
 
         call_result = call_response["result"]
-        assert call_result["isError"] is False
-        assert call_result["structuredContent"]["data"]["echo"] == "hello"
+        assert call_result["structuredContent"]["echo"] == "hello"
         assert call_result["requestId"] == result_event["params"]["requestId"]
 
 
@@ -367,7 +366,7 @@ def test_ping_and_capability_negotiation():
         assert "method" not in call_response
         assert call_response["result"]["requestId"] == "nostream"
         assert (
-            call_response["result"]["structuredContent"]["data"]["echo"]
+            call_response["result"]["structuredContent"]["echo"]
             == "no-stream"
         )
         metadata = call_response["result"]["structuredContent"]["metadata"]["session"]

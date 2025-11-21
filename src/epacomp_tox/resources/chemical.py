@@ -1,4 +1,5 @@
 import base64
+import logging
 from typing import Any, Dict, List, Optional
 
 import ctxpy as ctx
@@ -7,6 +8,8 @@ from epacomp_tox.contracts import schema_ref
 from epacomp_tox.validators import to_serializable
 
 from .base import BaseResource
+
+logger = logging.getLogger(__name__)
 
 class ChemicalResource(BaseResource):
     """
@@ -31,7 +34,27 @@ class ChemicalResource(BaseResource):
             api_key: EPA CompTox API key.
         """
         super().__init__(api_key)
-        self.client = ctx.Chemical(x_api_key=api_key)
+        
+        # --- START MODIFICATION: Increase Upstream Timeout ---
+        # The default timeout is too short for complex queries.
+        # Increase it significantly (e.g., 120 seconds).
+        UPSTREAM_TIMEOUT = 120.0
+
+        try:
+            # Attempt to initialize the client with the increased timeout.
+            # This assumes the ctxpy library accepts a 'timeout' argument.
+            self.client = ctx.Chemical(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
+            logger.info(f"Successfully initialized ctx.Chemical with timeout={UPSTREAM_TIMEOUT}s")
+
+        except TypeError as e:
+            # If ctxpy does not accept the 'timeout' argument, it raises a TypeError.
+            # Fall back to the original initialization and log a warning.
+            logger.warning(
+                f"Could not set timeout for ctx.Chemical (TypeError: {e}). Using default timeout. "
+                "Timeouts may still occur for slow queries. Check ctxpy documentation/version."
+            )
+            self.client = ctx.Chemical(x_api_key=api_key)
+        # --- END MODIFICATION ---
     
     def get_tools(self) -> List[Dict[str, Any]]:
         """
@@ -155,118 +178,9 @@ class ChemicalResource(BaseResource):
             }
         ]
 
+        # Property endpoints are not available in the current ctxpy client; excluded to avoid runtime 500s.
         tools.extend(
             [
-                {
-                    "name": "get_chemical_property_summary",
-                    "description": "Retrieve physicochemical property summary for a chemical",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "dtxsid": {"type": "string", "description": "DSSTox Substance Identifier"},
-                            "property_name": {
-                                "type": "string",
-                                "description": "Optional property name filter",
-                            },
-                        },
-                        "required": ["dtxsid"],
-                    },
-                },
-                {
-                    "name": "get_chemical_predicted_properties",
-                    "description": "Get predicted properties for a single chemical",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "dtxsid": {"type": "string", "description": "DSSTox Substance Identifier"}
-                        },
-                        "required": ["dtxsid"],
-                    },
-                },
-                {
-                    "name": "batch_get_chemical_predicted_properties",
-                    "description": "Batch fetch predicted properties for chemicals",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "dtxsids": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                                "description": "List of DSSTox Substance Identifiers",
-                            }
-                        },
-                        "required": ["dtxsids"],
-                    },
-                },
-                {
-                    "name": "get_chemical_predicted_properties_by_range",
-                    "description": "Get predicted properties filtered by property ID and range",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "property_id": {"type": "string", "description": "Predicted property identifier"},
-                            "start": {"type": "number", "description": "Range start (inclusive)"},
-                            "end": {"type": "number", "description": "Range end (inclusive)"},
-                        },
-                        "required": ["property_id", "start", "end"],
-                    },
-                },
-                {
-                    "name": "get_chemical_experimental_properties",
-                    "description": "Get experimental properties for a single chemical",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "dtxsid": {"type": "string", "description": "DSSTox Substance Identifier"}
-                        },
-                        "required": ["dtxsid"],
-                    },
-                },
-                {
-                    "name": "batch_get_chemical_experimental_properties",
-                    "description": "Batch fetch experimental properties for chemicals",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "dtxsids": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                                "description": "List of DSSTox Substance Identifiers",
-                            }
-                        },
-                        "required": ["dtxsids"],
-                    },
-                },
-                {
-                    "name": "get_chemical_experimental_properties_by_range",
-                    "description": "Get experimental properties filtered by property name and range",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "property_name": {"type": "string", "description": "Experimental property name"},
-                            "start": {"type": "number", "description": "Range start (inclusive)"},
-                            "end": {"type": "number", "description": "Range end (inclusive)"},
-                        },
-                        "required": ["property_name", "start", "end"],
-                    },
-                },
-                {
-                    "name": "list_chemical_property_names",
-                    "description": "List predicted or experimental property names",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "property_type": {
-                                "type": "string",
-                                "enum": ["predicted", "experimental"],
-                                "description": "Property domain to list",
-                            }
-                        },
-                        "required": ["property_type"],
-                    },
-                },
                 {
                     "name": "get_chemical_fate_summary",
                     "description": "Retrieve environmental fate summary for a chemical",
@@ -310,27 +224,6 @@ class ChemicalResource(BaseResource):
                     },
                 },
                 {
-                    "name": "check_chemical_ghs_links",
-                    "description": "Check if chemicals have GHS classifications in Wikipedia or PubChem",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "source": {
-                                "type": "string",
-                                "enum": ["wikipedia", "pubchem"],
-                                "description": "Upstream data source",
-                            },
-                            "dtxsids": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                                "description": "List of DSSTox Substance Identifiers",
-                            },
-                        },
-                        "required": ["source", "dtxsids"],
-                    },
-                },
-                {
                     "name": "opsin_convert_name",
                     "description": "Convert a systematic name using OPSIN",
                     "parameters": {
@@ -370,64 +263,33 @@ class ChemicalResource(BaseResource):
                         "required": ["molfile", "output_format"],
                     },
                 },
-                {
-                    "name": "get_chemical_structure_file",
-                    "description": "Download structure files or images for a chemical identifier",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "identifier_type": {
-                                "type": "string",
-                                "enum": ["dtxsid", "dtxcid", "gsid", "smiles"],
-                                "description": "Identifier category",
-                            },
-                            "identifier": {
-                                "type": "string",
-                                "description": "Identifier value or SMILES string",
-                            },
-                            "file_format": {
-                                "type": "string",
-                                "enum": ["mol", "mrv", "image"],
-                                "description": "Desired file type",
-                            },
-                            "image_format": {
-                                "type": "string",
-                                "enum": ["PNG", "SVG"],
-                                "description": "Image format (when file_format is image)",
-                            },
-                        },
-                        "required": ["identifier_type", "identifier", "file_format"],
-                    },
-                },
             ]
         )
 
         schema_map = {
-            "search_chemical": ("common", "list_generic.response.schema"),
-            "batch_search_chemical": ("common", "list_generic.response.schema"),
+            "search_chemical": ("chemical", "search_chemical.response.schema"),
+            "batch_search_chemical": ("chemical", "search_chemical.response.schema"),
             "get_chemical_details": ("common", "object.response.schema"),
             "batch_get_chemical_details": ("common", "list_generic.response.schema"),
             "search_msready": ("common", "list_generic.response.schema"),
-            "get_chemical_property_summary": ("common", "object.response.schema"),
-            "get_chemical_predicted_properties": ("common", "list_generic.response.schema"),
-            "batch_get_chemical_predicted_properties": ("common", "list_generic.response.schema"),
-            "get_chemical_predicted_properties_by_range": ("common", "list_generic.response.schema"),
-            "get_chemical_experimental_properties": ("common", "list_generic.response.schema"),
-            "batch_get_chemical_experimental_properties": ("common", "list_generic.response.schema"),
-            "get_chemical_experimental_properties_by_range": ("common", "list_generic.response.schema"),
-            "list_chemical_property_names": ("common", "list_generic.response.schema"),
             "get_chemical_fate_summary": ("common", "object.response.schema"),
             "get_chemical_fate_details": ("common", "object.response.schema"),
             "get_chemical_extra_data": ("common", "list_generic.response.schema"),
-            "check_chemical_ghs_links": ("chemical", "ghs_links.response.schema"),
             "opsin_convert_name": ("chemical", "opsin_convert.response.schema"),
             "indigo_convert_molfile": ("chemical", "indigo_convert.response.schema"),
-            "get_chemical_structure_file": ("chemical", "structure_file.response.schema"),
         }
+
         for tool in tools:
             schema_info = schema_map.get(tool["name"])
             if schema_info:
                 tool["responseSchemaRef"] = schema_ref(*schema_info)
+            
+            # Ensure outputSchema is populated from the reference
+            if "responseSchemaRef" in tool:
+                from epacomp_tox.contracts import load_schema
+                ref = tool["responseSchemaRef"]
+                tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
+                
         return tools
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
@@ -472,33 +334,6 @@ class ChemicalResource(BaseResource):
                 mass_start=parameters.get("mass_start"),
                 mass_end=parameters.get("mass_end"),
             )
-        if tool_name == "get_chemical_property_summary":
-            return self.get_chemical_property_summary(
-                dtxsid=parameters["dtxsid"],
-                property_name=parameters.get("property_name"),
-            )
-        if tool_name == "get_chemical_predicted_properties":
-            return self.get_chemical_predicted_properties(parameters["dtxsid"])
-        if tool_name == "batch_get_chemical_predicted_properties":
-            return self.batch_get_chemical_predicted_properties(parameters["dtxsids"])
-        if tool_name == "get_chemical_predicted_properties_by_range":
-            return self.get_chemical_predicted_properties_by_range(
-                property_id=parameters["property_id"],
-                start=parameters["start"],
-                end=parameters["end"],
-            )
-        if tool_name == "get_chemical_experimental_properties":
-            return self.get_chemical_experimental_properties(parameters["dtxsid"])
-        if tool_name == "batch_get_chemical_experimental_properties":
-            return self.batch_get_chemical_experimental_properties(parameters["dtxsids"])
-        if tool_name == "get_chemical_experimental_properties_by_range":
-            return self.get_chemical_experimental_properties_by_range(
-                property_name=parameters["property_name"],
-                start=parameters["start"],
-                end=parameters["end"],
-            )
-        if tool_name == "list_chemical_property_names":
-            return self.list_chemical_property_names(parameters["property_type"])
         if tool_name == "get_chemical_fate_summary":
             return self.get_chemical_fate_summary(
                 dtxsid=parameters["dtxsid"],
@@ -508,11 +343,6 @@ class ChemicalResource(BaseResource):
             return self.get_chemical_fate_details(parameters["dtxsid"])
         if tool_name == "get_chemical_extra_data":
             return self.get_chemical_extra_data(parameters["dtxsids"])
-        if tool_name == "check_chemical_ghs_links":
-            return self.check_chemical_ghs_links(
-                source=parameters["source"],
-                dtxsids=parameters["dtxsids"],
-            )
         if tool_name == "opsin_convert_name":
             return self.opsin_convert_name(
                 name=parameters["name"],
@@ -522,13 +352,6 @@ class ChemicalResource(BaseResource):
             return self.indigo_convert_molfile(
                 molfile=parameters["molfile"],
                 output_format=parameters["output_format"],
-            )
-        if tool_name == "get_chemical_structure_file":
-            return self.get_chemical_structure_file(
-                identifier_type=parameters["identifier_type"],
-                identifier=parameters["identifier"],
-                file_format=parameters["file_format"],
-                image_format=parameters.get("image_format"),
             )
         raise ValueError(f"Unknown tool: {tool_name}")
     
@@ -573,71 +396,62 @@ class ChemicalResource(BaseResource):
     ) -> List[Dict[str, Any]]:
         """Search for chemicals by MS-ready properties or mass range."""
         normalized = search_type.strip().lower()
+        kwargs = {}
         if normalized == "mass-range":
+            if mass_start is not None:
+                kwargs["start"] = mass_start
+            if mass_end is not None:
+                kwargs["end"] = mass_end
             result = self._with_retry(
-                lambda: self.client.msready(by="mass", start=mass_start, end=mass_end)
+                lambda: self.client.msready(by="mass", **kwargs)
             )
         else:
-            result = self._with_retry(lambda: self.client.msready(by=search_type, word=query))
+            if query is not None:
+                kwargs["word"] = query
+            result = self._with_retry(lambda: self.client.msready(by=search_type, **kwargs))
         return self._ensure_list(result)
 
-    def get_chemical_property_summary(self, dtxsid: str, property_name: Optional[str]) -> Any:
-        result = self._with_retry(
-            lambda: self.client.property_summary(dtxsid=dtxsid, prop_name=property_name)
+    def _raise_properties_unavailable(self, tool_name: str) -> None:
+        """Helper to surface a clear error when property endpoints are unavailable."""
+        raise NotImplementedError(
+            f"Chemical property tool '{tool_name}' is disabled: ctxpy client does not expose property endpoints."
         )
-        return to_serializable(result)
+
+    def get_chemical_property_summary(self, dtxsid: str, property_name: Optional[str] = None) -> Any:
+        self._raise_properties_unavailable("get_chemical_property_summary")
 
     def get_chemical_predicted_properties(self, dtxsid: str) -> List[Dict[str, Any]]:
-        result = self._with_retry(lambda: self.client.property_predicted_by_dtxsid(dtxsid))
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("get_chemical_predicted_properties")
 
     def batch_get_chemical_predicted_properties(self, dtxsids: List[str]) -> List[Dict[str, Any]]:
-        identifiers = [sid for sid in dtxsids if sid]
-        if not identifiers:
-            return []
-        result = self._with_retry(lambda: self.client.property_predicted_batch(identifiers))
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("batch_get_chemical_predicted_properties")
 
     def get_chemical_predicted_properties_by_range(
         self, property_id: str, start: float, end: float
     ) -> List[Dict[str, Any]]:
-        result = self._with_retry(
-            lambda: self.client.property_predicted_by_range(property_id, start, end)
-        )
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("get_chemical_predicted_properties_by_range")
 
     def get_chemical_experimental_properties(self, dtxsid: str) -> List[Dict[str, Any]]:
-        result = self._with_retry(lambda: self.client.property_experimental_by_dtxsid(dtxsid))
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("get_chemical_experimental_properties")
 
     def batch_get_chemical_experimental_properties(self, dtxsids: List[str]) -> List[Dict[str, Any]]:
-        identifiers = [sid for sid in dtxsids if sid]
-        if not identifiers:
-            return []
-        result = self._with_retry(lambda: self.client.property_experimental_batch(identifiers))
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("batch_get_chemical_experimental_properties")
 
     def get_chemical_experimental_properties_by_range(
         self, property_name: str, start: float, end: float
     ) -> List[Dict[str, Any]]:
-        result = self._with_retry(
-            lambda: self.client.property_experimental_by_range(property_name, start, end)
-        )
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("get_chemical_experimental_properties_by_range")
 
     def list_chemical_property_names(self, property_type: str) -> List[str]:
-        normalized = property_type.strip().lower()
-        if normalized == "predicted":
-            result = self._with_retry(self.client.property_predicted_names)
-        elif normalized == "experimental":
-            result = self._with_retry(self.client.property_experimental_names)
-        else:
-            raise ValueError("property_type must be 'predicted' or 'experimental'")
-        return self._ensure_list(result)
+        self._raise_properties_unavailable("list_chemical_property_names")
 
-    def get_chemical_fate_summary(self, dtxsid: str, property_name: Optional[str]) -> Any:
+    def get_chemical_fate_summary(self, dtxsid: str, property_name: Optional[str] = None) -> Any:
+        kwargs = {"dtxsid": dtxsid}
+        if property_name is not None:
+            kwargs["prop_name"] = property_name
+
         result = self._with_retry(
-            lambda: self.client.fate_summary(dtxsid=dtxsid, prop_name=property_name)
+            lambda: self.client.fate_summary(**kwargs)
         )
         return to_serializable(result)
 
@@ -685,26 +499,32 @@ class ChemicalResource(BaseResource):
         identifier_type: str,
         identifier: str,
         file_format: str,
-        image_format: Optional[str],
+        image_format: Optional[str] = None,
     ) -> Dict[str, Any]:
+        kwargs = {
+            "identifier_type": identifier_type,
+            "identifier": identifier,
+            "file_format": file_format,
+        }
+        if image_format is not None:
+            kwargs["image_format"] = image_format
+
         payload = self._with_retry(
-            lambda: self.client.structure_file(
-                identifier_type=identifier_type,
-                identifier=identifier,
-                file_format=file_format,
-                image_format=image_format,
-            )
+            lambda: self.client.structure_file(**kwargs)
         )
+        # ... (rest of the method remains the same)
         metadata = self.get_last_metadata()
         content_type = metadata.get("content_type") if metadata else None
 
         if isinstance(payload, bytes):
+            # Ensure base64 is imported if needed
+            import base64 
             data = base64.b64encode(payload).decode("ascii")
             encoding = "base64"
         else:
             data = to_serializable(payload)
             encoding = "utf-8"
-
+        
         response: Dict[str, Any] = {
             "identifier": identifier,
             "identifierType": identifier_type,

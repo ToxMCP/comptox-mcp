@@ -269,15 +269,21 @@ class MCPServer:
                     {
                         "type": "text",
                         "text": json.dumps(structured, indent=2, default=str),
-                        "annotations": {"audience": ["assistant"]},
                     }
                 ],
-                "structuredContent": {
-                    "data": structured,
-                    **({"metadata": combined_metadata} if combined_metadata else {}),
-                },
-                "isError": False,
             }
+            if structured:
+                if isinstance(structured, dict):
+                    result["structuredContent"] = structured
+                else:
+                    # Normalize lists/scalars into a consistent envelope so metadata can be attached.
+                    result["structuredContent"] = {"data": structured}
+            if combined_metadata:
+                existing_sc = result.get("structuredContent")
+                if isinstance(existing_sc, dict):
+                    existing_sc["metadata"] = combined_metadata
+                else:
+                    result["structuredContent"] = {"data": existing_sc, "metadata": combined_metadata}
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="success",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
@@ -8,6 +9,8 @@ from pydantic import BaseModel
 from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.contracts import load_schema
 from epacomp_tox.tools.schema import create_model_from_schema
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -48,7 +51,21 @@ class ToolRegistry:
                 namespace = schema_ref_def["namespace"]
                 schema_name = schema_ref_def["name"]
                 response_schema_ref = (namespace, schema_name)
-                output_schema = load_schema(namespace, schema_name)
+                # Only load if not already present (e.g. from resource-level override)
+                if not output_schema:
+                    output_schema = load_schema(namespace, schema_name)
+
+            if output_schema and output_schema.get("type") != "object":
+                # Wrap non-object schemas (e.g. arrays) in a standard envelope to match server behavior
+                # and satisfy MCP/Gemini requirements for tool output schemas.
+                logger.warning(f"Wrapping outputSchema for tool '{name}' (type: {output_schema.get('type')}) in object envelope.")
+                output_schema = {
+                    "type": "object",
+                    "properties": {
+                        "data": output_schema
+                    },
+                    "required": ["data"]
+                }
 
             description = tool.get("description", "")
             parameters_model = create_model_from_schema(name, input_schema)

@@ -1,0 +1,42 @@
+# Contributing to EPA CompTox MCP Server
+
+First off, thank you for considering contributing to this project! Your help is greatly appreciated.
+
+## Where to Start
+
+If you're new to the project, a good place to start is by looking at the [open issues](https://github.com/your-org/mcp_epacomp_tox/issues). You can also check out the [documentation](docs) to get a better understanding of the project's architecture and goals.
+
+## How to Contribute
+
+### Reporting Bugs
+
+If you find a bug, please open an issue and provide the following information:
+
+*   A clear and descriptive title.
+*   A detailed description of the problem, including steps to reproduce it.
+*   The expected behavior and what you're seeing instead.
+*   Your operating system, Python version, and the project version you're using.
+
+### Suggesting Enhancements
+
+If you have an idea for a new feature or an improvement to an existing one, please open an issue and provide the following information:
+
+*   A clear and descriptive title.
+*   A detailed description of the enhancement you're proposing.
+*   Any mockups or examples that might help illustrate your idea.
+
+### Submitting Pull Requests
+
+1.  Fork the repository and create a new branch from `main`.
+2.  Make your changes and add or update tests as appropriate.
+3.  Ensure the test suite passes by running `pytest`.
+4.  Format your code using a tool like `black`.
+5.  Open a pull request with a clear title and a detailed description of your changes.
+
+## Style Guide
+
+This project follows the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code. We also use `black` for automatic code formatting.
+
+## Code of Conduct
+
+This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.

@@ -24,28 +24,23 @@ class Endpoint:
 DEFAULT_ENDPOINTS: List[Endpoint] = [
     Endpoint(
         name="CTX Chemical API",
-        url=os.environ.get("CTX_CHEMICAL_HEALTH_URL", "https://comptox.epa.gov/ctx-api/v1/chemical"),
+        url=os.environ.get("CTX_CHEMICAL_HEALTH_URL", "https://comptox.epa.gov/ctx-api/chemical/list/"),
         description="Identifier resolution, structures, property lookups",
     ),
     Endpoint(
         name="CTX Hazard API",
-        url=os.environ.get("CTX_HAZARD_HEALTH_URL", "https://comptox.epa.gov/ctx-api/v1/hazard"),
+        url=os.environ.get("CTX_HAZARD_HEALTH_URL", "https://comptox.epa.gov/ctx-api/hazard/toxval/search/by-dtxsid/DTXSID7020182"),
         description="ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC",
     ),
     Endpoint(
         name="CTX Exposure API",
-        url=os.environ.get("CTX_EXPOSURE_HEALTH_URL", "https://comptox.epa.gov/ctx-api/v1/exposure"),
+        url=os.environ.get("CTX_EXPOSURE_HEALTH_URL", "https://comptox.epa.gov/ctx-api/exposure/product-data/puc"),
         description="CPDat, SEEM, MMDB, HTTK",
     ),
     Endpoint(
         name="CTX Bioactivity API",
-        url=os.environ.get("CTX_BIOACTIVITY_HEALTH_URL", "https://comptox.epa.gov/ctx-api/v1/bioactivity"),
+        url=os.environ.get("CTX_BIOACTIVITY_HEALTH_URL", "https://comptox.epa.gov/ctx-api/bioactivity/assay/count"),
         description="ToxCast/Tox21 assays, AOP mappings",
-    ),
-    Endpoint(
-        name="CTX Metadata API",
-        url=os.environ.get("CTX_METADATA_HEALTH_URL", "https://comptox.epa.gov/ctx-api/v1/metadata"),
-        description="Model cards, applicability domains",
     ),
 ]
 
