@@ -6,8 +6,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
 from pydantic import BaseModel
 
-from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.contracts import load_schema
+from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.tools.schema import create_model_from_schema
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,9 @@ class ToolRegistry:
             if name in self._tools:
                 raise ValueError(f"Tool '{name}' already registered.")
 
-            input_schema = tool.get("inputSchema") or tool.get("parameters") or {"type": "object"}
+            input_schema = (
+                tool.get("inputSchema") or tool.get("parameters") or {"type": "object"}
+            )
             output_schema = tool.get("outputSchema")
             response_schema_ref: Optional[Tuple[str, str]] = None
 
@@ -58,13 +60,13 @@ class ToolRegistry:
             if output_schema and output_schema.get("type") != "object":
                 # Wrap non-object schemas (e.g. arrays) in a standard envelope to match server behavior
                 # and satisfy MCP/Gemini requirements for tool output schemas.
-                logger.warning(f"Wrapping outputSchema for tool '{name}' (type: {output_schema.get('type')}) in object envelope.")
+                logger.warning(
+                    f"Wrapping outputSchema for tool '{name}' (type: {output_schema.get('type')}) in object envelope."
+                )
                 output_schema = {
                     "type": "object",
-                    "properties": {
-                        "data": output_schema
-                    },
-                    "required": ["data"]
+                    "properties": {"data": output_schema},
+                    "required": ["data"],
                 }
 
             description = tool.get("description", "")

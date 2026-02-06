@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
@@ -10,7 +10,9 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 class AuditBundleStore:
     """Durable storage for orchestrator audit bundles and attachments."""
 
-    def __init__(self, base_dir: Union[str, Path], *, retention_days: Optional[int] = None) -> None:
+    def __init__(
+        self, base_dir: Union[str, Path], *, retention_days: Optional[int] = None
+    ) -> None:
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         self.retention_days = retention_days
@@ -29,7 +31,9 @@ class AuditBundleStore:
         run_dir.mkdir(parents=True, exist_ok=True)
         created_at = datetime.now(timezone.utc).isoformat()
 
-        payload = json.dumps(bundle, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8")
+        payload = json.dumps(
+            bundle, ensure_ascii=False, indent=2, sort_keys=True
+        ).encode("utf-8")
         bundle_path = run_dir / "bundle.json"
         bundle_path.write_bytes(payload)
         bundle_checksum = hashlib.sha256(payload).hexdigest()

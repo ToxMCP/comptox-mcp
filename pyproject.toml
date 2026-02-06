@@ -7,7 +7,19 @@ name = "epacomp-tox-mcp"
 version = "0.1.0"
 description = "Model Context Protocol server for the EPA CompTox API"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+keywords = ["mcp", "model-context-protocol", "epa", "comptox", "toxicology"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Framework :: FastAPI",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 authors = [
     { name = "EPA CompTox MCP Maintainers" }
 ]
@@ -33,7 +45,11 @@ dev = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/senseibelbi/CompTox_MCP"
 Repository = "https://github.com/senseibelbi/CompTox_MCP"
+Issues = "https://github.com/senseibelbi/CompTox_MCP/issues"
+Documentation = "https://github.com/senseibelbi/CompTox_MCP/tree/main/docs"
+Security = "https://github.com/senseibelbi/CompTox_MCP/security/policy"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

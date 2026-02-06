@@ -1,9 +1,9 @@
-from typing import Any, Dict, List
 import logging
+from typing import Any, Dict, List
 
 import ctxpy as ctx
-
 from epacomp_tox.contracts import schema_ref
+
 from .base import BaseResource
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,9 @@ class HazardResource(BaseResource):
         UPSTREAM_TIMEOUT = 120.0
         try:
             self.client = ctx.Hazard(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
-            logger.info(f"Successfully initialized ctx.Hazard with timeout={UPSTREAM_TIMEOUT}s")
+            logger.info(
+                f"Successfully initialized ctx.Hazard with timeout={UPSTREAM_TIMEOUT}s"
+            )
         except TypeError as e:
             logger.warning(
                 f"Could not set timeout for ctx.Hazard (TypeError: {e}). Using default timeout."
@@ -151,7 +153,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -178,7 +183,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -205,7 +213,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -232,7 +243,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -259,7 +273,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -270,7 +287,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -281,7 +301,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -292,7 +315,10 @@ class HazardResource(BaseResource):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "dtxsid": {"type": "string", "description": "Chemical identifier (DTXSID)."}
+                        "dtxsid": {
+                            "type": "string",
+                            "description": "Chemical identifier (DTXSID).",
+                        }
                     },
                     "required": ["dtxsid"],
                 },
@@ -345,13 +371,14 @@ class HazardResource(BaseResource):
                 else "list_generic.response.schema"
             )
             tool["responseSchemaRef"] = self._schema(schema_name)
-            
+
             # Ensure outputSchema is populated from the reference
             if "responseSchemaRef" in tool:
                 from epacomp_tox.contracts import load_schema
+
                 ref = tool["responseSchemaRef"]
                 tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
-                
+
         return tools
 
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
@@ -366,17 +393,39 @@ class HazardResource(BaseResource):
                 dtxsids=params["dtxsids"],
                 summary=params.get("summary", True),
             ),
-            "get_hazard_toxval": lambda params: self.get_hazard_toxval(params["dtxsid"]),
-            "batch_get_hazard_toxval": lambda params: self.batch_get_hazard_toxval(params["dtxsids"]),
-            "get_hazard_skin_eye": lambda params: self.get_hazard_skin_eye(params["dtxsid"]),
-            "batch_get_hazard_skin_eye": lambda params: self.batch_get_hazard_skin_eye(params["dtxsids"]),
-            "get_hazard_cancer_summary": lambda params: self.get_hazard_cancer_summary(params["dtxsid"]),
-            "batch_get_hazard_cancer_summary": lambda params: self.batch_get_hazard_cancer_summary(params["dtxsids"]),
-            "get_hazard_genetox_summary": lambda params: self.get_hazard_genetox_summary(params["dtxsid"]),
-            "batch_get_hazard_genetox_summary": lambda params: self.batch_get_hazard_genetox_summary(params["dtxsids"]),
-            "get_hazard_genetox_details": lambda params: self.get_hazard_genetox_details(params["dtxsid"]),
-            "batch_get_hazard_genetox_details": lambda params: self.batch_get_hazard_genetox_details(params["dtxsids"]),
-            "get_hazard_adme_ivive": lambda params: self.get_hazard_adme_ivive(params["dtxsid"]),
+            "get_hazard_toxval": lambda params: self.get_hazard_toxval(
+                params["dtxsid"]
+            ),
+            "batch_get_hazard_toxval": lambda params: self.batch_get_hazard_toxval(
+                params["dtxsids"]
+            ),
+            "get_hazard_skin_eye": lambda params: self.get_hazard_skin_eye(
+                params["dtxsid"]
+            ),
+            "batch_get_hazard_skin_eye": lambda params: self.batch_get_hazard_skin_eye(
+                params["dtxsids"]
+            ),
+            "get_hazard_cancer_summary": lambda params: self.get_hazard_cancer_summary(
+                params["dtxsid"]
+            ),
+            "batch_get_hazard_cancer_summary": lambda params: self.batch_get_hazard_cancer_summary(
+                params["dtxsids"]
+            ),
+            "get_hazard_genetox_summary": lambda params: self.get_hazard_genetox_summary(
+                params["dtxsid"]
+            ),
+            "batch_get_hazard_genetox_summary": lambda params: self.batch_get_hazard_genetox_summary(
+                params["dtxsids"]
+            ),
+            "get_hazard_genetox_details": lambda params: self.get_hazard_genetox_details(
+                params["dtxsid"]
+            ),
+            "batch_get_hazard_genetox_details": lambda params: self.batch_get_hazard_genetox_details(
+                params["dtxsids"]
+            ),
+            "get_hazard_adme_ivive": lambda params: self.get_hazard_adme_ivive(
+                params["dtxsid"]
+            ),
             "get_hazard_pprtv": lambda params: self.get_hazard_pprtv(params["dtxsid"]),
             "get_hazard_iris": lambda params: self.get_hazard_iris(params["dtxsid"]),
             "get_hazard_hawc": lambda params: self.get_hazard_hawc(params["dtxsid"]),
@@ -385,7 +434,9 @@ class HazardResource(BaseResource):
                 lookup_type=params["lookup_type"],
                 value=params["value"],
             ),
-            "batch_get_hazard_toxref": lambda params: self.batch_get_hazard_toxref(params["dtxsids"]),
+            "batch_get_hazard_toxref": lambda params: self.batch_get_hazard_toxref(
+                params["dtxsids"]
+            ),
         }
 
         try:
@@ -394,7 +445,9 @@ class HazardResource(BaseResource):
             raise ValueError(f"Unknown tool: {tool_name}") from exc
         return handler(parameters)
 
-    def search_hazard(self, data_type: str, dtxsid: str, summary: bool = True) -> List[Dict[str, Any]]:
+    def search_hazard(
+        self, data_type: str, dtxsid: str, summary: bool = True
+    ) -> List[Dict[str, Any]]:
         """
         Search hazard datasets for a chemical.
 
@@ -432,7 +485,9 @@ class HazardResource(BaseResource):
         if not cleaned:
             return {}
         payload = self._with_retry(
-            lambda: self.client.batch_search(by=data_type, dtxsid=cleaned, summary=summary)
+            lambda: self.client.batch_search(
+                by=data_type, dtxsid=cleaned, summary=summary
+            )
         )
         normalized = self._ensure_object(payload)
         return {key: self._ensure_list(value) for key, value in normalized.items()}
@@ -463,33 +518,45 @@ class HazardResource(BaseResource):
         payload = self._with_retry(lambda: self.client.cancer_summary(dtxsid=dtxsid))
         return self._ensure_list(payload)
 
-    def batch_get_hazard_cancer_summary(self, dtxsids: List[str]) -> List[Dict[str, Any]]:
+    def batch_get_hazard_cancer_summary(
+        self, dtxsids: List[str]
+    ) -> List[Dict[str, Any]]:
         cleaned = self._clean_identifiers(dtxsids)
         if not cleaned:
             return []
-        payload = self._with_retry(lambda: self.client.cancer_summary_batch(dtxsids=cleaned))
+        payload = self._with_retry(
+            lambda: self.client.cancer_summary_batch(dtxsids=cleaned)
+        )
         return self._ensure_list(payload)
 
     def get_hazard_genetox_summary(self, dtxsid: str) -> List[Dict[str, Any]]:
         payload = self._with_retry(lambda: self.client.genetox_summary(dtxsid=dtxsid))
         return self._ensure_list(payload)
 
-    def batch_get_hazard_genetox_summary(self, dtxsids: List[str]) -> List[Dict[str, Any]]:
+    def batch_get_hazard_genetox_summary(
+        self, dtxsids: List[str]
+    ) -> List[Dict[str, Any]]:
         cleaned = self._clean_identifiers(dtxsids)
         if not cleaned:
             return []
-        payload = self._with_retry(lambda: self.client.genetox_summary_batch(dtxsids=cleaned))
+        payload = self._with_retry(
+            lambda: self.client.genetox_summary_batch(dtxsids=cleaned)
+        )
         return self._ensure_list(payload)
 
     def get_hazard_genetox_details(self, dtxsid: str) -> List[Dict[str, Any]]:
         payload = self._with_retry(lambda: self.client.genetox_details(dtxsid=dtxsid))
         return self._ensure_list(payload)
 
-    def batch_get_hazard_genetox_details(self, dtxsids: List[str]) -> List[Dict[str, Any]]:
+    def batch_get_hazard_genetox_details(
+        self, dtxsids: List[str]
+    ) -> List[Dict[str, Any]]:
         cleaned = self._clean_identifiers(dtxsids)
         if not cleaned:
             return []
-        payload = self._with_retry(lambda: self.client.genetox_details_batch(dtxsids=cleaned))
+        payload = self._with_retry(
+            lambda: self.client.genetox_details_batch(dtxsids=cleaned)
+        )
         return self._ensure_list(payload)
 
     def get_hazard_adme_ivive(self, dtxsid: str) -> List[Dict[str, Any]]:
@@ -508,7 +575,9 @@ class HazardResource(BaseResource):
         payload = self._with_retry(lambda: self.client.hawc(dtxsid=dtxsid))
         return self._ensure_list(payload)
 
-    def get_hazard_toxref(self, dataset: str, lookup_type: str, value: str) -> List[Dict[str, Any]]:
+    def get_hazard_toxref(
+        self, dataset: str, lookup_type: str, value: str
+    ) -> List[Dict[str, Any]]:
         payload = self._with_retry(
             lambda: self.client.toxref(dataset=dataset, lookup=lookup_type, value=value)
         )

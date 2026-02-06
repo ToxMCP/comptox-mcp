@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Iterable, List
 
-from jsonschema import validate, ValidationError
+from jsonschema import ValidationError, validate
 
 DEFAULT_SCHEMA_PATH = Path("schemas/comptox_model_card.schema.json")
 DEFAULT_CARDS_DIR = Path("metadata/model_cards")
@@ -32,9 +32,7 @@ def validate_model_cards(
         raise MetadataValidationError("\n".join(errors))
 
 
-def validate_applicability_domains(
-    *, directory: Path = DEFAULT_AD_DIR
-) -> None:
+def validate_applicability_domains(*, directory: Path = DEFAULT_AD_DIR) -> None:
     required_fields = {"model", "version", "criteria", "policy"}
     errors: List[str] = []
     for path in sorted(directory.glob("*.json")):

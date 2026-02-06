@@ -64,4 +64,3 @@ def check_ctx_health(
     raise RuntimeError(
         f"CTX health check failed for base '{resolved_base_url}': {error_detail}"
     )
-

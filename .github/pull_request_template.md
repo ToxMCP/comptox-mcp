@@ -17,4 +17,4 @@ Please link to any related issues.
 - [ ] I have read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 - [ ] I have added or updated tests to cover my changes.
 - [ ] I have run `pytest` and all tests are passing.
-- [ ] I have formatted my code with `black`.
+- [ ] I have formatted my code with `isort` and `black`.

@@ -4,11 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from epacomp_tox.predictive import (
-    ADCheckResult,
-    PredictiveRequest,
-    PredictiveResponse,
-)
+from epacomp_tox.predictive import ADCheckResult, PredictiveRequest, PredictiveResponse
 
 
 class MetadataTrace(BaseModel):

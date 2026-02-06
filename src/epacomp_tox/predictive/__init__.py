@@ -1,16 +1,16 @@
 """Predictive micro-service utilities."""
 
 from .base import (
-    PredictiveServiceBase,
+    ADCheckResult,
     PredictiveRequest,
     PredictiveResponse,
-    ADCheckResult,
+    PredictiveServiceBase,
 )
 from .clients import PredictiveClient
-from .test_service import TestConsensusPredictiveService
-from .opera_service import OperaPropertyService
 from .genra_service import GenRAService
+from .opera_service import OperaPropertyService
 from .router import build_predictive_router
+from .test_service import TestConsensusPredictiveService
 
 __all__ = [
     "PredictiveServiceBase",

@@ -46,7 +46,10 @@ class ModelCardStore:
             try:
                 raw = path.read_text(encoding="utf-8")
                 payload = json.loads(raw)
-            except (OSError, json.JSONDecodeError):  # pragma: no cover - logged upstream
+            except (
+                OSError,
+                json.JSONDecodeError,
+            ):  # pragma: no cover - logged upstream
                 continue
             checksum = hashlib.sha256(raw.encode("utf-8")).hexdigest()
             stat = path.stat()

@@ -3,16 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
-from .identifiers import IdentifierResolver
+from ..predictive.base import ADCheckResult, PredictiveRequest, PredictiveServiceBase
 from .ctx_data import CtxDataAssembler
+from .evidence import EvidenceSynthesizer
+from .identifiers import IdentifierResolver
 from .predictive import PredictiveCoordinator
 from .workflow import GenRAOrchestrator
-from .evidence import EvidenceSynthesizer
-from ..predictive.base import (
-    ADCheckResult,
-    PredictiveRequest,
-    PredictiveServiceBase,
-)
 
 OFFLINE_SCENARIOS = [
     "acute_toxicity",
@@ -54,7 +50,9 @@ class _OfflineHazardResource:
     def __init__(self) -> None:
         self._metadata: Dict[str, Any] = {}
 
-    def search_hazard(self, data_type: str, dtxsid: str, summary: bool = True) -> list[dict[str, Any]]:
+    def search_hazard(
+        self, data_type: str, dtxsid: str, summary: bool = True
+    ) -> list[dict[str, Any]]:
         self._metadata = {"status": 200}
         return [{"endpoint": "Acute toxicity", "value": "LD50", "source": "Offline"}]
 
@@ -70,7 +68,9 @@ class _OfflineExposureResource:
         self._metadata = {"status": 200}
         return [{"kmp": 1.2, "unit": "1/hr"}]
 
-    def search_cpdat(self, vocab_name: str, dtxsids: Sequence[str]) -> list[dict[str, Any]]:
+    def search_cpdat(
+        self, vocab_name: str, dtxsids: Sequence[str]
+    ) -> list[dict[str, Any]]:
         self._metadata = {"status": 200}
         return [{"vocab": vocab_name, "label": "Consumer product"}]
 
@@ -78,7 +78,9 @@ class _OfflineExposureResource:
         self._metadata = {"status": 200}
         return [{"probability": 0.42}]
 
-    def search_exposures(self, data_type: str, dtxsids: Sequence[str]) -> list[dict[str, Any]]:
+    def search_exposures(
+        self, data_type: str, dtxsids: Sequence[str]
+    ) -> list[dict[str, Any]]:
         self._metadata = {"status": 200}
         return [{"dataset": data_type, "value": "offline"}]
 
@@ -119,7 +121,9 @@ class OfflinePredictiveService(PredictiveServiceBase):
     def _check_ad_impl(self, request: PredictiveRequest) -> ADCheckResult:
         return ADCheckResult(in_domain=True, confidence=0.85, details={"analogues": 4})
 
-    def _build_metadata(self, request: PredictiveRequest, ad_result: ADCheckResult) -> Dict[str, Any]:
+    def _build_metadata(
+        self, request: PredictiveRequest, ad_result: ADCheckResult
+    ) -> Dict[str, Any]:
         metadata = super()._build_metadata(request, ad_result)
         metadata.update(
             {
@@ -137,7 +141,9 @@ def build_offline_orchestrator(
     clock: Optional[Callable[[], str]] = None,
 ) -> GenRAOrchestrator:
     """Construct an orchestrator wired with offline stub resources."""
-    resolver = IdentifierResolver(chemical_resource=_OfflineChemicalResource(), cache_ttl=0)
+    resolver = IdentifierResolver(
+        chemical_resource=_OfflineChemicalResource(), cache_ttl=0
+    )
     assembler = CtxDataAssembler(
         hazard_resource=_OfflineHazardResource(),
         exposure_resource=_OfflineExposureResource(),

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from ctxpy import CtxApiError
-
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.predictive.base import (
     ADCheckResult,
@@ -22,14 +21,16 @@ class TestClient(PredictiveClient):
     def predict(self, request: PredictiveRequest) -> Dict[str, Any]:
         try:
             return self.client.predict(
-                chemical=request.chemical_identifier, identifier_type=request.identifier_type
+                chemical=request.chemical_identifier,
+                identifier_type=request.identifier_type,
             )
         except CtxApiError as exc:  # pragma: no cover - passthrough
             raise ValueError(f"TEST prediction failed: {exc}") from exc
 
     def check_applicability_domain(self, request: PredictiveRequest) -> ADCheckResult:
         result = self.client.check_applicability_domain(
-            chemical=request.chemical_identifier, identifier_type=request.identifier_type
+            chemical=request.chemical_identifier,
+            identifier_type=request.identifier_type,
         )
         return ADCheckResult(
             in_domain=result.get("in_domain", False),

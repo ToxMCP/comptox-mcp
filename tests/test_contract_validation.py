@@ -26,7 +26,10 @@ class DummyResource(BaseResource):
                 "name": "dummy_tool",
                 "description": "Returns a payload validated against the hazard list schema.",
                 "parameters": {"type": "object"},
-                "responseSchemaRef": {"namespace": "common", "name": "list_generic.response.schema"},
+                "responseSchemaRef": {
+                    "namespace": "common",
+                    "name": "list_generic.response.schema",
+                },
             }
         ]
 

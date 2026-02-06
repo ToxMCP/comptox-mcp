@@ -5,7 +5,7 @@ from typing import Dict, List
 
 import pytest
 
-from epacomp_tox import PredictiveTask, PredictiveRequest
+from epacomp_tox import PredictiveRequest, PredictiveTask
 from epacomp_tox.orchestrator.offline import (
     OFFLINE_SCENARIOS,
     build_offline_orchestrator,
@@ -26,7 +26,10 @@ def _sanitize_bundle(bundle: Dict[str, any]) -> Dict[str, any]:
         },
         "guardrails": bundle.get("guardrails", []),
         "ctxData": {
-            "hazardEndpoints": [item.get("endpoint") for item in bundle["ctxData"]["hazard"].get("all", [])],
+            "hazardEndpoints": [
+                item.get("endpoint")
+                for item in bundle["ctxData"]["hazard"].get("all", [])
+            ],
             "exposureKeys": sorted(bundle["ctxData"]["exposure"].keys()),
             "cheminformaticsKeys": sorted(bundle["ctxData"]["cheminformatics"].keys()),
             "dataGaps": bundle["ctxData"].get("dataGaps", []),
@@ -58,7 +61,13 @@ def _sanitize_bundle(bundle: Dict[str, any]) -> Dict[str, any]:
 def _expected_snapshot(scenario: str) -> Dict[str, any]:
     exposure_lookup = {
         "acute_toxicity": ["cpdat:fc", "httk"],
-        "exposure_prioritization": ["cpdat:fc", "cpdat:puc", "httk", "pathways", "seem"],
+        "exposure_prioritization": [
+            "cpdat:fc",
+            "cpdat:puc",
+            "httk",
+            "pathways",
+            "seem",
+        ],
         "genra_read_across": ["cpdat:fc", "httk", "qsurs"],
     }
     return {
@@ -147,7 +156,9 @@ def test_offline_orchestrator_scenarios(tmp_path: Path, scenario: str) -> None:
     assert attachments_dir.exists()
 
     attachment_names = {path.name for path in attachments_dir.iterdir()}
-    assert {"ctx_data.json", "predictive_results.json", "evidence.json"}.issubset(attachment_names)
+    assert {"ctx_data.json", "predictive_results.json", "evidence.json"}.issubset(
+        attachment_names
+    )
 
     storage_meta = bundle.get("storage") or {}
     assert storage_meta.get("bundlePath") == str(bundle_path.relative_to(tmp_path))

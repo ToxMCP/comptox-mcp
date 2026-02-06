@@ -5,26 +5,27 @@ from unittest import mock
 import pytest
 
 from ctxpy import RateLimitInfo
-
 from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
 from epacomp_tox.orchestrator.identifiers import (
     IdentifierResolutionError,
     IdentifierResolver,
 )
-from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
 from epacomp_tox.orchestrator.models import PredictiveTask
+from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
 from epacomp_tox.orchestrator.workflow import GenRAOrchestrator
-from epacomp_tox.resources.cheminformatics import CheminformaticsResource
-from epacomp_tox.resources.exposure import ExposureResource
-from epacomp_tox.resources.hazard import HazardResource
 from epacomp_tox.predictive import (
     ADCheckResult,
     PredictiveRequest,
     PredictiveServiceBase,
 )
+from epacomp_tox.resources.cheminformatics import CheminformaticsResource
+from epacomp_tox.resources.exposure import ExposureResource
+from epacomp_tox.resources.hazard import HazardResource
 
 
-def _rate_limit(limit: int = 120, remaining: int = 119, reset: int = 60) -> RateLimitInfo:
+def _rate_limit(
+    limit: int = 120, remaining: int = 119, reset: int = 60
+) -> RateLimitInfo:
     return RateLimitInfo(limit=limit, remaining=remaining, reset=reset)
 
 
@@ -125,12 +126,18 @@ def test_ctx_data_assembler_fetches_datasets_and_uses_cache():
     cheminformatics_resource = _mock_resource(CheminformaticsResource)
 
     hazard_resource.search_hazard.return_value = [{"hazard": "record"}]
-    hazard_resource.get_last_metadata.side_effect = lambda: {"status": 200, "rate_limit": _rate_limit(100, 98, 30)}
+    hazard_resource.get_last_metadata.side_effect = lambda: {
+        "status": 200,
+        "rate_limit": _rate_limit(100, 98, 30),
+    }
 
     exposure_resource.search_httk.return_value = [{"httk": "value"}]
     exposure_resource.search_qsurs.return_value = []
     exposure_resource.search_cpdat.return_value = [{"fc": "industrial"}]
-    exposure_resource.get_last_metadata.side_effect = lambda: {"status": 200, "request_id": "req-exp"}
+    exposure_resource.get_last_metadata.side_effect = lambda: {
+        "status": 200,
+        "request_id": "req-exp",
+    }
 
     cheminformatics_resource.search_toxprints.return_value = {"fingerprints": ["FP1"]}
     cheminformatics_resource.get_last_metadata.return_value = {}
@@ -195,10 +202,17 @@ def test_predictive_coordinator_success_flow():
         name="Stub",
         ad_results=[ad],
         payloads=[{"value": 42}],
-        ad_definition={"model": "Stub", "version": "1", "policy": "block", "errorCode": "STUB_AD_FAIL"},
+        ad_definition={
+            "model": "Stub",
+            "version": "1",
+            "policy": "block",
+            "errorCode": "STUB_AD_FAIL",
+        },
     )
     coordinator = PredictiveCoordinator({"stub": service})
-    task = PredictiveTask(service="stub", request=PredictiveRequest(chemical_identifier="DTXSID0001"))
+    task = PredictiveTask(
+        service="stub", request=PredictiveRequest(chemical_identifier="DTXSID0001")
+    )
 
     result = coordinator.run([task])
 
@@ -215,10 +229,17 @@ def test_predictive_coordinator_blocks_on_ad_failure():
         name="Blocked",
         ad_results=[ad],
         payloads=[{"value": 1}],
-        ad_definition={"model": "Blocked", "version": "1", "policy": "block", "errorCode": "BLOCKED_AD"},
+        ad_definition={
+            "model": "Blocked",
+            "version": "1",
+            "policy": "block",
+            "errorCode": "BLOCKED_AD",
+        },
     )
     coordinator = PredictiveCoordinator({"blocked": service})
-    task = PredictiveTask(service="blocked", request=PredictiveRequest(chemical_identifier="DTXSID0002"))
+    task = PredictiveTask(
+        service="blocked", request=PredictiveRequest(chemical_identifier="DTXSID0002")
+    )
 
     result = coordinator.run([task], require_ad_clearance=True)
 
@@ -230,17 +251,25 @@ def test_predictive_coordinator_blocks_on_ad_failure():
     assert service.predictions == 0
 
 
-
 def test_predictive_coordinator_warn_policy_continues():
     ad = ADCheckResult(in_domain=False, confidence=0.55)
     service = _StubPredictiveService(
         name="Warning",
         ad_results=[ad],
         payloads=[{"value": 7}],
-        ad_definition={"model": "Warning", "version": "1", "policy": "warn", "errorCode": "WARN_AD"},
+        ad_definition={
+            "model": "Warning",
+            "version": "1",
+            "policy": "warn",
+            "errorCode": "WARN_AD",
+        },
     )
-    coordinator = PredictiveCoordinator({"warning": service}, default_require_ad_clearance=False)
-    task = PredictiveTask(service="warning", request=PredictiveRequest(chemical_identifier="DTXSID0003"))
+    coordinator = PredictiveCoordinator(
+        {"warning": service}, default_require_ad_clearance=False
+    )
+    task = PredictiveTask(
+        service="warning", request=PredictiveRequest(chemical_identifier="DTXSID0003")
+    )
 
     result = coordinator.run([task])
 
@@ -266,7 +295,9 @@ def test_genra_orchestrator_successful_bundle(tmp_path):
     cheminformatics_resource.search_toxprints.return_value = {"toxprints": []}
     cheminformatics_resource.get_last_metadata.return_value = {}
 
-    chemical_resource.search_chemical.return_value = [{"dtxsid": "DTXSID0000001", "preferredName": "Example"}]
+    chemical_resource.search_chemical.return_value = [
+        {"dtxsid": "DTXSID0000001", "preferredName": "Example"}
+    ]
     chemical_resource.get_chemical_details.return_value = {
         "dtxsid": "DTXSID0000001",
         "preferredName": "Example",
@@ -286,7 +317,12 @@ def test_genra_orchestrator_successful_bundle(tmp_path):
         name="Stub",
         ad_results=[ADCheckResult(in_domain=True, confidence=0.9)],
         payloads=[{"prediction": "ok"}],
-        ad_definition={"model": "Stub", "version": "1", "policy": "block", "errorCode": "GENRA_AD_FAIL"},
+        ad_definition={
+            "model": "Stub",
+            "version": "1",
+            "policy": "block",
+            "errorCode": "GENRA_AD_FAIL",
+        },
     )
     coordinator = PredictiveCoordinator({"stub": predictive_service})
     orchestrator = GenRAOrchestrator(
@@ -301,7 +337,12 @@ def test_genra_orchestrator_successful_bundle(tmp_path):
         target_identifier="50-00-0",
         identifier_type="casrn",
         scenarios=["genra_read_across"],
-        predictive_plan=[PredictiveTask(service="stub", request=PredictiveRequest(chemical_identifier="DTXSID0000001"))],
+        predictive_plan=[
+            PredictiveTask(
+                service="stub",
+                request=PredictiveRequest(chemical_identifier="DTXSID0000001"),
+            )
+        ],
     )
 
     assert bundle["status"] == "success"
@@ -328,10 +369,17 @@ def test_predictive_coordinator_records_prediction_errors():
         name="Error",
         ad_results=[ad],
         payloads=[],  # triggers runtime error inside predict
-        ad_definition={"model": "Error", "version": "1", "policy": "block", "errorCode": "ERR_AD"},
+        ad_definition={
+            "model": "Error",
+            "version": "1",
+            "policy": "block",
+            "errorCode": "ERR_AD",
+        },
     )
     coordinator = PredictiveCoordinator({"error": service})
-    task = PredictiveTask(service="error", request=PredictiveRequest(chemical_identifier="DTXSID0004"))
+    task = PredictiveTask(
+        service="error", request=PredictiveRequest(chemical_identifier="DTXSID0004")
+    )
 
     result = coordinator.run([task])
 

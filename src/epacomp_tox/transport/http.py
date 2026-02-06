@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
@@ -10,7 +10,10 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
 from epacomp_tox.server import MCPServer
-from epacomp_tox.transport.common import PRIMARY_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS
+from epacomp_tox.transport.common import (
+    PRIMARY_PROTOCOL_VERSION,
+    SUPPORTED_PROTOCOL_VERSIONS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +50,6 @@ async def mcp_probe(request: Request) -> Response:
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "status": "ok",
             "serverInfo": server.get_server_info(),
             "protocolVersion": PRIMARY_PROTOCOL_VERSION,
             "supportedProtocolVersions": SUPPORTED_PROTOCOL_VERSIONS,
@@ -65,10 +67,7 @@ async def oauth_discovery_placeholder() -> Response:
     Handle OAuth discovery probes from MCP clients.
     Returns 200 OK with empty content to satisfy client discovery attempts.
     """
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={})
 
 
 def _jsonrpc_success(result: Any, request_id: Optional[Any]) -> Dict[str, Any]:
@@ -101,7 +100,8 @@ def _get_mcp_server(request: Request) -> MCPServer:
         detail = str(server_error) if server_error else "MCP server not configured"
         logger.error("MCP server unavailable: %s", detail)
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="MCP server unavailable"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="MCP server unavailable",
         )
     return server
 
@@ -139,7 +139,10 @@ def _build_request_context(request: Request) -> Dict[str, Any]:
     user_agent = request.headers.get("user-agent")
     context: Dict[str, Any] = {
         "sessionId": session_id,
-        "clientInfo": {"name": "http-client", **({"userAgent": user_agent} if user_agent else {})},
+        "clientInfo": {
+            "name": "http-client",
+            **({"userAgent": user_agent} if user_agent else {}),
+        },
         "clientCapabilities": {},
         "negotiatedCapabilities": {},
         "transport": {"type": "http"},
@@ -163,13 +166,6 @@ async def mcp_endpoint(request: Request) -> Response:
             code=PARSE_ERROR, message="Parse error: invalid JSON", request_id=None
         )
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
-
-    # Lightweight request logging to help diagnose handshake issues.
-    try:
-        with open("/tmp/mcp_http.log", "a", encoding="utf-8") as log_file:
-            log_file.write(json.dumps(payload, default=str) + "\n")
-    except Exception:  # pragma: no cover - best-effort diagnostics
-        logger.debug("Failed to write request payload to /tmp/mcp_http.log")
 
     if isinstance(payload, list):
         content = _jsonrpc_error(
@@ -211,8 +207,6 @@ async def mcp_endpoint(request: Request) -> Response:
     #             "supportedProtocolVersions": SUPPORTED_PROTOCOL_VERSIONS,
     #         },
     #     )
-
-    jsonrpc_method = payload.get("method")
 
     request_id = payload.get("id")
     method = payload.get("method")
@@ -298,7 +292,9 @@ async def mcp_endpoint(request: Request) -> Response:
         # Notification – no response content
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=_jsonrpc_success(result, request_id))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, content=_jsonrpc_success(result, request_id)
+    )
 
 
 async def _dispatch_method(
@@ -316,16 +312,21 @@ async def _dispatch_method(
 
     if method in {"initialized", "notifications/initialized"}:
         logger.info("Client reported initialization complete.")
-        return {"status": "ok"}
+        return {}
 
     if method == "shutdown":
         logger.info("Shutdown requested via HTTP transport.")
-        return {"status": "ok"}
+        return {}
 
     if method in {"tools.list", "tools/list", "mcp/tool.list", "mcp/tool/list"}:
         return _handle_tools_list(server, params)
 
-    if method in {"resources.list", "resources/list", "mcp/resource.list", "mcp/resource/list"}:
+    if method in {
+        "resources.list",
+        "resources/list",
+        "mcp/resource.list",
+        "mcp/resource/list",
+    }:
         return _handle_resources_list(server, params)
 
     if method in {"resources/templates/list", "resources.templates.list"}:
@@ -341,7 +342,7 @@ async def _dispatch_method(
         return await _handle_tools_call(server, params, request)
 
     if method == "ping":
-        return {"status": "ok"}
+        return {}
 
     raise LookupError(f"Method not found: {method}")
 
@@ -350,10 +351,12 @@ def _handle_initialize(server: MCPServer, params: Dict[str, Any]) -> Dict[str, A
     if params and not isinstance(params, dict):
         raise ValueError("Initialize parameters must be an object.")
 
-    logger.info("HTTP MCP initialize with capabilities: %s", params.get("capabilities", {}))
+    logger.info(
+        "HTTP MCP initialize with capabilities: %s", params.get("capabilities", {})
+    )
     protocol_version = params.get("protocolVersion") or PRIMARY_PROTOCOL_VERSION
     # session_id = params.get("sessionId") or str(uuid4()) # Removed as per instructions
-    
+
     # Return ONLY standard MCP fields
     return {
         # "type": "connected",      # <-- DELETE THIS
@@ -409,11 +412,13 @@ def _handle_resources_list(server: MCPServer, params: Dict[str, Any]) -> Dict[st
     return {"resources": resources, "nextCursor": next_cursor}
 
 
-def _handle_resources_templates_list(server: MCPServer, params: Dict[str, Any]) -> Dict[str, Any]:
+def _handle_resources_templates_list(
+    server: MCPServer, params: Dict[str, Any]
+) -> Dict[str, Any]:
     """Handle resources/templates/list - returns empty list as templates are not supported."""
     if params and not isinstance(params, dict):
         raise ValueError("resources/templates/list parameters must be an object.")
-    
+
     # This server doesn't support resource templates
     return {"resourceTemplates": []}
 
@@ -422,7 +427,7 @@ def _handle_prompts_list(server: MCPServer, params: Dict[str, Any]) -> Dict[str,
     """Handle prompts/list - returns empty list as prompts are not supported."""
     if params and not isinstance(params, dict):
         raise ValueError("prompts/list parameters must be an object.")
-    
+
     # This server doesn't support prompts
     return {"prompts": []}
 
@@ -434,23 +439,23 @@ def _coerce_value(value: Any) -> Any:
     """
     if not isinstance(value, str):
         return value
-    
+
     # Handle boolean strings
     if value.lower() in {"true", "false"}:
         return value.lower() == "true"
-    
+
     # Try integer conversion
     try:
         return int(value)
     except ValueError:
         pass
-    
+
     # Try float conversion
     try:
         return float(value)
     except ValueError:
         pass
-    
+
     # Return as string
     return value
 
@@ -493,28 +498,33 @@ def _extract_legacy_tool(uri: str) -> Tuple[Optional[str], Dict[str, Any]]:
     if candidate_name:
         # Heuristic check: Reject names that look like chemical identifiers
         is_identifier = (
-            candidate_name.startswith(("DTXSID", "DTXCID")) or 
+            candidate_name.startswith(("DTXSID", "DTXCID"))
+            or
             # Check for CASRN-like patterns (numeric with dashes, at least 5 digits)
             (len(candidate_name) >= 5 and candidate_name.replace("-", "").isdigit())
         )
-        
+
         if not is_identifier:
             tool_name = candidate_name
         else:
-             logger.debug(f"Rejecting path segment '{candidate_name}' as a tool name; looks like an identifier.")
+            logger.debug(
+                f"Rejecting path segment '{candidate_name}' as a tool name; looks like an identifier."
+            )
 
     # Coerce query parameters
     tool_params = _coerce_query_params(parse_qs(parsed.query, keep_blank_values=True))
     return tool_name, tool_params
 
 
-def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+def _adapt_legacy_arguments(
+    tool_name: str, arguments: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Maps legacy URI parameters to specific tool parameters and cleans up arguments
     using a whitelist approach to satisfy strict schema validation.
     """
     adapted_args = arguments.copy()
-    
+
     # --- Utility functions ---
     SINGULAR_ID_KEYS = {"identifier", "dtxsid", "dtxcid", "casrn", "query", "search"}
     PLURAL_ID_KEYS = {"identifiers", "dtxsids", "dtxcids", "casrns"}
@@ -524,28 +534,33 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
         value = None
         for key in SINGULAR_ID_KEYS:
             if key in args:
-                value = args.get(key); break
+                value = args.get(key)
+                break
         if value is None:
             for key in PLURAL_ID_KEYS:
-                 if key in args:
+                if key in args:
                     v = args.get(key)
                     if (isinstance(v, list) and v) or isinstance(v, str):
-                        value = v; break
+                        value = v
+                        break
         if value:
-            if isinstance(value, list) and value: value = value[0]
+            if isinstance(value, list) and value:
+                value = value[0]
             return str(value) if value is not None else None
         return None
 
     def extract_plural_identifiers(args: Dict[str, Any]) -> Optional[List[str]]:
-       # (Implementation remains the same as previous analysis)
+        # (Implementation remains the same as previous analysis)
         value = None
         for key in PLURAL_ID_KEYS:
             if key in args:
-                value = args.get(key); break
+                value = args.get(key)
+                break
         if value is None:
             for key in SINGULAR_ID_KEYS:
                 if key in args:
-                    value = args.get(key); break
+                    value = args.get(key)
+                    break
         if value:
             return value if isinstance(value, list) else [value]
         return None
@@ -555,12 +570,20 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
         Removes any keys not present in the allowed_keys set (including 'limit', 'tool', etc.).
         """
         keys_to_remove = set(args.keys()) - allowed_keys
-        
+
         # Also explicitly handle common transport keys often added by clients.
         # 'tool' must be removed as it's used for routing but not part of the schema.
-        TRANSPORT_KEYS = {"limit", "offset", "cursor", "page", "pageSize", "tool", "name"}
+        TRANSPORT_KEYS = {
+            "limit",
+            "offset",
+            "cursor",
+            "page",
+            "pageSize",
+            "tool",
+            "name",
+        }
         keys_to_remove.update(TRANSPORT_KEYS.intersection(args.keys()))
-        
+
         for key in keys_to_remove:
             args.pop(key, None)
 
@@ -568,47 +591,56 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
     if "dataset" in adapted_args and isinstance(adapted_args.get("dataset"), str):
         dataset_value = adapted_args["dataset"].lower()
         if dataset_value == "toxval":
-             adapted_args["dataset"] = "toxvaldb"
+            adapted_args["dataset"] = "toxvaldb"
         elif dataset_value == "toxref":
-             adapted_args["dataset"] = "toxrefdb"
+            adapted_args["dataset"] = "toxrefdb"
 
     # --- Specific mappings and Whitelisting ---
-    
+
     # MAPPING: Chemical Details
     if tool_name == "get_chemical_details":
-        id_type = None; identifier_value = None
+        id_type = None
+        identifier_value = None
         client_id_type = adapted_args.get("identifierType", adapted_args.get("id_type"))
-        
+
         if "dtxsid" in adapted_args:
-            identifier_value = adapted_args.get("dtxsid"); id_type = "dtxsid"
+            identifier_value = adapted_args.get("dtxsid")
+            id_type = "dtxsid"
         elif "dtxcid" in adapted_args:
-            identifier_value = adapted_args.get("dtxcid"); id_type = "dtxcid"
+            identifier_value = adapted_args.get("dtxcid")
+            id_type = "dtxcid"
         elif "identifier" in adapted_args and client_id_type in ["dtxsid", "dtxcid"]:
-                identifier_value = adapted_args.get("identifier"); id_type = client_id_type
+            identifier_value = adapted_args.get("identifier")
+            id_type = client_id_type
 
         allowed_keys = {"identifier", "id_type", "subset"}
 
         if identifier_value and id_type:
-            if isinstance(identifier_value, list) and identifier_value: identifier_value = identifier_value[0]
+            if isinstance(identifier_value, list) and identifier_value:
+                identifier_value = identifier_value[0]
             adapted_args["identifier"] = str(identifier_value)
             adapted_args["id_type"] = id_type
 
         clean_keys_whitelist(adapted_args, allowed_keys)
 
     elif tool_name == "batch_get_chemical_details":
-        id_type = None; identifiers_value = None
+        id_type = None
+        identifiers_value = None
         dtxsids = adapted_args.get("dtxsids", adapted_args.get("dtxsid"))
         if dtxsids:
-            identifiers_value = dtxsids; id_type = "dtxsid"
+            identifiers_value = dtxsids
+            id_type = "dtxsid"
         else:
             dtxcids = adapted_args.get("dtxcids", adapted_args.get("dtxcid"))
             if dtxcids:
-                identifiers_value = dtxcids; id_type = "dtxcid"
+                identifiers_value = dtxcids
+                id_type = "dtxcid"
 
         allowed_keys = {"identifiers", "id_type", "subset"}
 
         if identifiers_value and id_type:
-            if not isinstance(identifiers_value, list): identifiers_value = [identifiers_value]
+            if not isinstance(identifiers_value, list):
+                identifiers_value = [identifiers_value]
             adapted_args["identifiers"] = identifiers_value
             adapted_args["id_type"] = id_type
 
@@ -621,20 +653,24 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
 
         if identifier:
             is_id_search = False
-            if (arguments.get("dtxsid") or arguments.get("casrn") or arguments.get("identifier")) and not (arguments.get("query") or arguments.get("search")):
-                    is_id_search = True
-                
+            if (
+                arguments.get("dtxsid")
+                or arguments.get("casrn")
+                or arguments.get("identifier")
+            ) and not (arguments.get("query") or arguments.get("search")):
+                is_id_search = True
+
             adapted_args["query"] = identifier
             default_type = "equals" if is_id_search else "contains"
             adapted_args.setdefault("search_type", default_type)
-        
+
         clean_keys_whitelist(adapted_args, allowed_keys)
 
     # MAPPING: Hazard Search
     elif tool_name == "search_hazard":
         if "dtxsid" in adapted_args or "casrn" in adapted_args:
             adapted_args.setdefault("dataset", "toxvaldb")
-        
+
         allowed_keys = {"dtxsid", "casrn", "dataset"}
         clean_keys_whitelist(adapted_args, allowed_keys)
 
@@ -659,29 +695,43 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
 
         allowed_keys = {"data_type", "dtxsid", "dtxsids"}
         clean_keys_whitelist(adapted_args, allowed_keys)
-            
+
     # MAPPING: Tools expecting 'dtxsid' (Singular) - Comprehensive list
     elif tool_name in [
         # Chemical
-        "get_chemical_fate_summary", "get_chemical_fate_details", 
+        "get_chemical_fate_summary",
+        "get_chemical_fate_details",
         # Bioactivity
-        "get_bioactivity_models", 
-        "get_bioactivity_summary_by_dtxsid", "get_bioactivity_aed", 
-        "get_bioactivity_analytical_qc", 
+        "get_bioactivity_models",
+        "get_bioactivity_summary_by_dtxsid",
+        "get_bioactivity_aed",
+        "get_bioactivity_analytical_qc",
         # Exposure
-        "get_exposure_functional_use", 
-        "get_seem_general", "get_seem_demographic", "get_exposure_product_data", 
-        "get_exposure_list_presence", "get_exposure_httk", 
-        "get_exposure_functional_use_probability", "get_exposure_ccd_puc", 
-        "get_exposure_ccd_production_volume", "get_exposure_ccd_monitoring_data",
-        "get_exposure_ccd_keywords", "get_exposure_ccd_functional_use",
-        "get_exposure_ccd_chem_weight_fractions", 
-        "get_exposure_mmdb_single_sample_by_dtxsid", 
+        "get_exposure_functional_use",
+        "get_seem_general",
+        "get_seem_demographic",
+        "get_exposure_product_data",
+        "get_exposure_list_presence",
+        "get_exposure_httk",
+        "get_exposure_functional_use_probability",
+        "get_exposure_ccd_puc",
+        "get_exposure_ccd_production_volume",
+        "get_exposure_ccd_monitoring_data",
+        "get_exposure_ccd_keywords",
+        "get_exposure_ccd_functional_use",
+        "get_exposure_ccd_chem_weight_fractions",
+        "get_exposure_mmdb_single_sample_by_dtxsid",
         "get_exposure_mmdb_aggregate_by_dtxsid",
         # Hazard
-        "get_hazard_toxval", "get_hazard_skin_eye", "get_hazard_cancer_summary", 
-        "get_hazard_genetox_summary", "get_hazard_genetox_details", 
-        "get_hazard_adme_ivive", "get_hazard_pprtv", "get_hazard_iris", "get_hazard_hawc",
+        "get_hazard_toxval",
+        "get_hazard_skin_eye",
+        "get_hazard_cancer_summary",
+        "get_hazard_genetox_summary",
+        "get_hazard_genetox_details",
+        "get_hazard_adme_ivive",
+        "get_hazard_pprtv",
+        "get_hazard_iris",
+        "get_hazard_hawc",
     ]:
         identifier = extract_singular_identifier(adapted_args)
         if identifier:
@@ -689,9 +739,9 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
 
         # Define specific allowed sets for tools with optional params.
         if tool_name == "get_chemical_fate_summary":
-             allowed_keys = {"dtxsid", "property_name"}
+            allowed_keys = {"dtxsid", "property_name"}
         elif tool_name == "get_bioactivity_models":
-             allowed_keys = {"dtxsid", "model_name"}
+            allowed_keys = {"dtxsid", "model_name"}
         else:
             allowed_keys = {"dtxsid"}
 
@@ -711,16 +761,23 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
     # MAPPING: Tools expecting 'dtxsids' (Plural Array) - Comprehensive list
     elif tool_name in [
         # Chemical
-        "get_chemical_extra_data", "check_chemical_ghs_links",
+        "get_chemical_extra_data",
+        "check_chemical_ghs_links",
         # Hazard
-        "batch_search_hazard", "batch_get_hazard_toxval", 
-        "batch_get_hazard_skin_eye", "batch_get_hazard_cancer_summary",
-        "batch_get_hazard_genetox_summary", "batch_get_hazard_genetox_details",
+        "batch_search_hazard",
+        "batch_get_hazard_toxval",
+        "batch_get_hazard_skin_eye",
+        "batch_get_hazard_cancer_summary",
+        "batch_get_hazard_genetox_summary",
+        "batch_get_hazard_genetox_details",
         "batch_get_hazard_toxref",
         # Exposure
-        "batch_get_seem_general", "batch_get_seem_demographic", 
-        "batch_get_exposure_product_data", "batch_get_exposure_list_presence",
-        "batch_get_exposure_httk", "batch_get_exposure_functional_use",
+        "batch_get_seem_general",
+        "batch_get_seem_demographic",
+        "batch_get_exposure_product_data",
+        "batch_get_exposure_list_presence",
+        "batch_get_exposure_httk",
+        "batch_get_exposure_functional_use",
         # Bioactivity
         "batch_get_bioactivity_aed",
     ]:
@@ -731,16 +788,24 @@ def _adapt_legacy_arguments(tool_name: str, arguments: Dict[str, Any]) -> Dict[s
         if tool_name == "check_chemical_ghs_links":
             allowed_keys = {"dtxsids", "source"}
         elif tool_name == "batch_search_hazard":
-             allowed_keys = {"dtxsids", "dataset"}
+            allowed_keys = {"dtxsids", "dataset"}
         else:
             allowed_keys = {"dtxsids"}
 
         clean_keys_whitelist(adapted_args, allowed_keys)
-    
+
     # Default cleanup for any tools not explicitly handled
     else:
         # For unhandled tools, we still attempt to clean up client-injected transport parameters
-        TRANSPORT_KEYS = {"limit", "offset", "cursor", "page", "pageSize", "tool", "name"}
+        TRANSPORT_KEYS = {
+            "limit",
+            "offset",
+            "cursor",
+            "page",
+            "pageSize",
+            "tool",
+            "name",
+        }
         # This is a fallback blacklist approach for unmapped tools
         clean_keys_whitelist(adapted_args, set(adapted_args.keys()) - TRANSPORT_KEYS)
 
@@ -753,7 +818,9 @@ def _summarize_tool_definitions(tools: List[Dict[str, Any]]) -> List[Dict[str, A
     for tool in tools:
         summary = {
             "name": tool.get("name"),
-            "title": tool.get("title", tool.get("name")),  # Fallback to name if title is missing
+            "title": tool.get(
+                "title", tool.get("name")
+            ),  # Fallback to name if title is missing
             "description": tool.get("description"),
         }
         # Filter out keys where value is None
@@ -768,38 +835,40 @@ def _sanitize_tool_result_for_resource_read(tool_result: Dict[str, Any]) -> str:
     Used by compatibility shims to prevent massive JSON blobs via legacy transport.
     """
     structured_data = tool_result.get("structuredContent", tool_result)
-    
+
     # Define strict limits for this legacy transport layer
     MAX_ITEMS = 50
     MAX_LENGTH = 10000  # 10KB limit
-    
+
     truncated_data = structured_data
     is_truncated_items = False
-    
+
     # 1. Truncate items
     if isinstance(structured_data, list):
         if len(structured_data) > MAX_ITEMS:
             truncated_data = structured_data[:MAX_ITEMS]
             is_truncated_items = True
-    
+
     try:
         # 2. Serialize the (potentially truncated) data
         # Use compact serialization (no indent) to save space
         serialized_data = json.dumps(truncated_data, default=str)
     except TypeError:
-        return json.dumps({"error": "Tool result could not be serialized via legacy transport."})
-        
+        return json.dumps(
+            {"error": "Tool result could not be serialized via legacy transport."}
+        )
+
     # 3. Enforce maximum length constraint
     if len(serialized_data) > MAX_LENGTH:
         # If still too long, we must summarize instead of returning partial data.
         summary = {
             "status": "error",
             "message": "Tool execution successful, but results exceed transport limits.",
-            "detail": f"Data size ({len(serialized_data)} chars) > MAX_LENGTH ({MAX_LENGTH} chars). Please use tools/call directly for full results."
+            "detail": f"Data size ({len(serialized_data)} chars) > MAX_LENGTH ({MAX_LENGTH} chars). Please use tools/call directly for full results.",
         }
         if isinstance(structured_data, list):
             summary["total_records"] = len(structured_data)
-        
+
         return json.dumps(summary, default=str)
 
     # 4. Handle item truncation warning
@@ -809,24 +878,26 @@ def _sanitize_tool_result_for_resource_read(tool_result: Dict[str, Any]) -> str:
             "status": "partial_success",
             "message": f"Showing first {MAX_ITEMS} of {len(structured_data)} results.",
             "detail": f"Total results exceeds MAX_ITEMS ({MAX_ITEMS}). Please use tools/call directly for full results.",
-            "data": truncated_data
+            "data": truncated_data,
         }
         return json.dumps(summary, default=str)
 
     return serialized_data
 
 
-async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], request: Request) -> Dict[str, Any]:
+async def _handle_resources_read(
+    server: MCPServer, params: Dict[str, Any], request: Request
+) -> Dict[str, Any]:
     """
     Handle resources/read, including comprehensive compatibility shims for legacy URIs.
     """
     if not isinstance(params, dict):
         raise ValueError("resources/read parameters must be an object.")
-    
+
     uri = params.get("uri")
     if not isinstance(uri, str) or not uri:
         raise ValueError("Resource 'uri' must be provided.")
-    
+
     if not uri.startswith("resource://"):
         raise ValueError(f"Invalid resource URI format: {uri}")
 
@@ -837,31 +908,42 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
     tool_name_param = params.get("name")
     tool_args_param = params.get("arguments") or params.get("parameters")
     if isinstance(tool_name_param, str) and tool_name_param:
-        logger.info("resources/read received explicit tool name in params; redirecting: %s", tool_name_param)
+        logger.info(
+            "resources/read received explicit tool name in params; redirecting: %s",
+            tool_name_param,
+        )
         arguments = tool_args_param if isinstance(tool_args_param, dict) else {}
-        
+
         # Adaptation and execution
         adapted_arguments = _adapt_legacy_arguments(tool_name_param, arguments)
         try:
-            tool_result = await _handle_tools_call(server, {"name": tool_name_param, "arguments": adapted_arguments}, request)
+            tool_result = await _handle_tools_call(
+                server,
+                {"name": tool_name_param, "arguments": adapted_arguments},
+                request,
+            )
         except Exception as exc:
             raise ValueError(f"Tool execution failed: {exc}") from exc
 
         sanitized_text = _sanitize_tool_result_for_resource_read(tool_result)
-        return {"contents": [{"uri": uri, "mimeType": "application/json", "text": sanitized_text}]}
+        return {
+            "contents": [
+                {"uri": uri, "mimeType": "application/json", "text": sanitized_text}
+            ]
+        }
 
     # COMPAT: URI-based tool execution and inferred search (Unified flow)
-    
+
     # 1. Extract potential tool name from path segments and get query arguments.
     path_tool_name, query_args = _extract_legacy_tool(uri)
 
     # 2. Determine the tool name and arguments to use.
-    
+
     # Prioritize the 'tool' query parameter (e.g., resource://bioactivity?tool=...)
     explicit_query_tool = query_args.get("tool")
     if isinstance(explicit_query_tool, str) and explicit_query_tool:
         tool_to_use = explicit_query_tool
-        args_to_use = query_args # Adapter will clean 'tool' via whitelist
+        args_to_use = query_args  # Adapter will clean 'tool' via whitelist
         logger.info(f"Using explicit tool from query parameter: {tool_to_use}")
 
     # Otherwise, use the tool name extracted from the path (e.g., resource://chemical/search_chemical?...)
@@ -882,13 +964,13 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
             logger.info(f"Detected identifier in path: {identifier}")
             # Map the identifier based on pattern
             if identifier.startswith("DTXSID"):
-                 inferred_args.setdefault("dtxsid", identifier)
+                inferred_args.setdefault("dtxsid", identifier)
             elif identifier.startswith("DTXCID"):
-                 inferred_args.setdefault("dtxcid", identifier)
-            elif (len(identifier) >= 5 and identifier.replace("-", "").isdigit()):
-                 inferred_args.setdefault("casrn", identifier)
+                inferred_args.setdefault("dtxcid", identifier)
+            elif len(identifier) >= 5 and identifier.replace("-", "").isdigit():
+                inferred_args.setdefault("casrn", identifier)
             else:
-                 inferred_args.setdefault("query", identifier)
+                inferred_args.setdefault("query", identifier)
 
         # Check if we have arguments for inference
         if inferred_args:
@@ -919,9 +1001,13 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
                 {"name": tool_to_use, "arguments": adapted_arguments},
                 request,
             )
-            
+
             sanitized_text = _sanitize_tool_result_for_resource_read(tool_result)
-            return {"contents": [{"uri": uri, "mimeType": "application/json", "text": sanitized_text}]}
+            return {
+                "contents": [
+                    {"uri": uri, "mimeType": "application/json", "text": sanitized_text}
+                ]
+            }
 
         except Exception as exc:
             # Catch validation errors (400) or LookupErrors during legacy execution
@@ -935,7 +1021,7 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
     if resource_name not in server.resources:
         # Handle potential empty resource name if URI is just "resource://"
         if not resource_name:
-             raise ValueError("Invalid resource URI: missing resource name.")
+            raise ValueError("Invalid resource URI: missing resource name.")
         raise LookupError(f"Resource not found: {resource_name}")
 
     resource = server.resources[resource_name]
@@ -948,15 +1034,16 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
 
     # Assuming _summarize_tool_definitions is defined elsewhere
     summarized_tools = _summarize_tool_definitions(full_tool_definitions)
-    
+
     resource_content = {
         "name": resource_name,
         "description": resource.description,
         "tools": summarized_tools,
     }
-    
+
     # Ensure json is imported if not already
     import json
+
     return {
         "contents": [
             {
@@ -968,7 +1055,9 @@ async def _handle_resources_read(server: MCPServer, params: Dict[str, Any], requ
     }
 
 
-async def _handle_tools_call(server: MCPServer, params: Dict[str, Any], request: Request) -> Dict[str, Any]:
+async def _handle_tools_call(
+    server: MCPServer, params: Dict[str, Any], request: Request
+) -> Dict[str, Any]:
     tool_name = params.get("name")
     if not isinstance(tool_name, str) or not tool_name:
         raise ValueError("Tool 'name' must be provided.")
@@ -986,7 +1075,11 @@ async def _handle_tools_call(server: MCPServer, params: Dict[str, Any], request:
 
     # --- Issue 1: Sanitize the response content to prevent client-side parsing issues ---
     # Intercept the result and simplify the 'content' field if it contains oversized JSON dumps
-    if isinstance(result, dict) and "structuredContent" in result and "content" in result:
+    if (
+        isinstance(result, dict)
+        and "structuredContent" in result
+        and "content" in result
+    ):
         structured_data = result.get("structuredContent")
         summary = None
 
@@ -1000,21 +1093,24 @@ async def _handle_tools_call(server: MCPServer, params: Dict[str, Any], request:
             # Heuristic check: If the original content seems to be a raw JSON dump, replace it
             original_content = result.get("content")
             is_likely_json_dump = False
-            
-            if (isinstance(original_content, list) and
-                len(original_content) > 0 and
-                isinstance(original_content[0], dict) and
-                original_content[0].get("type") == "text"):
-                
+
+            if (
+                isinstance(original_content, list)
+                and len(original_content) > 0
+                and isinstance(original_content[0], dict)
+                and original_content[0].get("type") == "text"
+            ):
                 text_content = original_content[0].get("text", "")
                 if isinstance(text_content, str):
                     stripped_text = text_content.strip()
                     # Check if it starts like JSON or is excessively long (e.g., > 512 chars)
-                    if stripped_text.startswith(('[', '{')) or len(stripped_text) > 512:
+                    if stripped_text.startswith(("[", "{")) or len(stripped_text) > 512:
                         is_likely_json_dump = True
 
             if is_likely_json_dump:
-                logger.debug(f"Sanitizing large/JSON 'content' field for tool: {tool_name}")
+                logger.debug(
+                    f"Sanitizing large/JSON 'content' field for tool: {tool_name}"
+                )
                 result["content"] = [{"type": "text", "text": summary}]
     # --- END Issue 1 modification ---
 

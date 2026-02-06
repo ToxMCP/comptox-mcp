@@ -11,7 +11,12 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import CollectorRegistry, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Gauge,
+    generate_latest,
+)
 
 from epacomp_tox import audit
 from epacomp_tox.server import MCPServer
@@ -33,6 +38,67 @@ DEFAULT_SERVER_CAPABILITIES: Dict[str, Any] = {
 
 CANCELLED_ERROR_CODE = -32800
 CAPABILITY_NOT_NEGOTIATED_ERROR_CODE = -32004
+
+
+class AuditMiddleware:
+    """ASGI middleware that adds request IDs, security headers, and audit events."""
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        correlation_id = str(uuid.uuid4())
+        scope.setdefault("state", {})["correlation_id"] = correlation_id
+        start = time.perf_counter()
+        status_code: Optional[int] = None
+        captured_exc: Optional[BaseException] = None
+
+        async def send_wrapper(message) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+                headers = list(message.get("headers", []))
+                headers = [
+                    (name, value)
+                    for name, value in headers
+                    if name.lower() != b"x-request-id"
+                ]
+                header_names = {name.lower() for name, _ in headers}
+
+                if b"x-content-type-options" not in header_names:
+                    headers.append((b"x-content-type-options", b"nosniff"))
+                if b"x-frame-options" not in header_names:
+                    headers.append((b"x-frame-options", b"DENY"))
+
+                headers.append((b"x-request-id", correlation_id.encode()))
+                message["headers"] = headers
+            await send(message)
+
+        try:
+            await self.app(scope, receive, send_wrapper)
+        except BaseException as exc:
+            captured_exc = exc
+            raise
+        finally:
+            duration_ms = (time.perf_counter() - start) * 1000
+            if status_code is None:
+                status_code = (
+                    499 if isinstance(captured_exc, asyncio.CancelledError) else 500
+                )
+            audit.emit(
+                {
+                    "type": "http_request",
+                    "correlation_id": correlation_id,
+                    "method": scope.get("method"),
+                    "path": scope.get("path"),
+                    "status_code": status_code,
+                    "duration_ms": round(duration_ms, 3),
+                }
+            )
 
 
 def _coerce_value(value: Any) -> Any:
@@ -85,7 +151,7 @@ def _extract_legacy_tool(uri: str) -> tuple[Optional[str], Dict[str, Any]]:
       - resource://<resource>/tool/<tool_name>?k=v
       - resource://<resource>/<tool_name>?k=v
     """
-    from urllib.parse import urlparse, parse_qs
+    from urllib.parse import parse_qs, urlparse
 
     parsed = urlparse(uri)
     segments = [segment for segment in parsed.path.split("/") if segment]
@@ -96,13 +162,17 @@ def _extract_legacy_tool(uri: str) -> tuple[Optional[str], Dict[str, Any]]:
     elif len(segments) == 1:
         tool_name = segments[0]
 
-    return tool_name, _coerce_query_params(parse_qs(parsed.query, keep_blank_values=True))
+    return tool_name, _coerce_query_params(
+        parse_qs(parsed.query, keep_blank_values=True)
+    )
 
 
 class ToolExecutionError(Exception):
     """Exception raised when tool execution fails prior to MCP response."""
 
-    def __init__(self, *, code: int, message: str, data: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, *, code: int, message: str, data: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(message)
         self.code = code
         self.message = message
@@ -123,7 +193,9 @@ class MCPWebSocketSession:
         self.handshake_timeout = options.get("handshake_timeout", 30)
         self.last_activity = time.monotonic()
         self.client_capabilities: Dict[str, Any] = {}
-        self.negotiated_capabilities: Dict[str, Any] = deepcopy(DEFAULT_SERVER_CAPABILITIES)
+        self.negotiated_capabilities: Dict[str, Any] = deepcopy(
+            DEFAULT_SERVER_CAPABILITIES
+        )
         self.client_info: Dict[str, Any] = {}
         self.authentication: Dict[str, Any] = {}
         self._close_reason = "disconnect"
@@ -141,7 +213,9 @@ class MCPWebSocketSession:
                         self.websocket.receive_text(), timeout=self._receive_timeout()
                     )
                 except asyncio.TimeoutError:
-                    logger.warning("Heartbeat timeout closing session %s", self.session_id)
+                    logger.warning(
+                        "Heartbeat timeout closing session %s", self.session_id
+                    )
                     await self._send_error(
                         None,
                         code=-32002,
@@ -156,7 +230,9 @@ class MCPWebSocketSession:
             logger.debug("WebSocket disconnected (session %s)", self.session_id)
             self._close_reason = "client_disconnect"
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.exception("Unhandled error in MCP WebSocket session %s", self.session_id)
+            logger.exception(
+                "Unhandled error in MCP WebSocket session %s", self.session_id
+            )
             await self._send_error(None, code=-32603, message="Internal server error")
             await self.websocket.close()
             self._close_reason = f"error:{exc.__class__.__name__}"
@@ -175,7 +251,9 @@ class MCPWebSocketSession:
             return
 
         if payload.get("jsonrpc") != "2.0":
-            await self._send_error(payload.get("id"), code=-32600, message="Invalid JSON-RPC version")
+            await self._send_error(
+                payload.get("id"), code=-32600, message="Invalid JSON-RPC version"
+            )
             return
 
         method = payload.get("method")
@@ -219,7 +297,9 @@ class MCPWebSocketSession:
         negotiated = deepcopy(DEFAULT_SERVER_CAPABILITIES)
         for section, client_section in (client_caps or {}).items():
             server_section = negotiated.get(section)
-            if not isinstance(server_section, dict) or not isinstance(client_section, dict):
+            if not isinstance(server_section, dict) or not isinstance(
+                client_section, dict
+            ):
                 continue
             for key, server_value in list(server_section.items()):
                 if isinstance(server_value, bool):
@@ -241,14 +321,19 @@ class MCPWebSocketSession:
                 message_id,
                 code=-32602,
                 message="Unsupported protocol version",
-                data={"supported": SUPPORTED_PROTOCOL_VERSIONS, "requested": requested_version},
+                data={
+                    "supported": SUPPORTED_PROTOCOL_VERSIONS,
+                    "requested": requested_version,
+                },
             )
             return
 
         self.protocol_version = requested_version or PRIMARY_PROTOCOL_VERSION
         self.initialized = True
         self.client_capabilities = params.get("capabilities") or {}
-        self.negotiated_capabilities = self._merge_capabilities(self.client_capabilities)
+        self.negotiated_capabilities = self._merge_capabilities(
+            self.client_capabilities
+        )
         self._streams_enabled = bool(
             self.negotiated_capabilities.get("tools", {}).get("streams", False)
         )
@@ -310,7 +395,9 @@ class MCPWebSocketSession:
             }
         )
 
-    async def _handle_resources_list(self, message_id: Any, params: Dict[str, Any]) -> None:
+    async def _handle_resources_list(
+        self, message_id: Any, params: Dict[str, Any]
+    ) -> None:
         if message_id is None:
             return
         cursor = params.get("cursor")
@@ -318,7 +405,9 @@ class MCPWebSocketSession:
         limit_value = int(limit) if isinstance(limit, (int, float)) else None
         if limit_value is not None and limit_value <= 0:
             limit_value = None
-        resources, next_cursor = self.server.list_resources(cursor=cursor, limit=limit_value)
+        resources, next_cursor = self.server.list_resources(
+            cursor=cursor, limit=limit_value
+        )
         await self._send(
             {
                 "jsonrpc": "2.0",
@@ -327,16 +416,24 @@ class MCPWebSocketSession:
             }
         )
 
-    async def _handle_resources_read(self, message_id: Any, params: Dict[str, Any]) -> None:
+    async def _handle_resources_read(
+        self, message_id: Any, params: Dict[str, Any]
+    ) -> None:
         if message_id is None:
             return
         if not isinstance(params, dict):
-            await self._send_error(message_id, code=-32602, message="resources/read params must be an object")
+            await self._send_error(
+                message_id,
+                code=-32602,
+                message="resources/read params must be an object",
+            )
             return
 
         uri = params.get("uri")
         if not isinstance(uri, str) or not uri.startswith("resource://"):
-            await self._send_error(message_id, code=-32602, message="Invalid or missing resource URI")
+            await self._send_error(
+                message_id, code=-32602, message="Invalid or missing resource URI"
+            )
             return
 
         # 1) Explicit tool name + arguments tunneled through resources/read
@@ -344,17 +441,21 @@ class MCPWebSocketSession:
         tool_args_param = params.get("arguments") or params.get("parameters")
         if isinstance(tool_name_param, str):
             arguments = tool_args_param if isinstance(tool_args_param, dict) else {}
-            await self._handle_tools_call(message_id, {"name": tool_name_param, "arguments": arguments})
+            await self._handle_tools_call(
+                message_id, {"name": tool_name_param, "arguments": arguments}
+            )
             return
 
         # 2) Legacy URI forms (with or without /tool/ segment)
         legacy_tool_name, legacy_args = _extract_legacy_tool(uri)
         if legacy_tool_name:
-            await self._handle_tools_call(message_id, {"name": legacy_tool_name, "arguments": legacy_args})
+            await self._handle_tools_call(
+                message_id, {"name": legacy_tool_name, "arguments": legacy_args}
+            )
             return
 
         # 3) Query-string based inference (resource://<resource>?q=...)
-        from urllib.parse import urlparse, parse_qs
+        from urllib.parse import parse_qs, urlparse
 
         parsed = urlparse(uri)
         resource_name = parsed.netloc or ""
@@ -368,11 +469,17 @@ class MCPWebSocketSession:
             }.get(resource_name)
 
             if inferred_tool:
-                arguments = _coerce_query_params(parse_qs(parsed.query, keep_blank_values=True))
+                arguments = _coerce_query_params(
+                    parse_qs(parsed.query, keep_blank_values=True)
+                )
                 try:
-                    await self._handle_tools_call(message_id, {"name": inferred_tool, "arguments": arguments})
+                    await self._handle_tools_call(
+                        message_id, {"name": inferred_tool, "arguments": arguments}
+                    )
                 except Exception as exc:  # pragma: no cover - defensive
-                    await self._send_error(message_id, code=-32602, message=f"Tool execution failed: {exc}")
+                    await self._send_error(
+                        message_id, code=-32602, message=f"Tool execution failed: {exc}"
+                    )
                 return
 
             available_tools = [
@@ -393,7 +500,9 @@ class MCPWebSocketSession:
         # 4) Standard resource description
         resource_name = parsed.netloc or uri.replace("resource://", "").split("?")[0]
         if resource_name not in self.server.resources:
-            await self._send_error(message_id, code=-32601, message=f"Resource not found: {resource_name}")
+            await self._send_error(
+                message_id, code=-32601, message=f"Resource not found: {resource_name}"
+            )
             return
         resource = self.server.resources[resource_name]
         await self._send(
@@ -412,7 +521,8 @@ class MCPWebSocketSession:
                                     "tools": [
                                         tool
                                         for tool in self.server.tool_registry.list_definitions()
-                                        if tool.get("annotations", {}).get("resource") == resource_name
+                                        if tool.get("annotations", {}).get("resource")
+                                        == resource_name
                                     ],
                                 },
                                 indent=2,
@@ -429,10 +539,14 @@ class MCPWebSocketSession:
         name = params.get("name")
         arguments = params.get("arguments", {})
         if not name:
-            await self._send_error(message_id, code=-32602, message="Tool name is required")
+            await self._send_error(
+                message_id, code=-32602, message="Tool name is required"
+            )
             return
         if not isinstance(arguments, dict):
-            await self._send_error(message_id, code=-32602, message="Tool arguments must be an object")
+            await self._send_error(
+                message_id, code=-32602, message="Tool arguments must be an object"
+            )
             return
         request_id = params.get("requestId") or str(uuid.uuid4())
         timeout_ms = params.get("timeoutMs")
@@ -452,11 +566,15 @@ class MCPWebSocketSession:
         )
         self.active_requests[request_id] = {"task": task, "message_id": message_id}
 
-    async def _handle_tools_cancel(self, message_id: Any, params: Dict[str, Any]) -> None:
+    async def _handle_tools_cancel(
+        self, message_id: Any, params: Dict[str, Any]
+    ) -> None:
         request_id = params.get("requestId")
         if not request_id:
             if message_id is not None:
-                await self._send_error(message_id, code=-32602, message="requestId is required")
+                await self._send_error(
+                    message_id, code=-32602, message="requestId is required"
+                )
             return
         if not self._cancellation_enabled:
             if message_id is not None:
@@ -520,13 +638,24 @@ class MCPWebSocketSession:
         """Respond to ping requests to keep the connection alive."""
         if message_id is None:
             return
-        payload = {"jsonrpc": "2.0", "id": message_id, "result": {"timestamp": time.time()}}
+        payload = {
+            "jsonrpc": "2.0",
+            "id": message_id,
+            "result": {"timestamp": time.time()},
+        }
         await self._send(payload)
 
     async def _send(self, payload: Dict[str, Any]) -> None:
         await self.websocket.send_text(json.dumps(payload, default=_json_default))
 
-    async def _send_error(self, message_id: Any, *, code: int, message: str, data: Optional[Dict[str, Any]] = None) -> None:
+    async def _send_error(
+        self,
+        message_id: Any,
+        *,
+        code: int,
+        message: str,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> None:
         error: Dict[str, Any] = {"code": code, "message": message}
         if data is not None:
             error["data"] = data
@@ -536,7 +665,9 @@ class MCPWebSocketSession:
         await self._send(response)
 
     def _receive_timeout(self) -> float:
-        return self.handshake_timeout if not self.initialized else self.heartbeat_timeout
+        return (
+            self.handshake_timeout if not self.initialized else self.heartbeat_timeout
+        )
 
     def _mark_activity(self) -> None:
         self.last_activity = time.monotonic()
@@ -578,7 +709,9 @@ class MCPWebSocketSession:
             return
         else:
             response_payload = {**result, "requestId": request_id}
-            await self._send({"jsonrpc": "2.0", "id": message_id, "result": response_payload})
+            await self._send(
+                {"jsonrpc": "2.0", "id": message_id, "result": response_payload}
+            )
         finally:
             # Remove request record regardless of completion status
             self.active_requests.pop(request_id, None)
@@ -699,7 +832,9 @@ class MCPWebSocketSession:
         call = partial(self.server.call_tool, name, arguments, context=context)
         try:
             if timeout is not None:
-                return await asyncio.wait_for(loop.run_in_executor(None, call), timeout=timeout)
+                return await asyncio.wait_for(
+                    loop.run_in_executor(None, call), timeout=timeout
+                )
             return await loop.run_in_executor(None, call)
         except asyncio.TimeoutError as exc:
             raise ToolExecutionError(
@@ -779,7 +914,9 @@ def _json_default(value: Any) -> Any:
     """Fallback JSON serializer that uses to_serializable for CTX payloads."""
     converted = to_serializable(value)
     if converted is value:
-        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+        raise TypeError(
+            f"Object of type {type(value).__name__} is not JSON serializable"
+        )
     return converted
 
 
@@ -812,32 +949,7 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
             app.state.mcp_server = None
             app.state.mcp_server_error = exc
 
-    @app.middleware("http")
-    async def security_headers(request, call_next):
-        response = await call_next(request)
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        return response
-
-    @app.middleware("http")
-    async def audit_middleware(request, call_next):
-        correlation_id = str(uuid.uuid4())
-        request.state.correlation_id = correlation_id
-        start = time.perf_counter()
-        response = await call_next(request)
-        duration_ms = (time.perf_counter() - start) * 1000
-        audit.emit(
-            {
-                "type": "http_request",
-                "correlation_id": correlation_id,
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "duration_ms": round(duration_ms, 3),
-            }
-        )
-        response.headers["X-Request-ID"] = correlation_id
-        return response
+    app.add_middleware(AuditMiddleware)
 
     @app.get("/healthz", tags=["health"])
     async def healthz() -> Dict[str, Any]:
@@ -882,7 +994,13 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
                         "error": {
                             "code": -32000,
                             "message": "MCP server unavailable",
-                            "data": {"detail": str(server_error) if server_error else "Server not configured"},
+                            "data": {
+                                "detail": (
+                                    str(server_error)
+                                    if server_error
+                                    else "Server not configured"
+                                )
+                            },
                         },
                     }
                 )

@@ -5,9 +5,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dev-debug.log
+*.pid
+*.seed
 
 # Dependency directories
 node_modules/
+.venv/
+venv/
+env/
 
 # Environment variables
 .env
@@ -30,6 +35,11 @@ __pycache__/
 *.pyc
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
 
 # Local automation artifacts
 .taskmaster/
@@ -37,3 +47,5 @@ __pycache__/
 
 # Runtime artifacts
 artifacts/
+dist/
+build/

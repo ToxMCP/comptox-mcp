@@ -17,7 +17,7 @@ SAMPLE_CARD = {
         "description": "Sample description",
         "developers": [{"name": "EPA"}],
         "organizations": ["EPA"],
-        "releaseDate": "2025-01-01"
+        "releaseDate": "2025-01-01",
     },
     "intendedUse": {
         "summary": "Sample",
@@ -25,40 +25,37 @@ SAMPLE_CARD = {
         "outOfScope": ["Out"],
         "limitations": [],
         "warnings": [],
-        "regulatoryPrograms": []
+        "regulatoryPrograms": [],
     },
     "oecdValidationPrinciples": {
         "definedEndpoint": {"description": "Endpoint", "unit": "mg/L"},
         "unambiguousAlgorithm": {"summary": "Algorithm"},
         "definedApplicabilityDomain": {"summary": "AD"},
         "goodnessOfFitMetrics": {},
-        "mechanisticInterpretation": {"summary": "Mechanism"}
+        "mechanisticInterpretation": {"summary": "Mechanism"},
     },
     "trainingData": {
         "dataset": {"name": "Training", "source": "EPA"},
         "records": 1,
-        "chemicalCount": 1
+        "chemicalCount": 1,
     },
     "evaluationData": {
         "datasets": [{"name": "Eval", "source": "EPA"}],
         "validationApproach": "Holdout",
-        "metrics": [{"name": "RMSE", "value": 0.1}]
+        "metrics": [{"name": "RMSE", "value": 0.1}],
     },
     "applicabilityDomain": {
         "summary": "AD",
         "criteria": [{"type": "descriptor_range", "description": "range"}],
-        "enforcement": {"mcpTools": ["sample.check_ad"]}
+        "enforcement": {"mcpTools": ["sample.check_ad"]},
     },
     "ethicalConsiderations": {"risks": []},
     "provenance": {
         "sourceRepositories": ["https://example.com"],
         "build": {"id": "test", "timestamp": "2025-01-01T00:00:00Z"},
         "checksum": {"algorithm": "SHA256", "value": "abc"},
-        "reviewStatus": {
-            "approvedBy": [{"name": "QA"}],
-            "approvalDate": "2025-01-31"
-        }
-    }
+        "reviewStatus": {"approvedBy": [{"name": "QA"}], "approvalDate": "2025-01-31"},
+    },
 }
 
 
@@ -84,9 +81,7 @@ def test_metadata_resource_filters_by_name(sample_store: ModelCardStore) -> None
         "metadata_get_model_card", {"model_name": "sample", "limit": 1}
     )
     assert result["modelCards"]
-    result = resource.execute_tool(
-        "metadata_get_model_card", {"model_name": "unknown"}
-    )
+    result = resource.execute_tool("metadata_get_model_card", {"model_name": "unknown"})
     assert result["modelCards"] == []
 
 
@@ -96,7 +91,5 @@ def test_metadata_resource_filters_by_compliance(sample_store: ModelCardStore) -
         "metadata_get_model_card", {"compliance": "approved"}
     )
     assert len(approved["modelCards"]) == 1
-    draft = resource.execute_tool(
-        "metadata_get_model_card", {"compliance": "draft"}
-    )
+    draft = resource.execute_tool("metadata_get_model_card", {"compliance": "draft"})
     assert draft["modelCards"] == []

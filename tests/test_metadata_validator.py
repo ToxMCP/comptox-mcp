@@ -22,7 +22,7 @@ def test_validate_model_cards_success(tmp_path: Path) -> None:
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "required": ["name"],
-        "properties": {"name": {"type": "string"}}
+        "properties": {"name": {"type": "string"}},
     }
     schema_path = tmp_path / "schema.json"
     schema_path.write_text(json.dumps(schema))
@@ -39,7 +39,7 @@ def test_validate_model_cards_failure(tmp_path: Path) -> None:
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "required": ["name"],
-        "properties": {"name": {"type": "string"}}
+        "properties": {"name": {"type": "string"}},
     }
     schema_path = tmp_path / "schema.json"
     schema_path.write_text(json.dumps(schema))

@@ -4,7 +4,6 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from ctxpy import CtxApiError
-
 from epacomp_tox.resources.cheminformatics import CheminformaticsResource
 from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.hazard import HazardResource
@@ -90,7 +89,9 @@ class CtxDataAssembler:
         exposure_types = set(self.exposure_datasets)
         cpdat_vocab = set(self.cpdat_vocabularies)
         include_toxprints = (
-            self.include_toxprints if include_cheminformatics is None else include_cheminformatics
+            self.include_toxprints
+            if include_cheminformatics is None
+            else include_cheminformatics
         )
 
         for scenario in scenario_list:
@@ -131,14 +132,18 @@ class CtxDataAssembler:
                     summary=hazard_summary,
                 )
             except CtxApiError as exc:
-                trace.append(self._metadata_trace(self.hazard_resource, f"hazard:{hazard_type}"))
+                trace.append(
+                    self._metadata_trace(self.hazard_resource, f"hazard:{hazard_type}")
+                )
                 raise CtxDataAssemblyError(
                     f"Failed to fetch hazard dataset '{hazard_type}' for {normalized_sid}: {exc}"
                 ) from exc
             hazard_data[hazard_type] = payload
             if not payload:
                 data_gaps.append(f"hazard:{hazard_type}")
-            trace.append(self._metadata_trace(self.hazard_resource, f"hazard:{hazard_type}"))
+            trace.append(
+                self._metadata_trace(self.hazard_resource, f"hazard:{hazard_type}")
+            )
 
         # Exposure datasets -------------------------------------------------
         for exposure_type in sorted(exposure_types):
@@ -183,14 +188,18 @@ class CtxDataAssembler:
                         chemical=normalized_sid
                     )
                 except CtxApiError as exc:
-                    trace.append(self._metadata_trace(self.cheminformatics_resource, step_name))
+                    trace.append(
+                        self._metadata_trace(self.cheminformatics_resource, step_name)
+                    )
                     raise CtxDataAssemblyError(
                         f"Failed to fetch toxprints for {normalized_sid}: {exc}"
                     ) from exc
                 cheminformatics_data["toxprints"] = payload
                 if not payload:
                     data_gaps.append(step_name)
-                trace.append(self._metadata_trace(self.cheminformatics_resource, step_name))
+                trace.append(
+                    self._metadata_trace(self.cheminformatics_resource, step_name)
+                )
 
         bundle = CtxDataBundle(
             dtxsid=normalized_sid,
@@ -213,7 +222,9 @@ class CtxDataAssembler:
             metadata = sanitize_metadata(resource.get_last_metadata())
         return MetadataTrace(step=step, metadata=metadata)
 
-    def _fetch_exposure_dataset(self, dataset: str, dtxsid: str) -> List[Dict[str, Any]]:
+    def _fetch_exposure_dataset(
+        self, dataset: str, dtxsid: str
+    ) -> List[Dict[str, Any]]:
         dataset = dataset.lower()
         if dataset == "httk":
             return self.exposure_resource.search_httk(dtxsids=[dtxsid])

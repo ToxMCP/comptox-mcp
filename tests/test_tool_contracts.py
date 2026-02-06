@@ -8,7 +8,6 @@ from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.hazard import HazardResource
 from epacomp_tox.resources.metadata import MetadataResource
 
-
 RESOURCE_FACTORIES = {
     "chemical": lambda: ChemicalResource(api_key="fake"),
     "chemical_list": lambda: ChemicalListResource(api_key="fake"),

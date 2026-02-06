@@ -1,8 +1,8 @@
 import sys
-from pathlib import Path
 import unittest
-from unittest import mock
 import urllib.error
+from pathlib import Path
+from unittest import mock
 
 # Ensure src is on path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -13,8 +13,13 @@ from epacomp_tox.health import check_ctx_health
 class TestCheckCtxHealth(unittest.TestCase):
     def setUp(self) -> None:
         # Patch env resolution helpers so tests do not rely on real env vars.
-        patcher_key = mock.patch("epacomp_tox.health.get_api_key", return_value="fake-key")
-        patcher_base = mock.patch("epacomp_tox.health.get_base_url", return_value="https://example.com/ctx-api")
+        patcher_key = mock.patch(
+            "epacomp_tox.health.get_api_key", return_value="fake-key"
+        )
+        patcher_base = mock.patch(
+            "epacomp_tox.health.get_base_url",
+            return_value="https://example.com/ctx-api",
+        )
         self.addCleanup(patcher_key.stop)
         self.addCleanup(patcher_base.stop)
         patcher_key.start()
@@ -53,7 +58,9 @@ class TestCheckCtxHealth(unittest.TestCase):
         mock_urlopen.assert_called_once()
 
     @mock.patch("urllib.request.urlopen")
-    def test_health_check_raises_on_repeated_failure(self, mock_urlopen: mock.MagicMock) -> None:
+    def test_health_check_raises_on_repeated_failure(
+        self, mock_urlopen: mock.MagicMock
+    ) -> None:
         failures = [
             urllib.error.HTTPError(
                 url="https://example.com/ctx-api/health",

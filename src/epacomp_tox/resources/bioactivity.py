@@ -2,7 +2,6 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import ctxpy as ctx
-
 from epacomp_tox.contracts import schema_ref
 from epacomp_tox.validators import to_serializable
 
@@ -24,12 +23,14 @@ class BioactivityResource(BaseResource):
 
     def __init__(self, api_key: str):
         super().__init__(api_key)
-        
+
         # Increase upstream timeout for slow queries
         UPSTREAM_TIMEOUT = 120.0
         try:
             self.client = ctx.Bioactivity(x_api_key=api_key, timeout=UPSTREAM_TIMEOUT)
-            logger.info(f"Successfully initialized ctx.Bioactivity with timeout={UPSTREAM_TIMEOUT}s")
+            logger.info(
+                f"Successfully initialized ctx.Bioactivity with timeout={UPSTREAM_TIMEOUT}s"
+            )
         except TypeError as e:
             logger.warning(
                 f"Could not set timeout for ctx.Bioactivity (TypeError: {e}). Using default timeout."
@@ -281,13 +282,14 @@ class BioactivityResource(BaseResource):
                 tool["responseSchemaRef"] = schema_ref(*schema_info)
             else:
                 tool["responseSchemaRef"] = list_schema
-            
+
             # Ensure outputSchema is populated from the reference
             if "responseSchemaRef" in tool:
                 from epacomp_tox.contracts import load_schema
+
                 ref = tool["responseSchemaRef"]
                 tool["outputSchema"] = load_schema(ref["namespace"], ref["name"])
-                
+
         return tools
 
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
@@ -347,7 +349,9 @@ class BioactivityResource(BaseResource):
         result = self._with_retry(lambda: self.client.search(search_type, value))
         return self._ensure_list(result)
 
-    def get_bioactivity_models(self, dtxsid: str, model: Optional[str] = None) -> List[Any]:
+    def get_bioactivity_models(
+        self, dtxsid: str, model: Optional[str] = None
+    ) -> List[Any]:
         kwargs = {"dtxsid": dtxsid}
         if model is not None:
             kwargs["model"] = model
@@ -367,7 +371,9 @@ class BioactivityResource(BaseResource):
         return self._ensure_list(result)
 
     def get_bioactivity_summary_by_tissue(self, dtxsid: str, tissue: str) -> List[Any]:
-        result = self._with_retry(lambda: self.client.data_summary_by_tissue(dtxsid, tissue))
+        result = self._with_retry(
+            lambda: self.client.data_summary_by_tissue(dtxsid, tissue)
+        )
         return self._ensure_list(result)
 
     def get_bioactivity_data(
@@ -382,19 +388,21 @@ class BioactivityResource(BaseResource):
             kwargs["projection"] = projection
 
         if norm == "spid":
-            result = self._with_retry(lambda: self.client.data_by_spid(kwargs["identifier"]))
+            result = self._with_retry(
+                lambda: self.client.data_by_spid(kwargs["identifier"])
+            )
         elif norm == "m4id":
-            result = self._with_retry(lambda: self.client.data_by_m4id(kwargs["identifier"]))
+            result = self._with_retry(
+                lambda: self.client.data_by_m4id(kwargs["identifier"])
+            )
         elif norm == "dtxsid":
-            result = self._with_retry(
-                lambda: self.client.data_by_dtxsid(**kwargs)
-            )
+            result = self._with_retry(lambda: self.client.data_by_dtxsid(**kwargs))
         elif norm == "aeid":
-            result = self._with_retry(
-                lambda: self.client.data_by_aeid(**kwargs)
-            )
+            result = self._with_retry(lambda: self.client.data_by_aeid(**kwargs))
         else:
-            raise ValueError("identifier_type must be one of spid, m4id, dtxsid, or aeid")
+            raise ValueError(
+                "identifier_type must be one of spid, m4id, dtxsid, or aeid"
+            )
         return self._ensure_list(result)
 
     def batch_get_bioactivity_data(
@@ -403,7 +411,9 @@ class BioactivityResource(BaseResource):
         clean = [value for value in identifiers if value]
         if not clean:
             return []
-        result = self._with_retry(lambda: self.client.data_batch(identifier_type, clean))
+        result = self._with_retry(
+            lambda: self.client.data_batch(identifier_type, clean)
+        )
         return self._ensure_list(result)
 
     def get_bioactivity_aed(self, dtxsid: str) -> List[Any]:
@@ -436,14 +446,18 @@ class BioactivityResource(BaseResource):
             if aeid is None:
                 raise ValueError("aeid is required when mode='single-concentration'")
             kwargs["aeid"] = aeid
-            result = self._with_retry(lambda: self.client.assay_single_conc_by_aeid(**kwargs))
+            result = self._with_retry(
+                lambda: self.client.assay_single_conc_by_aeid(**kwargs)
+            )
         elif normalized == "gene":
             if gene_symbol is None:
                 raise ValueError("gene_symbol is required when mode='gene'")
             kwargs["gene_symbol"] = gene_symbol
             result = self._with_retry(lambda: self.client.assay_by_gene(**kwargs))
         else:
-            raise ValueError("mode must be one of all, aeid, single-concentration, or gene")
+            raise ValueError(
+                "mode must be one of all, aeid, single-concentration, or gene"
+            )
         return to_serializable(result)
 
     def batch_get_bioactivity_assay_annotations(self, aeids: List[str]) -> List[Any]:
@@ -464,11 +478,17 @@ class BioactivityResource(BaseResource):
     def get_bioactivity_aop(self, lookup_type: str, identifier: str) -> List[Any]:
         norm = lookup_type.strip().lower()
         if norm == "toxcast-aeid":
-            result = self._with_retry(lambda: self.client.aop_by_toxcast_aeid(identifier))
+            result = self._with_retry(
+                lambda: self.client.aop_by_toxcast_aeid(identifier)
+            )
         elif norm == "event-number":
-            result = self._with_retry(lambda: self.client.aop_by_event_number(identifier))
+            result = self._with_retry(
+                lambda: self.client.aop_by_event_number(identifier)
+            )
         elif norm == "entrez-gene-id":
-            result = self._with_retry(lambda: self.client.aop_by_entrez_gene(identifier))
+            result = self._with_retry(
+                lambda: self.client.aop_by_entrez_gene(identifier)
+            )
         else:
             raise ValueError(
                 "lookup_type must be one of toxcast-aeid, event-number, or entrez-gene-id"

@@ -1,5 +1,5 @@
 """Metadata utilities for CompTox model cards."""
 
-from .model_cards import ModelCardStore, ModelCardFilter
+from .model_cards import ModelCardFilter, ModelCardStore
 
 __all__ = ["ModelCardStore", "ModelCardFilter"]

@@ -40,7 +40,10 @@ class ApplicabilityDomainStore:
         for path in sorted(self.directory.glob("*.json")):
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):  # pragma: no cover - logged upstream
+            except (
+                OSError,
+                json.JSONDecodeError,
+            ):  # pragma: no cover - logged upstream
                 continue
             payload["path"] = str(path)
             yield payload

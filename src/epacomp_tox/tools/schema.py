@@ -49,11 +49,16 @@ def _schema_type_to_annotation(schema: JSONSchema) -> Any:
     return Any
 
 
-def create_model_from_schema(tool_name: str, schema: Optional[JSONSchema]) -> Type[BaseModel]:
+def create_model_from_schema(
+    tool_name: str, schema: Optional[JSONSchema]
+) -> Type[BaseModel]:
     schema = schema or {}
     if schema.get("type", "object") != "object":
         # Default to accepting any mapping
-        return create_model(f"{tool_name.title()}Params", **{"__root__": (Dict[str, Any], Field(default_factory=dict))})
+        return create_model(
+            f"{tool_name.title()}Params",
+            **{"__root__": (Dict[str, Any], Field(default_factory=dict))},
+        )
 
     properties: Dict[str, JSONSchema] = schema.get("properties", {})
     required_fields = set(schema.get("required", []))
@@ -67,10 +72,11 @@ def create_model_from_schema(tool_name: str, schema: Optional[JSONSchema]) -> Ty
         if prop_name in required_fields and default is None:
             field_info = Field(..., description=description)
         else:
-            field_info = Field(default if default is not None else None, description=description)
+            field_info = Field(
+                default if default is not None else None, description=description
+            )
 
         fields[prop_name] = (annotation, field_info)
 
     model_name = "".join(part.capitalize() for part in tool_name.split("_")) or "Tool"
     return create_model(f"{model_name}Params", **fields)
-

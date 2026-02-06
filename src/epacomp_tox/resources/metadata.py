@@ -55,7 +55,9 @@ class MetadataResource(BaseResource):
                         "nextCursor": {"type": ["string", "null"]},
                     },
                 },
-                "responseSchemaRef": schema_ref("metadata", "model_cards.response.schema"),
+                "responseSchemaRef": schema_ref(
+                    "metadata", "model_cards.response.schema"
+                ),
                 "outputSchema": {
                     "type": "object",
                     "properties": {
@@ -81,7 +83,9 @@ class MetadataResource(BaseResource):
                         "nextCursor": {"type": ["string", "null"]},
                     },
                 },
-                "responseSchemaRef": schema_ref("metadata", "applicability_list.response.schema"),
+                "responseSchemaRef": schema_ref(
+                    "metadata", "applicability_list.response.schema"
+                ),
                 "outputSchema": {
                     "type": "object",
                     "properties": {
@@ -111,7 +115,9 @@ class MetadataResource(BaseResource):
                         "references": {"type": "array"},
                     },
                 },
-                "responseSchemaRef": schema_ref("metadata", "applicability_detail.response.schema"),
+                "responseSchemaRef": schema_ref(
+                    "metadata", "applicability_detail.response.schema"
+                ),
                 "outputSchema": {
                     "type": "object",
                     "properties": {

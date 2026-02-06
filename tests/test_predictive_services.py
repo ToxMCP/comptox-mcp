@@ -6,17 +6,23 @@ import pytest
 
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.predictive import (
-    PredictiveRequest,
     ADCheckResult,
-    TestConsensusPredictiveService,
-    OperaPropertyService,
     GenRAService,
+    OperaPropertyService,
+    PredictiveRequest,
+    TestConsensusPredictiveService,
 )
 from epacomp_tox.predictive.clients import PredictiveClient
 
 
 class StubClient(PredictiveClient):
-    def __init__(self, *, response: Dict[str, Any], confidence: float = 1.0, in_domain: bool = True):
+    def __init__(
+        self,
+        *,
+        response: Dict[str, Any],
+        confidence: float = 1.0,
+        in_domain: bool = True,
+    ):
         self.response = response
         self.confidence = confidence
         self.in_domain = in_domain
@@ -29,21 +35,33 @@ class StubClient(PredictiveClient):
 
 
 SERVICE_CASES = [
-    (TestConsensusPredictiveService, {
-        "name": "TEST Consensus Acute Toxicity",
-        "version": "5.2.0",
-        "ad_model_name": "TEST Consensus Acute Toxicity",
-    }, "block"),
-    (OperaPropertyService, {
-        "name": "OPERA Property Predictions",
-        "version": "3.6.1",
-        "ad_model_name": "OPERA Property Predictions",
-    }, "warn"),
-    (GenRAService, {
-        "name": "GenRA Read-Across Workflow",
-        "version": "2.1.0",
-        "ad_model_name": "GenRA Read-Across Workflow",
-    }, "block"),
+    (
+        TestConsensusPredictiveService,
+        {
+            "name": "TEST Consensus Acute Toxicity",
+            "version": "5.2.0",
+            "ad_model_name": "TEST Consensus Acute Toxicity",
+        },
+        "block",
+    ),
+    (
+        OperaPropertyService,
+        {
+            "name": "OPERA Property Predictions",
+            "version": "3.6.1",
+            "ad_model_name": "OPERA Property Predictions",
+        },
+        "warn",
+    ),
+    (
+        GenRAService,
+        {
+            "name": "GenRA Read-Across Workflow",
+            "version": "2.1.0",
+            "ad_model_name": "GenRA Read-Across Workflow",
+        },
+        "block",
+    ),
 ]
 
 

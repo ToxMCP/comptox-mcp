@@ -25,7 +25,9 @@ class NoopResource(BaseResource):
     def get_tools(self) -> list[Dict[str, Any]]:
         return []
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:  # pragma: no cover - unused
+    def execute_tool(
+        self, tool_name: str, parameters: Dict[str, Any]
+    ) -> Any:  # pragma: no cover - unused
         raise NotImplementedError
 
 
@@ -50,7 +52,9 @@ def test_readyz_returns_ok_when_health_passes() -> None:
     server = HealthServer(api_key="dummy")
     app = create_app(server=server)
     client = TestClient(app)
-    with mock.patch.object(server, "check_health", return_value={"ok": True, "status": 200}):
+    with mock.patch.object(
+        server, "check_health", return_value={"ok": True, "status": 200}
+    ):
         response = client.get("/readyz")
 
     assert response.status_code == 200

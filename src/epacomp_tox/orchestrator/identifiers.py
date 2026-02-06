@@ -5,7 +5,6 @@ import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from ctxpy import CtxApiError
-
 from epacomp_tox.resources.chemical import ChemicalResource
 
 from .models import IdentifierResolution, MetadataTrace
@@ -53,7 +52,9 @@ class IdentifierResolver:
         self._time_fn = time_fn
         self._cache: Dict[Tuple[str, str], Tuple[float, IdentifierResolution]] = {}
 
-    def resolve(self, identifier: str, identifier_type: Optional[str] = None) -> IdentifierResolution:
+    def resolve(
+        self, identifier: str, identifier_type: Optional[str] = None
+    ) -> IdentifierResolution:
         """Resolve an identifier to a canonical DTXSID."""
         normalized_value = (identifier or "").strip()
         if not normalized_value:
@@ -109,7 +110,9 @@ class IdentifierResolver:
         if identifier_type:
             key = identifier_type.strip().lower()
             if key not in self._TYPE_ALIASES:
-                raise IdentifierResolutionError(f"Unsupported identifier type '{identifier_type}'.")
+                raise IdentifierResolutionError(
+                    f"Unsupported identifier type '{identifier_type}'."
+                )
             return self._TYPE_ALIASES[key]
         if self._DTXSID_RE.match(value):
             return "dtxsid"
@@ -131,12 +134,16 @@ class IdentifierResolver:
     ) -> Dict[str, Any]:
         search_modes = self._SEARCH_ORDER.get(identifier_type)
         if not search_modes:
-            raise IdentifierResolutionError(f"Identifier type '{identifier_type}' is not searchable.")
+            raise IdentifierResolutionError(
+                f"Identifier type '{identifier_type}' is not searchable."
+            )
 
         last_error: Optional[Exception] = None
         for mode in search_modes:
             try:
-                results = self.chemical_resource.search_chemical(query=identifier, search_type=mode)
+                results = self.chemical_resource.search_chemical(
+                    query=identifier, search_type=mode
+                )
                 trace.append(self._metadata_trace(f"chemical.search:{mode}"))
             except CtxApiError as exc:
                 last_error = exc
@@ -161,7 +168,9 @@ class IdentifierResolver:
             raise IdentifierResolutionError(
                 f"Failed to search for identifier '{identifier}': {last_error}"
             ) from last_error
-        raise IdentifierResolutionError(f"No CTX record found for identifier '{identifier}'.")
+        raise IdentifierResolutionError(
+            f"No CTX record found for identifier '{identifier}'."
+        )
 
     def _fetch_details(
         self,
@@ -212,7 +221,9 @@ class IdentifierResolver:
     ) -> IdentifierResolution:
         dtxsid = self._extract_dtxsid(detail_record or matched_record)
         synonyms = self._extract_synonyms(detail_record)
-        casrn = self._extract_field(("casrn", "cas", "CASRN", "casNumber"), detail_record, matched_record)
+        casrn = self._extract_field(
+            ("casrn", "cas", "CASRN", "casNumber"), detail_record, matched_record
+        )
         preferred_name = self._extract_field(
             ("preferredName", "preferred_name", "name"),
             detail_record,
@@ -233,7 +244,9 @@ class IdentifierResolver:
         )
 
     def _extract_synonyms(self, detail: Dict[str, Any]) -> List[str]:
-        raw = detail.get("synonyms") or detail.get("synonym") or detail.get("synonymList")
+        raw = (
+            detail.get("synonyms") or detail.get("synonym") or detail.get("synonymList")
+        )
         values: Iterable[Any]
         if isinstance(raw, (list, tuple)):
             values = raw

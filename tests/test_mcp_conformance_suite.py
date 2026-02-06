@@ -16,7 +16,9 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 class ConformanceResource(BaseResource):
     """Stub resource providing deterministic tool definitions for conformance tests."""
 
-    def __init__(self, api_key: str, name: str, description: str, tools: List[Dict[str, Any]]):
+    def __init__(
+        self, api_key: str, name: str, description: str, tools: List[Dict[str, Any]]
+    ):
         super().__init__(api_key)
         self._name = name
         self._description = description
@@ -154,15 +156,21 @@ def test_discovery_contains_required_contract() -> None:
         notification = websocket.receive_json()
         assert notification.get("method") == "notifications/initialized"
 
-        websocket.send_json({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
+        websocket.send_json(
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
+        )
         tools_response = websocket.receive_json()
         assert tools_response["result"]["nextCursor"] is None
         tool_names = {tool["name"] for tool in tools_response["result"]["tools"]}
         for required in expected["requiredTools"]:
             assert required in tool_names
 
-        websocket.send_json({"jsonrpc": "2.0", "id": 3, "method": "resources/list", "params": {}})
+        websocket.send_json(
+            {"jsonrpc": "2.0", "id": 3, "method": "resources/list", "params": {}}
+        )
         resources_response = websocket.receive_json()
-        resource_names = {resource["name"] for resource in resources_response["result"]["resources"]}
+        resource_names = {
+            resource["name"] for resource in resources_response["result"]["resources"]
+        }
         for required in expected["requiredResources"]:
             assert required in resource_names

@@ -1,26 +1,26 @@
 from __future__ import annotations
 
 import json
-from dataclasses import is_dataclass, asdict
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 from uuid import uuid4
 
+from .audit import AuditBundleStore
 from .ctx_data import CtxDataAssembler, CtxDataAssemblyError
-from .identifiers import IdentifierResolver, IdentifierResolutionError
+from .evidence import EvidenceSynthesizer
+from .identifiers import IdentifierResolutionError, IdentifierResolver
 from .models import (
     CtxDataBundle,
+    EvidenceSynthesis,
     GuardrailEvent,
     IdentifierResolution,
-    EvidenceSynthesis,
     MetadataTrace,
     PredictiveRunResult,
     PredictiveStepResult,
     PredictiveTask,
 )
 from .predictive import PredictiveCoordinator
-from .evidence import EvidenceSynthesizer
-from .audit import AuditBundleStore
 from .utils import sanitize_metadata
 
 
@@ -54,7 +54,9 @@ class GenRAOrchestrator:
         self.identifier_resolver = identifier_resolver
         self.ctx_data_assembler = ctx_data_assembler
         self.predictive_coordinator = predictive_coordinator
-        self.bundle_store = AuditBundleStore(persistence_dir) if persistence_dir else None
+        self.bundle_store = (
+            AuditBundleStore(persistence_dir) if persistence_dir else None
+        )
         self._clock = clock
         self.evidence_synthesizer = evidence_synthesizer or EvidenceSynthesizer()
 
@@ -75,8 +77,12 @@ class GenRAOrchestrator:
 
         resolution: IdentifierResolution
         try:
-            resolution = self.identifier_resolver.resolve(target_identifier, identifier_type)
-            timeline.append(self._timeline_entry("NormalizeIdentifier", resolution.trace))
+            resolution = self.identifier_resolver.resolve(
+                target_identifier, identifier_type
+            )
+            timeline.append(
+                self._timeline_entry("NormalizeIdentifier", resolution.trace)
+            )
         except IdentifierResolutionError as exc:
             guardrails.append(
                 GuardrailEvent(
@@ -142,7 +148,9 @@ class GenRAOrchestrator:
         timeline.append(
             {
                 "stage": "RunPredictiveModels",
-                "metadata": [self._result_metadata(step) for step in predictive_result.results],
+                "metadata": [
+                    self._result_metadata(step) for step in predictive_result.results
+                ],
             }
         )
 
@@ -173,7 +181,9 @@ class GenRAOrchestrator:
 
     # Internal helpers -----------------------------------------------------
 
-    def _timeline_entry(self, stage: str, trace: Sequence[MetadataTrace]) -> Dict[str, Any]:
+    def _timeline_entry(
+        self, stage: str, trace: Sequence[MetadataTrace]
+    ) -> Dict[str, Any]:
         return {
             "stage": stage,
             "metadata": [_serialize(item) for item in trace],
@@ -276,7 +286,9 @@ class GenRAOrchestrator:
             return None
         attachments: Dict[str, str] = {}
         if ctx_bundle:
-            attachments["ctx_data.json"] = json.dumps(_serialize(ctx_bundle), indent=2, sort_keys=True)
+            attachments["ctx_data.json"] = json.dumps(
+                _serialize(ctx_bundle), indent=2, sort_keys=True
+            )
         if predictive_result:
             attachments["predictive_results.json"] = json.dumps(
                 _serialize(predictive_result),
@@ -284,5 +296,7 @@ class GenRAOrchestrator:
                 sort_keys=True,
             )
         if evidence:
-            attachments["evidence.json"] = json.dumps(_serialize(evidence), indent=2, sort_keys=True)
+            attachments["evidence.json"] = json.dumps(
+                _serialize(evidence), indent=2, sort_keys=True
+            )
         return self.bundle_store.save(bundle, attachments=attachments)

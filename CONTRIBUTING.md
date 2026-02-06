@@ -4,7 +4,7 @@ First off, thank you for considering contributing to this project! Your help is 
 
 ## Where to Start
 
-If you're new to the project, a good place to start is by looking at the [open issues](https://github.com/your-org/mcp_epacomp_tox/issues). You can also check out the [documentation](docs) to get a better understanding of the project's architecture and goals.
+If you're new to the project, a good place to start is by looking at the [open issues](https://github.com/senseibelbi/CompTox_MCP/issues). You can also check out the [documentation](docs) to get a better understanding of the project's architecture and goals.
 
 ## How to Contribute
 
@@ -30,12 +30,12 @@ If you have an idea for a new feature or an improvement to an existing one, plea
 1.  Fork the repository and create a new branch from `main`.
 2.  Make your changes and add or update tests as appropriate.
 3.  Ensure the test suite passes by running `pytest`.
-4.  Format your code using a tool like `black`.
+4.  Format your code with `isort` and `black`.
 5.  Open a pull request with a clear title and a detailed description of your changes.
 
 ## Style Guide
 
-This project follows the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code. We also use `black` for automatic code formatting.
+This project follows the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code. We use `isort` and `black` for automatic import and code formatting.
 
 ## Code of Conduct
 

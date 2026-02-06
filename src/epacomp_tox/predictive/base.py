@@ -113,9 +113,7 @@ class PredictiveServiceBase(ABC):
             )
             error_code = definition.get("errorCode")
             if policy == "block":
-                raise ValueError(
-                    error_code or message
-                )
+                raise ValueError(error_code or message)
             if policy == "warn":
                 metadata["adWarning"] = True
                 metadata["adMessage"] = error_code or message

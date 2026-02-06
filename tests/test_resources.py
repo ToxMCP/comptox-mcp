@@ -1,6 +1,6 @@
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 from unittest import mock
 
 # Ensure src is on path
@@ -15,11 +15,15 @@ from epacomp_tox.resources.hazard import HazardResource  # noqa: E402
 
 class TestChemicalResource(unittest.TestCase):
     @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
-    def test_batch_get_details_normalizes_list(self, mock_client_cls: mock.MagicMock) -> None:
+    def test_batch_get_details_normalizes_list(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
         mock_client = mock_client_cls.return_value
+
         def _details_side_effect(*args, **kwargs):
             mock_client.last_metadata = {"status": 200, "request_id": "req-1"}
             return [{"id": 1}]
+
         mock_client.details.side_effect = _details_side_effect
 
         resource = ChemicalResource(api_key="fake")
@@ -36,7 +40,9 @@ class TestChemicalResource(unittest.TestCase):
         )
         self.assertIsInstance(result, list)
         self.assertEqual(result, [{"id": 1}])
-        self.assertEqual(resource.get_last_metadata(), {"status": 200, "request_id": "req-1"})
+        self.assertEqual(
+            resource.get_last_metadata(), {"status": 200, "request_id": "req-1"}
+        )
 
     @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
     def test_search_msready_mass_range(self, mock_client_cls: mock.MagicMock) -> None:
@@ -57,7 +63,9 @@ class TestChemicalResource(unittest.TestCase):
 
 class TestExposureResource(unittest.TestCase):
     @mock.patch("epacomp_tox.resources.exposure.ctx.Exposure")
-    def test_search_cpdat_handles_multiple_ids(self, mock_client_cls: mock.MagicMock) -> None:
+    def test_search_cpdat_handles_multiple_ids(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
         mock_client = mock_client_cls.return_value
         mock_client.search_cpdat.side_effect = (
             [{"dtxsid": "DTX1"}],
@@ -70,10 +78,14 @@ class TestExposureResource(unittest.TestCase):
 
         self.assertEqual(mock_client.search_cpdat.call_count, 2)
         self.assertEqual(result, [{"dtxsid": "DTX1"}, {"dtxsid": "DTX2"}])
-        self.assertEqual(resource.get_last_metadata(), {"status": 200, "request_id": "req-2"})
+        self.assertEqual(
+            resource.get_last_metadata(), {"status": 200, "request_id": "req-2"}
+        )
 
     @mock.patch("epacomp_tox.resources.exposure.ctx.Exposure")
-    def test_search_exposures_requires_identifier(self, mock_client_cls: mock.MagicMock) -> None:
+    def test_search_exposures_requires_identifier(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
         resource = ExposureResource(api_key="fake")
         with self.assertRaises(ValueError):
             resource.search_exposures(data_type="pathways", dtxsids=[])
@@ -81,7 +93,9 @@ class TestExposureResource(unittest.TestCase):
 
 class TestHazardResource(unittest.TestCase):
     @mock.patch("epacomp_tox.resources.hazard.ctx.Hazard")
-    def test_batch_search_hazard_normalizes_values(self, mock_client_cls: mock.MagicMock) -> None:
+    def test_batch_search_hazard_normalizes_values(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
         mock_client = mock_client_cls.return_value
         mock_client.batch_search.return_value = {"DTX1": {"score": 1}}
 
@@ -135,7 +149,9 @@ class TestBaseResourceRetry(unittest.TestCase):
 
         with self.assertRaises(CtxApiError):
             resource._with_retry(
-                lambda: (_ for _ in ()).throw(CtxApiError(status=400, message="bad input")),
+                lambda: (_ for _ in ()).throw(
+                    CtxApiError(status=400, message="bad input")
+                ),
                 retries=2,
                 base_delay=0,
             )

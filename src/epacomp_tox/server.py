@@ -5,26 +5,27 @@ from datetime import datetime, timezone
 from importlib import metadata
 from typing import Any, Dict, List, Optional, Tuple
 
-from ctxpy import CtxApiError, RateLimitInfo
 from pydantic import ValidationError
 
+from ctxpy import CtxApiError, RateLimitInfo
 from epacomp_tox import audit
 from epacomp_tox.config import configure_ctx_env, get_api_key, get_base_url
-from epacomp_tox.settings import settings
-from epacomp_tox.health import check_ctx_health
 from epacomp_tox.contracts import SchemaValidationError, validate_payload
+from epacomp_tox.health import check_ctx_health
+from epacomp_tox.settings import settings
 from epacomp_tox.tools.registry import ToolRegistry
 from epacomp_tox.validators import to_serializable
+
 
 class MCPServer:
     """
     Model Context Protocol (MCP) server for EPA CompTox data.
-    
+
     This server exposes EPA CompTox data through a standardized MCP interface,
     allowing LLM agents to interact with chemical, exposure, hazard, and other
     toxicology data.
     """
-    
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -34,7 +35,7 @@ class MCPServer:
     ):
         """
         Initialize the MCP server.
-        
+
         Args:
             api_key: EPA CompTox API key. If not provided, will attempt to use
                     environment variable EPA_COMPTOX_API_KEY.
@@ -61,17 +62,17 @@ class MCPServer:
         self.tool_registry = ToolRegistry()
         for resource in self.resources.values():
             self.tool_registry.register_resource(resource)
-        
+
     def _initialize_resources(self) -> Dict[str, Any]:
         """Initialize and return all available resources."""
         from .resources.bioactivity import BioactivityResource
         from .resources.chemical import ChemicalResource
+        from .resources.chemical_list import ChemicalListResource
+        from .resources.cheminformatics import CheminformaticsResource
         from .resources.exposure import ExposureResource
         from .resources.hazard import HazardResource
         from .resources.metadata import MetadataResource
-        from .resources.chemical_list import ChemicalListResource
-        from .resources.cheminformatics import CheminformaticsResource
-        
+
         return {
             "chemical": ChemicalResource(self.api_key),
             "bioactivity": BioactivityResource(self.api_key),
@@ -81,11 +82,11 @@ class MCPServer:
             "cheminformatics": CheminformaticsResource(self.api_key),
             "metadata": MetadataResource(self.api_key),
         }
-    
+
     def get_resources(self) -> List[Dict[str, str]]:
         """
         Get a list of all available resources.
-        
+
         Returns:
             List of resource information dictionaries.
         """
@@ -93,7 +94,7 @@ class MCPServer:
             {
                 "name": name,
                 "description": resource.description,
-                "url": f"/resources/{name}"
+                "url": f"/resources/{name}",
             }
             for name, resource in self.resources.items()
         ]
@@ -106,27 +107,27 @@ class MCPServer:
             timeout=timeout,
         )
         return self._last_health
-    
+
     def get_tools(self) -> List[Dict[str, Any]]:
         """
         Get a list of all available tools for LLM agents.
-        
+
         Returns:
             List of tool definitions.
         """
         return self.tool_registry.list_definitions()
-    
+
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """
         Execute a tool with the given parameters.
-        
+
         Args:
             tool_name: Name of the tool to execute.
             parameters: Parameters for the tool.
-            
+
         Returns:
             Tool execution result.
-            
+
         Raises:
             ValueError: If the tool is not found.
         """
@@ -143,7 +144,7 @@ class MCPServer:
                             f"Tool '{tool_name}' response failed schema validation: {exc}"
                         ) from exc
                 return result
-        
+
         raise ValueError(f"Tool '{tool_name}' not found.")
 
     def get_server_info(self) -> Dict[str, str]:
@@ -158,7 +159,9 @@ class MCPServer:
         """Expose transport configuration (heartbeat, handshake timeouts, etc.)."""
         return dict(self.transport_options)
 
-    def list_tools(self, *, cursor: Optional[str] = None, limit: Optional[int] = None) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    def list_tools(
+        self, *, cursor: Optional[str] = None, limit: Optional[int] = None
+    ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
         Return MCP-compliant tool definitions.
 
@@ -186,7 +189,9 @@ class MCPServer:
             next_cursor = str(end_index)
         return page, next_cursor
 
-    def list_resources(self, *, cursor: Optional[str] = None, limit: Optional[int] = None) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    def list_resources(
+        self, *, cursor: Optional[str] = None, limit: Optional[int] = None
+    ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
         Return MCP-compliant resource descriptors for discovery.
         """
@@ -249,7 +254,9 @@ class MCPServer:
         resource = registration.resource
 
         try:
-            validated_params = registration.parameters_model.model_validate(parameters or {})
+            validated_params = registration.parameters_model.model_validate(
+                parameters or {}
+            )
             payload = self._invoke_resource(
                 resource,
                 tool_name,
@@ -283,7 +290,10 @@ class MCPServer:
                 if isinstance(existing_sc, dict):
                     existing_sc["metadata"] = combined_metadata
                 else:
-                    result["structuredContent"] = {"data": existing_sc, "metadata": combined_metadata}
+                    result["structuredContent"] = {
+                        "data": existing_sc,
+                        "metadata": combined_metadata,
+                    }
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="success",
@@ -307,7 +317,9 @@ class MCPServer:
                 params=parameters,
                 error=str(exc),
             )
-            raise ValueError(f"Invalid parameters for tool '{tool_name}': {exc}") from exc
+            raise ValueError(
+                f"Invalid parameters for tool '{tool_name}': {exc}"
+            ) from exc
         except CtxApiError as exc:
             metadata = self._format_metadata(resource.get_last_metadata())
             session_metadata = self._format_session_context(context)
@@ -434,7 +446,9 @@ class MCPServer:
             return os.environ.get("EPACOMP_TOX_VERSION", "0.0.0-dev")
 
     @staticmethod
-    def _format_metadata(metadata: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _format_metadata(
+        metadata: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         if not metadata:
             return None
         formatted: Dict[str, Any] = {}
@@ -450,8 +464,12 @@ class MCPServer:
         return formatted or None
 
     @staticmethod
-    def _normalise_tool_definition(*, resource_name: str, tool: Dict[str, Any]) -> Dict[str, Any]:
-        input_schema = tool.get("inputSchema") or tool.get("parameters") or {"type": "object"}
+    def _normalise_tool_definition(
+        *, resource_name: str, tool: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        input_schema = (
+            tool.get("inputSchema") or tool.get("parameters") or {"type": "object"}
+        )
         output_schema = tool.get("outputSchema")
         normalised: Dict[str, Any] = {
             "name": tool["name"],
@@ -498,9 +516,13 @@ class MCPServer:
 
     def update_session_activity(self, session_id: str) -> None:
         if session_id in self._sessions:
-            self._sessions[session_id]["lastActivity"] = datetime.now(tz=timezone.utc).isoformat()
+            self._sessions[session_id]["lastActivity"] = datetime.now(
+                tz=timezone.utc
+            ).isoformat()
 
-    def unregister_session(self, session_id: str, *, reason: Optional[str] = None) -> None:
+    def unregister_session(
+        self, session_id: str, *, reason: Optional[str] = None
+    ) -> None:
         if session_id in self._sessions:
             session = self._sessions[session_id]
             session["closedAt"] = datetime.now(tz=timezone.utc).isoformat()
@@ -509,7 +531,9 @@ class MCPServer:
             session["status"] = "closed"
 
     @staticmethod
-    def _resolve_transport_options(override: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _resolve_transport_options(
+        override: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Resolve heartbeat and handshake settings from configuration and overrides."""
         base_options = settings.transport
         options = {
@@ -523,7 +547,9 @@ class MCPServer:
         return options
 
     @staticmethod
-    def _format_session_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _format_session_context(
+        context: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         if not context:
             return None
         session_view: Dict[str, Any] = {}
@@ -563,7 +589,9 @@ class MCPServer:
                 for key, value in values.items():
                     if isinstance(value, bool):
                         metric_key = f"{section}.{key}"
-                        counts = bucket.setdefault(metric_key, {"enabled": 0, "disabled": 0})
+                        counts = bucket.setdefault(
+                            metric_key, {"enabled": 0, "disabled": 0}
+                        )
                         if value:
                             counts["enabled"] += 1
                         else:

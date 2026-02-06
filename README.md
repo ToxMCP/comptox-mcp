@@ -47,7 +47,7 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 ## Quick start
 
 ```bash
-git clone https://github.com/your-org/mcp_epacomp_tox.git
+git clone https://github.com/senseibelbi/CompTox_MCP.git mcp_epacomp_tox
 cd mcp_epacomp_tox
 pip install -e .
 cp .env.example .env
@@ -197,6 +197,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - Rotate `CTX_API_KEY` regularly and store secrets outside the repository (e.g. cloud secret manager or OS keychain).
 - Monitor `/metrics` for negotiated capability changes and unexpected spikes in `tools/call` failures.
 - Enable HTTPS/TLS at the ingress or reverse proxy layer.
+- Follow coordinated vulnerability disclosure guidance in [`SECURITY.md`](SECURITY.md).
 
 ---
 

@@ -7,7 +7,6 @@ from typing import List, Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 LEGACY_CTX_BASE_URL = "https://api-ccte.epa.gov"
 DEFAULT_CTX_BASE_URL = "https://comptox.epa.gov/ctx-api"
 
@@ -66,13 +65,19 @@ class _RawSettings(BaseSettings):
     ctx_api_key: Optional[str] = Field(default=None, alias="CTX_API_KEY")
     ctx_api_key_legacy: Optional[str] = Field(default=None, alias="EPA_COMPTOX_API_KEY")
     ctx_api_key_client: Optional[str] = Field(default=None, alias="ctx_x_api_key")
-    ctx_api_base_url: str = Field(default=DEFAULT_CTX_BASE_URL, alias="CTX_API_BASE_URL")
+    ctx_api_base_url: str = Field(
+        default=DEFAULT_CTX_BASE_URL, alias="CTX_API_BASE_URL"
+    )
     ctx_use_legacy: bool = Field(default=False, alias="CTX_USE_LEGACY")
     ctx_retry_attempts: int = Field(default=3, alias="CTX_RETRY_ATTEMPTS")
     ctx_retry_base: float = Field(default=0.5, alias="CTX_RETRY_BASE")
 
-    heartbeat_timeout: int = Field(default=120, alias="EPACOMP_MCP_HEARTBEAT_TIMEOUT_SECONDS")
-    handshake_timeout: int = Field(default=30, alias="EPACOMP_MCP_HANDSHAKE_TIMEOUT_SECONDS")
+    heartbeat_timeout: int = Field(
+        default=120, alias="EPACOMP_MCP_HEARTBEAT_TIMEOUT_SECONDS"
+    )
+    handshake_timeout: int = Field(
+        default=30, alias="EPACOMP_MCP_HANDSHAKE_TIMEOUT_SECONDS"
+    )
 
     metrics_enabled: bool = Field(default=True, alias="EPACOMP_MCP_METRICS_ENABLED")
 
@@ -117,7 +122,9 @@ class Settings(_RawSettings):
     def transport(self) -> TransportSettings:
         heartbeat = max(5, int(self.heartbeat_timeout))
         handshake = max(5, int(self.handshake_timeout))
-        return TransportSettings(heartbeat_timeout=heartbeat, handshake_timeout=handshake)
+        return TransportSettings(
+            heartbeat_timeout=heartbeat, handshake_timeout=handshake
+        )
 
     @cached_property
     def observability(self) -> ObservabilitySettings:
@@ -130,4 +137,3 @@ def _load_settings() -> Settings:
 
 
 settings = _load_settings()
-

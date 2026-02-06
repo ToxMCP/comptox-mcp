@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import time
 import re
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.server import MCPServer
 from epacomp_tox.transport.websocket import create_app
-
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -139,7 +138,12 @@ def _connect():
             yield server, websocket
 
 
-def _initialize(websocket, *, capabilities: Optional[Dict[str, Any]] = None, heartbeat_ms: Optional[int] = None):
+def _initialize(
+    websocket,
+    *,
+    capabilities: Optional[Dict[str, Any]] = None,
+    heartbeat_ms: Optional[int] = None,
+):
     websocket.send_json(
         {
             "jsonrpc": "2.0",
@@ -149,7 +153,11 @@ def _initialize(websocket, *, capabilities: Optional[Dict[str, Any]] = None, hea
                 "protocolVersion": "2025-06-18",
                 "capabilities": capabilities or {},
                 "clientInfo": {"name": "test-client", "version": "0.0.1"},
-                **({"heartbeatIntervalMs": heartbeat_ms} if heartbeat_ms is not None else {}),
+                **(
+                    {"heartbeatIntervalMs": heartbeat_ms}
+                    if heartbeat_ms is not None
+                    else {}
+                ),
             },
         }
     )
@@ -207,7 +215,9 @@ def test_websocket_transport_flow():
             elif event["method"] == "events/end":
                 _assert_event_structure(event, "events_end.json")
 
-        result_event = next(event for event in events if event["method"] == "events/result")
+        result_event = next(
+            event for event in events if event["method"] == "events/result"
+        )
         structured = result_event["params"]["result"]["structuredContent"]
         assert structured["echo"] == "hello"
 
@@ -243,7 +253,11 @@ def test_tools_call_timeout():
             else:
                 events.append(message)
 
-        error_codes = [event["params"].get("code") for event in events if event["method"] == "events/error"]
+        error_codes = [
+            event["params"].get("code")
+            for event in events
+            if event["method"] == "events/error"
+        ]
         assert -32003 in error_codes
         end_events = [event for event in events if event["method"] == "events/end"]
         assert end_events[0]["params"]["status"] == "error"
@@ -332,7 +346,9 @@ def test_ping_and_capability_negotiation():
         assert streams_metric["disabled"] == 1 and streams_metric["enabled"] == 0
         assert cancel_metric["disabled"] == 1 and cancel_metric["enabled"] == 0
 
-        websocket.send_json({"jsonrpc": "2.0", "id": 99, "method": "ping", "params": {}})
+        websocket.send_json(
+            {"jsonrpc": "2.0", "id": 99, "method": "ping", "params": {}}
+        )
         ping_response = websocket.receive_json()
         assert ping_response["id"] == 99
         assert "timestamp" in ping_response["result"]
@@ -365,10 +381,7 @@ def test_ping_and_capability_negotiation():
         assert call_response["id"] == 101
         assert "method" not in call_response
         assert call_response["result"]["requestId"] == "nostream"
-        assert (
-            call_response["result"]["structuredContent"]["echo"]
-            == "no-stream"
-        )
+        assert call_response["result"]["structuredContent"]["echo"] == "no-stream"
         metadata = call_response["result"]["structuredContent"]["metadata"]["session"]
         assert metadata["sessionId"] == session_id
         assert metadata["negotiatedCapabilities"]["tools"]["streams"] is False

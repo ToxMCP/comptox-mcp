@@ -4,13 +4,13 @@ from typing import Callable, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from epacomp_tox.contracts import validate_payload
 from epacomp_tox.predictive.base import (
     ADCheckResult,
     PredictiveRequest,
     PredictiveResponse,
     PredictiveServiceBase,
 )
-from epacomp_tox.contracts import validate_payload
 
 PREDICT_RESPONSE_SCHEMA = ("predictive", "predict.response.schema")
 AD_RESPONSE_SCHEMA = ("predictive", "ad_check.response.schema")

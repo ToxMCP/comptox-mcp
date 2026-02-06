@@ -164,7 +164,9 @@ class PredictiveCoordinator:
                 )
             )
 
-        return PredictiveRunResult(results=results, guardrails=guardrails, succeeded=succeeded)
+        return PredictiveRunResult(
+            results=results, guardrails=guardrails, succeeded=succeeded
+        )
 
     # Internal utilities -----------------------------------------------------
 
