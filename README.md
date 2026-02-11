@@ -74,6 +74,20 @@ With the server running, MCP clients can connect to `http://localhost:8000/mcp` 
 
 ---
 
+## Verification (smoke test)
+
+Once the server is running:
+
+```bash
+# health
+curl -s http://localhost:8000/health | jq .
+
+# list MCP tools
+curl -s http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq .
+```
+
 ## Configuration
 
 Settings are resolved via [`pydantic-settings`](https://docs.pydantic.dev/latest/concepts/settings/) with `.env`/`.env.local` support. Key environment variables:
