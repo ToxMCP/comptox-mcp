@@ -1,6 +1,7 @@
 [![CI](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.64898%2F2026.02.06.703989-blue)](https://doi.org/10.64898/2026.02.06.703989)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE)
+[![Release](https://img.shields.io/github/v/release/ToxMCP/comptox-mcp?sort=semver)](https://github.com/ToxMCP/comptox-mcp/releases)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
 # EPA CompTox MCP Server
