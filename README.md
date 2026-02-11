@@ -58,6 +58,26 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 
 ---
 
+## Quickstart TL;DR
+
+```bash
+# 1) install
+pip install -e .
+
+# 2) configure
+cp .env.example .env
+# (set CTX_API_KEY in .env)
+
+# 3) run
+uvicorn epacomp_tox.transport.websocket:app --reload
+
+# 4) verify
+curl -s http://localhost:8000/health | jq .
+curl -s http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq .
+```
+
 ## Quick start
 
 ```bash
