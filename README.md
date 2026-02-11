@@ -1,5 +1,8 @@
 # EPA CompTox MCP Server
 
+> Part of **ToxMCP** Suite → https://github.com/ToxMCP/toxmcp
+
+
 **Public MCP endpoint for the EPA Computational Toxicology (CompTox) API.**  
 Expose CompTox resources, predictive services, and guardrailed workflows to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
 
