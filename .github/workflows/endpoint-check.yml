@@ -24,9 +24,16 @@ jobs:
         run: pip install -e .
 
       - name: Run endpoint checker
+        if: ${{ secrets.CTX_API_KEY != '' }}
         env:
           CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
         run: python scripts/check_endpoints.py --json > endpoint_status.json
+
+      - name: Mark check as skipped (missing CTX_API_KEY)
+        if: ${{ secrets.CTX_API_KEY == '' }}
+        run: |
+          echo '{"skipped": true, "reason": "CTX_API_KEY secret is not configured for this repository"}' > endpoint_status.json
+          echo "Skipping endpoint check because CTX_API_KEY is not configured."
 
       - name: Upload results artifact
         uses: actions/upload-artifact@v4
