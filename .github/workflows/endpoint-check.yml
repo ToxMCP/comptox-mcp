@@ -11,6 +11,8 @@ jobs:
   check-endpoints:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.labels.*.name, 'run-endpoint-check'))
+    env:
+      CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,13 +26,11 @@ jobs:
         run: pip install -e .
 
       - name: Run endpoint checker
-        if: ${{ secrets.CTX_API_KEY != '' }}
-        env:
-          CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
+        if: ${{ env.CTX_API_KEY != '' }}
         run: python scripts/check_endpoints.py --json > endpoint_status.json
 
       - name: Mark check as skipped (missing CTX_API_KEY)
-        if: ${{ secrets.CTX_API_KEY == '' }}
+        if: ${{ env.CTX_API_KEY == '' }}
         run: |
           echo '{"skipped": true, "reason": "CTX_API_KEY secret is not configured for this repository"}' > endpoint_status.json
           echo "Skipping endpoint check because CTX_API_KEY is not configured."
