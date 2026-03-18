@@ -4,7 +4,7 @@ First off, thank you for considering contributing to this project! Your help is 
 
 ## Where to Start
 
-If you're new to the project, a good place to start is by looking at the [open issues](https://github.com/senseibelbi/CompTox_MCP/issues). You can also check out the [documentation](docs) to get a better understanding of the project's architecture and goals.
+If you're new to the project, a good place to start is by looking at the [open issues](https://github.com/ToxMCP/comptox-mcp/issues). You can also check out the [documentation](docs) to get a better understanding of the project's architecture and goals.
 
 ## How to Contribute
 

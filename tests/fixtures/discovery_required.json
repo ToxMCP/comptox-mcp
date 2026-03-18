@@ -6,14 +6,12 @@
     "search_httk",
     "search_hazard",
     "get_public_list_names",
-    "get_full_list",
-    "search_toxprints"
+    "get_full_list"
   ],
   "requiredResources": [
     "chemical",
     "exposure",
     "hazard",
-    "chemical_list",
-    "cheminformatics"
+    "chemical_list"
   ]
 }

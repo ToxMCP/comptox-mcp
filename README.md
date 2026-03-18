@@ -81,8 +81,8 @@ curl -s http://localhost:8000/mcp \
 ## Quick start
 
 ```bash
-git clone https://github.com/senseibelbi/CompTox_MCP.git mcp_epacomp_tox
-cd mcp_epacomp_tox
+git clone https://github.com/ToxMCP/comptox-mcp.git comptox-mcp
+cd comptox-mcp
 pip install -e .
 cp .env.example .env
 uvicorn epacomp_tox.transport.websocket:app --reload
@@ -107,6 +107,8 @@ curl -s http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq .
 ```
+
+Current live coverage for the MCP catalog is verified for `chemical`, `bioactivity`, `exposure`, `hazard`, `chemical_list`, and `metadata`. `cheminformatics` remains out of the live MCP catalog because the current CTX host does not provide ToxPrint endpoints.
 
 ## Configuration
 
@@ -137,6 +139,7 @@ See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and
 | --- | --- | --- |
 | Chemical discovery | `search_chemical`, `batch_search_chemical`, `get_chemical_details` | Resolve identifiers, structures, and details with CTX retry/backoff baked in. |
 | Exposure & hazard | `search_hazard`, `get_hazard_toxval`, `get_hazard_toxref` | Batch-normalized access to CTX exposure datasets plus granular hazard endpoints (ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC). |
+| Chemical lists | `get_public_list_names`, `get_full_list` | Public list-name discovery is normalized through the shared `ctxpy` client; when the upstream enumeration route returns `404`, the server falls back to a maintained catalog while list contents still come from the live CTX API. |
 | Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and audit metadata. |
 | Predictive services | `predictive_run_test`, `predictive_run_opera`, `predictive_run_genra` (via orchestrator helpers) | Trigger guardrailed predictive runs and receive provenance detail alongside outputs. |
 | Utility helpers | `opsin_convert_name`, `indigo_convert_molfile` | Provide supporting conversions for downstream automations. |
@@ -232,7 +235,7 @@ Each guide covers tool listing, sample calls, binary payload handling, and troub
 Every successful tool invocation returns structured payloads designed for agents:
 
 - `content`: human-readable JSON wrapped as text for chat surfaces.
-- `structuredContent.data`: machine-readable results (lists, dicts, or arrays) for programmatic chaining.
+- `structuredContent.data`: machine-readable results for programmatic chaining. Success responses always expose it; error responses set it to `null` while preserving `isError=true`.
 - `structuredContent.metadata`: when available, includes rate-limit information, applicability-domain context, audit bundle references, and session metadata.
 - Predictive tools return additional provenance such as model version, policy enforcement outcome, and attachments (e.g. audit bundle IDs).
 
@@ -284,6 +287,7 @@ Every successful tool invocation returns structured payloads designed for agents
 
 - Expand predictive coverage beyond current TEST/OPERA/GenRA helpers.
 - Surface additional analytics (latency histograms, rate-limit breaches) through `/metrics`.
+- Re-enable live cheminformatics/ToxPrint MCP exposure once the current CTX host provides a supported endpoint or migration path.
 - Optional SSE transport once MCP spec finalises streaming semantics.
 
 ---
@@ -321,4 +325,3 @@ Djidrovski, I. **ToxMCP: Guardrailed, Auditable Agentic Workflows for Computatio
 ```
 
 Citation metadata: [`CITATION.cff`](./CITATION.cff)
-

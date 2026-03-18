@@ -45,11 +45,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/senseibelbi/CompTox_MCP"
-Repository = "https://github.com/senseibelbi/CompTox_MCP"
-Issues = "https://github.com/senseibelbi/CompTox_MCP/issues"
-Documentation = "https://github.com/senseibelbi/CompTox_MCP/tree/main/docs"
-Security = "https://github.com/senseibelbi/CompTox_MCP/security/policy"
+Homepage = "https://github.com/ToxMCP/comptox-mcp"
+Repository = "https://github.com/ToxMCP/comptox-mcp"
+Issues = "https://github.com/ToxMCP/comptox-mcp/issues"
+Documentation = "https://github.com/ToxMCP/comptox-mcp/tree/main/docs"
+Security = "https://github.com/ToxMCP/comptox-mcp/security/policy"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

@@ -281,7 +281,9 @@ class MCPServer:
             }
             if structured:
                 if isinstance(structured, dict):
-                    result["structuredContent"] = structured
+                    normalized_sc = dict(structured)
+                    normalized_sc.setdefault("data", dict(structured))
+                    result["structuredContent"] = normalized_sc
                 else:
                     # Normalize lists/scalars into a consistent envelope so metadata can be attached.
                     result["structuredContent"] = {"data": structured}
@@ -289,6 +291,9 @@ class MCPServer:
                 existing_sc = result.get("structuredContent")
                 if isinstance(existing_sc, dict):
                     existing_sc["metadata"] = combined_metadata
+                    data_payload = existing_sc.get("data")
+                    if isinstance(data_payload, dict):
+                        data_payload["metadata"] = combined_metadata
                 else:
                     result["structuredContent"] = {
                         "data": existing_sc,
@@ -337,6 +342,7 @@ class MCPServer:
                 if session_metadata:
                     merged["session"] = session_metadata
                 error_payload["metadata"] = merged
+            error_payload.setdefault("data", None)
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="error",

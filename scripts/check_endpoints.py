@@ -24,7 +24,10 @@ class Endpoint:
 DEFAULT_ENDPOINTS: List[Endpoint] = [
     Endpoint(
         name="CTX Chemical API",
-        url=os.environ.get("CTX_CHEMICAL_HEALTH_URL", "https://comptox.epa.gov/ctx-api/chemical/list/"),
+        url=os.environ.get(
+            "CTX_CHEMICAL_HEALTH_URL",
+            "https://comptox.epa.gov/ctx-api/chemical/detail/search/by-dtxsid/DTXSID7020182",
+        ),
         description="Identifier resolution, structures, property lookups",
     ),
     Endpoint(

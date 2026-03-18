@@ -13,7 +13,7 @@ Security fixes are provided for the latest state of the `main` branch.
 
 Please report suspected vulnerabilities through GitHub's private advisory channel:
 
-- https://github.com/senseibelbi/CompTox_MCP/security/advisories/new
+- https://github.com/ToxMCP/comptox-mcp/security/advisories/new
 
 Do not open public issues for security-sensitive reports.
 

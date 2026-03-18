@@ -38,16 +38,16 @@ Resource → Underlying ctxpy calls
   - `search_qsurs` → `GET /exposure/functional-use/probability/search/by-dtxsid/{id}`
   - `search_exposures` → `/exposure/{mmdb|seem}/...` endpoints based on selector
 - chemical_list (src/epacomp_tox/resources/chemical_list.py:1):
-  - `get_public_list_names` → `GET /chemical/list/`
+  - `get_public_list_names` → attempts `GET /chemical/list/`; if the current CTX host returns `404`, `ctxpy.ChemicalList.public_list_names()` falls back to a maintained public-list catalog
   - `get_full_list` → `GET /chemical/list/chemicals/search/by-listname/{list}`
 - cheminformatics (src/epacomp_tox/resources/cheminformatics.py:1):
-  - `search_toxprints` → `ctx.search_toxprints(chemical)` (returns DataFrame; code converts to dict)
+  - `search_toxprints` → `ctx.search_toxprints(chemical)` but remains disabled in MCP tool discovery because the current CTX host returns `404` for ToxPrint routes
 
 Notes
 - Method signatures and available calls extracted into `epa_comptox_api_structure.json:1` (generated via `extract_api_structure.py:1`).
 - Lightweight shim in `src/ctxpy/__init__.py` wraps GET/POST/batch, respects `ctx_api_host`, enforces batch chunking, and surfaces structured `CtxApiError` data (request id, rate limits, retry-after).
 - `_with_retry` now provides exponential backoff with jitter, retries only on retryable statuses, and exposes `get_last_metadata()` for downstream telemetry.
-- Cheminformatics/ToxPrint endpoints remain unavailable on comptox.epa.gov/ctx-api; shim raises migration warning.
+- Cheminformatics/ToxPrint endpoints remain unavailable on comptox.epa.gov/ctx-api; shim raises migration warning and MCP does not advertise the tool.
 
 Gaps/Actions
 - Confirm maximum batch payload accepted by comptox host (shim currently assumes 200 identifiers per chunk).

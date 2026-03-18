@@ -533,6 +533,10 @@ Get names of available public chemical lists.
 **Returns:**
 - List of chemical list names (normalized to string list).
 
+**Notes:**
+- Uses the shared `ctxpy` list-discovery path.
+- When the upstream CTX enumeration endpoint returns `404`, the method falls back to a maintained catalog of verified public list names.
+
 #### get_full_list(list_name)
 
 Get all chemicals in a specific list.
@@ -545,7 +549,7 @@ Get all chemicals in a specific list.
 
 ### CheminformaticsResource
 
-The `CheminformaticsResource` class provides access to ToxPrint chemotypes and other cheminformatics tools.
+The `CheminformaticsResource` class contains ToxPrint helper methods used by orchestrator code paths, but live MCP tool export is currently disabled because the current CTX host does not expose supported ToxPrint endpoints.
 
 **Methods:**
 
