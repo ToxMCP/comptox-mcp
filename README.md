@@ -143,10 +143,11 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 11. [Development notes](#development-notes)
 12. [Contributing](#contributing)
 13. [Security policy](#security-policy)
-14. [Code of conduct](#code-of-conduct)
-15. [Citation](#citation)
-16. [Roadmap](#roadmap)
-17. [License](#license)
+14. [Support](#support)
+15. [Code of conduct](#code-of-conduct)
+16. [Citation](#citation)
+17. [Roadmap](#roadmap)
+18. [License](#license)
 
 ---
 
@@ -413,6 +414,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, coding standard
 ## Security policy
 
 See [SECURITY.md](SECURITY.md) for coordinated disclosure guidance and supported reporting channels.
+
+## Support
+
+See [SUPPORT.md](SUPPORT.md) for public support, bug-reporting, and non-security guidance.
 
 ## Code of conduct
 
