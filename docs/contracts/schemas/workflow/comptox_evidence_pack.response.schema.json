@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workflow.comptox_evidence_pack.response",
+  "description": "Portable CompTox evidence pack assembled from identity, hazard, exposure, bioactivity, AOP, and PBPK-context slices.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalIdentity",
+    "metadata",
+    "audit",
+    "semanticCoverage"
+  ],
+  "properties": {
+    "chemicalIdentity": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "dtxsid",
+        "preferredName",
+        "provenance"
+      ]
+    },
+    "hazardEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "exposureEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "bioactivityEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "aopLinkageSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "pbpkContextBundle": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "packId",
+        "sourceMcp",
+        "createdAt",
+        "suiteRole"
+      ]
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "generatedAt",
+        "generatedBy",
+        "sourceTools"
+      ]
+    },
+    "semanticCoverage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "identity",
+        "hazard",
+        "exposure",
+        "bioactivity",
+        "aopLinkage",
+        "pbpkContext"
+      ]
+    }
+  }
+}

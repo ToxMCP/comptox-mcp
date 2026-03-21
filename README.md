@@ -1,21 +1,104 @@
-[![CI](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml)
+# EPA CompTox MCP Server [![CI](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml) [![DOI](https://img.shields.io/badge/DOI-10.64898%2F2026.02.06.703989-blue)](https://doi.org/10.64898/2026.02.06.703989) [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE) [![Release](https://img.shields.io/github/v/release/ToxMCP/comptox-mcp?sort=semver)](https://github.com/ToxMCP/comptox-mcp/releases) [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
+> Part of **ToxMCP** Suite -> https://github.com/ToxMCP/toxmcp
+>
+> **Public MCP endpoint for EPA Computational Toxicology (CompTox) evidence federation.** Expose chemical identity, hazard, exposure, bioactivity, metadata, and cross-suite handoff builders to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
 
 ## Architecture
 
-![CompTox MCP architecture](./assets/comptox-mcp-architecture.jpg)
+```mermaid
+flowchart LR
+  subgraph Clients["Clients and Agents"]
+    Codex["Codex CLI / Desktop"]
+    Gemini["Gemini CLI"]
+    Claude["Claude Code"]
+    Scripts["Scripts / notebooks"]
+  end
 
-[![DOI](https://img.shields.io/badge/DOI-10.64898%2F2026.02.06.703989-blue)](https://doi.org/10.64898/2026.02.06.703989)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE)
-[![Release](https://img.shields.io/github/v/release/ToxMCP/comptox-mcp?sort=semver)](https://github.com/ToxMCP/comptox-mcp/releases)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+  subgraph API["FastAPI MCP Service"]
+    Router["HTTP + WebSocket entrypoints\n/healthz, /readyz, /mcp, /mcp/ws"]
+    Registry["Tool registry\ninputSchema + outputSchema"]
+    Tools["Tool handlers\nretrieval, validation, handoff"]
+  end
 
-# EPA CompTox MCP Server
+  subgraph Evidence["Tier-0 Evidence and Federation Layer"]
+    Chemical["Chemical identity"]
+    Hazard["Hazard datasets"]
+    Exposure["Exposure + HTTK"]
+    Bioactivity["Bioactivity + AOP link-outs"]
+    Metadata["Model cards + applicability"]
+    Interop["Portable evidence packs\nAOP / PBPK handoff builders"]
+  end
 
-> Part of **ToxMCP** Suite → https://github.com/ToxMCP/toxmcp
+  subgraph Contracts["Contract and Artifact Layer"]
+    McpSchemas["MCP response schemas\n/docs/contracts/schemas"]
+    Portable["Portable object schemas\n/schemas"]
+    Tests["Catalog, schema, and handoff tests"]
+  end
 
+  subgraph Upstream["Upstream Sources"]
+    CTX["EPA CTX APIs"]
+    Bundles["Packaged metadata bundles"]
+  end
 
-**Public MCP endpoint for the EPA Computational Toxicology (CompTox) API.**  
-Expose CompTox resources, predictive services, and guardrailed workflows to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
+  Clients --> Router
+  Router --> Registry
+  Registry --> Tools
+  Tools --> Chemical
+  Tools --> Hazard
+  Tools --> Exposure
+  Tools --> Bioactivity
+  Tools --> Metadata
+  Tools --> Interop
+  Chemical --> CTX
+  Hazard --> CTX
+  Exposure --> CTX
+  Bioactivity --> CTX
+  Metadata --> Bundles
+  Tools --> McpSchemas
+  Interop --> Portable
+  McpSchemas --> Tests
+  Portable --> Tests
+```
+
+The current implementation follows a layered model:
+
+- `FastAPI + JSON-RPC` expose `/mcp` and `/mcp/ws`, with `/healthz` and `/readyz` kept separate from domain logic.
+- `Retrieval resources` own CompTox-native evidence access for chemical, hazard, exposure, bioactivity, cheminformatics, and metadata.
+- `Interop tools` package portable evidence objects for downstream MCP consumers without cloning AOP OECD semantics or PBPK execution semantics.
+- `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
+- `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
+
+## What's New In v0.2.0
+
+- Repositioned CompTox MCP as the suite's Tier-0 evidence and federation MCP instead of a partially advertised orchestrator surface.
+- Published portable evidence objects under `schemas/` for identity, hazard, exposure, bioactivity, AOP linkage, PBPK context, and bundled evidence packs.
+- Added domain-specific MCP response namespaces for `hazard/`, `exposure/`, `bioactivity/`, and `workflow/`.
+- Added a public `interop` resource exposing `assemble_comptox_evidence_pack`, `build_aop_linkage_summary`, and `build_pbpk_context_bundle`.
+- Added deterministic release gates so README drift, catalog drift, and AOP/PBPK handoff drift fail CI before publish.
+
+## Published Schemas
+
+The portable CompTox handoff objects are now published as machine-readable JSON Schemas under `schemas/`, with matching examples under `schemas/examples/`.
+
+Published object family:
+
+- `schemas/chemicalIdentityRecord.v1.json`
+- `schemas/hazardEvidenceSummary.v1.json`
+- `schemas/exposureEvidenceSummary.v1.json`
+- `schemas/bioactivityEvidenceSummary.v1.json`
+- `schemas/aopLinkageSummary.v1.json`
+- `schemas/pbpkContextBundle.v1.json`
+- `schemas/comptoxEvidencePack.v1.json`
+
+Design intent:
+
+- keep the stable core fields required and allow additive convenience fields
+- keep AOP OECD normalization outside CompTox MCP
+- keep PBPK execution, qualification, and internal exposure objects outside CompTox MCP
+- make the portable evidence layer consumable by downstream validators and orchestrators without scraping examples out of tests
+
+See `schemas/README.md`, `tests/test_portable_schemas.py`, and `tests/test_cross_suite_handoffs.py` for the maintainer gates that keep published objects aligned with live payload generation.
 
 ## Why this project exists
 
@@ -23,11 +106,12 @@ Regulatory and research teams rely on the CompTox API for high-quality chemical,
 
 The EPA CompTox MCP server wraps those workflows in a **secure, programmable interface**:
 
-- **One MCP surface (`/mcp` HTTP + `/mcp/ws` WebSocket)** delivers discovery and execution across chemical, exposure, hazard, and metadata catalogues.
-- **Guardrails + provenance** – Applicability-domain policies, audit bundles, and metadata attachments are available to downstream automations.
+- **One MCP surface (`/mcp` HTTP + `/mcp/ws` WebSocket)** delivers discovery and execution across chemical, bioactivity, exposure, hazard, metadata, interop, and supporting utility catalogues.
+- **Evidence federation role** – CompTox acts as the suite's source-grounded evidence ingress layer for downstream AOP, PBPK, O-QT, and orchestration workflows.
+- **Guardrails + provenance** – JSON Schema validation, metadata attachments, and transport audit hooks improve downstream reproducibility.
 - **Agent friendly** – tested with Codex CLI, Gemini CLI, and Claude (see [integration guide](docs/integration_guides/mcp_integration.md)).
 
-> Looking for the orchestrator or Agentic SDK samples? The MCP server reuses the same components but packages them for any MCP-compatible agent instead of the bespoke SDK clients.
+> Experimental predictive and orchestrator components still exist in this repository, but they are not part of the default public MCP tool catalog exposed by the server today.
 
 ---
 
@@ -36,8 +120,9 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 | Capability | Description |
 | --- | --- |
 | 🌐 **Dual MCP Transports** | JSON-RPC over HTTP (`/mcp`) and WebSocket (`/mcp/ws`) with identical tool catalogues. |
-| 🧬 **CompTox Tooling** | Chemical, exposure, hazard, metadata, and predictive helpers mapped to structured MCP tools. |
-| 🛡️ **Guardrail Enforcement** | Applicability-domain policies, audit logging, JSON Schema response validation, and provenance bundles returned alongside tool data. |
+| 🧬 **CompTox Tooling** | Chemical, bioactivity, exposure, hazard, metadata, and supporting utility helpers mapped to structured MCP tools. |
+| 🔗 **Evidence Federation** | Designed as the suite's Tier-0 evidence ingress layer, packaging source-grounded CompTox outputs for downstream consumers. |
+| 🛡️ **Guardrail Enforcement** | JSON Schema response validation, metadata attachments, audit hooks, and transport safety controls improve reproducibility. |
 | ⚙️ **Configurable by Design** | Pydantic settings with `.env` support for API keys, retries, auth bypass, transport tuning, and observability. |
 | 🤖 **Agent Ready** | Verified with Codex CLI, Gemini CLI, and Claude Code; includes quick-start config snippets. |
 
@@ -45,16 +130,23 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 
 ## Table of contents
 
-1. [Quick start](#quick-start)
-2. [Configuration](#configuration)
-3. [Tool catalog](#tool-catalog)
-4. [Running the server](#running-the-server)
-5. [Integrating with coding agents](#integrating-with-coding-agents)
-6. [Output artifacts](#output-artifacts)
-7. [Security checklist](#security-checklist)
-8. [Development notes](#development-notes)
-9. [Roadmap](#roadmap)
-10. [License](#license)
+1. [Architecture](#architecture)
+2. [Published schemas](#published-schemas)
+3. [Quick start](#quick-start)
+4. [Configuration](#configuration)
+5. [Tool catalog](#tool-catalog)
+6. [Running the server](#running-the-server)
+7. [Integrating with coding agents](#integrating-with-coding-agents)
+8. [Output artifacts](#output-artifacts)
+9. [Security checklist](#security-checklist)
+10. [Current limitations](#current-limitations)
+11. [Development notes](#development-notes)
+12. [Contributing](#contributing)
+13. [Security policy](#security-policy)
+14. [Code of conduct](#code-of-conduct)
+15. [Citation](#citation)
+16. [Roadmap](#roadmap)
+17. [License](#license)
 
 ---
 
@@ -62,27 +154,29 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 
 ```bash
 # 1) install
+git clone https://github.com/ToxMCP/comptox-mcp.git
+cd comptox-mcp
 pip install -e .
 
 # 2) configure
 cp .env.example .env
-# (set CTX_API_KEY in .env)
+# set CTX_API_KEY in .env
 
 # 3) run
-uvicorn epacomp_tox.transport.websocket:app --reload
+uvicorn epacomp_tox.transport.websocket:app --host 0.0.0.0 --port 8000 --reload
 
 # 4) verify
-curl -s http://localhost:8000/health | jq .
+curl -s http://localhost:8000/healthz | jq .
 curl -s http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq .
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
 ```
 
 ## Quick start
 
 ```bash
-git clone https://github.com/senseibelbi/CompTox_MCP.git mcp_epacomp_tox
-cd mcp_epacomp_tox
+git clone https://github.com/ToxMCP/comptox-mcp.git
+cd comptox-mcp
 pip install -e .
 cp .env.example .env
 uvicorn epacomp_tox.transport.websocket:app --reload
@@ -92,7 +186,14 @@ uvicorn epacomp_tox.transport.websocket:app --reload
 
 With the server running, MCP clients can connect to `http://localhost:8000/mcp` (HTTP) or `ws://localhost:8000/mcp/ws` (WebSocket).
 
----
+Once the server is running:
+
+- HTTP MCP endpoint: `http://localhost:8000/mcp`
+- WebSocket MCP endpoint: `ws://localhost:8000/mcp/ws`
+- Health check: `http://localhost:8000/healthz`
+- Readiness check: `http://localhost:8000/readyz`
+- Architecture docs: `docs/architecture_overview.md`
+- Contract docs: `docs/contracts/README.md`
 
 ## Verification (smoke test)
 
@@ -100,13 +201,15 @@ Once the server is running:
 
 ```bash
 # health
-curl -s http://localhost:8000/health | jq .
+curl -s http://localhost:8000/healthz | jq .
 
 # list MCP tools
 curl -s http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq .
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
 ```
+
+---
 
 ## Configuration
 
@@ -136,12 +239,17 @@ See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and
 | Category | Highlight tools | Notes |
 | --- | --- | --- |
 | Chemical discovery | `search_chemical`, `batch_search_chemical`, `get_chemical_details` | Resolve identifiers, structures, and details with CTX retry/backoff baked in. |
-| Exposure & hazard | `search_hazard`, `get_hazard_toxval`, `get_hazard_toxref` | Batch-normalized access to CTX exposure datasets plus granular hazard endpoints (ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC). |
+| Bioactivity & AOP link-outs | `search_bioactivity_terms`, `get_bioactivity_summary_by_dtxsid`, `get_bioactivity_aop` | Surface ToxCast/Tox21 summaries, assay metadata, and AOP crosswalks from CompTox bioactivity APIs. |
+| Exposure & hazard | `search_cpdat`, `search_httk`, `search_hazard`, `get_hazard_toxval` | Batch-normalized access to CTX exposure datasets plus granular hazard endpoints (ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC). |
 | Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and audit metadata. |
-| Predictive services | `predictive_run_test`, `predictive_run_opera`, `predictive_run_genra` (via orchestrator helpers) | Trigger guardrailed predictive runs and receive provenance detail alongside outputs. |
+| Interop handoff builders | `assemble_comptox_evidence_pack`, `build_aop_linkage_summary`, `build_pbpk_context_bundle` | Package portable evidence objects and downstream-ready handoff summaries for AOP and PBPK MCP consumers without duplicating their semantics. |
 | Utility helpers | `opsin_convert_name`, `indigo_convert_molfile` | Provide supporting conversions for downstream automations. |
 
-Full schema definitions (input and output) are returned via the MCP `tools/list` call. See [`tests/test_resources.py`](tests/test_resources.py) for examples of exercising each category.
+The default server currently registers eight public resources: chemical, bioactivity, exposure, hazard, chemical list, cheminformatics, metadata, and interop. Full schema definitions (input and output) are returned via the MCP `tools/list` call. See [`tests/test_resources.py`](tests/test_resources.py) for examples of exercising each category.
+
+### Experimental components
+
+The repository also contains predictive and orchestrator code under `src/epacomp_tox/predictive/` and `src/epacomp_tox/orchestrator/`. Treat those modules as experimental until they are registered in the default server, documented as part of the canonical tool catalog, and backed by stable public response contracts.
 
 ---
 
@@ -233,8 +341,8 @@ Every successful tool invocation returns structured payloads designed for agents
 
 - `content`: human-readable JSON wrapped as text for chat surfaces.
 - `structuredContent.data`: machine-readable results (lists, dicts, or arrays) for programmatic chaining.
-- `structuredContent.metadata`: when available, includes rate-limit information, applicability-domain context, audit bundle references, and session metadata.
-- Predictive tools return additional provenance such as model version, policy enforcement outcome, and attachments (e.g. audit bundle IDs).
+- `structuredContent.metadata`: when available, includes rate-limit information, validation metadata, and session metadata.
+- Default registered tools are retrieval and federation oriented; experimental predictive/orchestrator modules in this repository are not part of the canonical public surface yet.
 
 ---
 
@@ -254,37 +362,67 @@ Every successful tool invocation returns structured payloads designed for agents
 ### Architecture snapshot
 
 ```
-┌────────────────┐       ┌─────────────────────────┐       ┌──────────────────────┐
-│ MCP Client     │  MCP  │ FastAPI App             │  CQRS │ CompTox Orchestrator │
-│ (CLI / IDE)    │──────▶│ HTTP (/mcp) & WS (/mcp/ws)│ ────▶│ + Predictive services│
-└────────────────┘       │ • tool registry         │       │ • guardrails/audit    │
-       │                 │ • JSON-RPC dispatch     │◀──────│ • audit bundle store  │
-       ▼                 └─────────────────────────┘       └──────────────────────┘
+┌────────────────┐       ┌────────────────────────────┐       ┌──────────────────────┐
+│ MCP Client     │  MCP  │ FastAPI App                │  MCP  │ CompTox Resources    │
+│ (CLI / IDE)    │──────▶│ HTTP (/mcp) & WS (/mcp/ws) │──────▶│ • chemical           │
+└────────────────┘       │ • tool registry            │       │ • bioactivity        │
+       │                 │ • JSON-RPC dispatch        │       │ • exposure / hazard  │
+       ▼                 │ • response validation      │       │ • metadata / interop │
+                         └────────────────────────────┘       │ • utility catalogs   │
+                                                              └──────────────────────┘
 ```
 
 ### Guardrails & governance
 
 - Applicability-domain definitions, policy defaults, and remediation steps live under `metadata/` with JSON Schema validation.
-- Predictive invocations persist audit bundles that can be fetched via metadata tools.
-- Governance workflows (SME review, policy approval, publication) are documented in `docs/model_cards_and_policies.md`.
-- Response contracts live under `docs/contracts/schemas/` (see `docs/contracts/README.md`) and are enforced before MCP responses (and predictive HTTP endpoints) are returned; upstream failover policies are summarized in `docs/contracts/endpoint-matrix.md`.
+- Response contracts live under `docs/contracts/schemas/` (see `docs/contracts/README.md`) and are enforced before MCP responses are returned; upstream failover policies are summarized in `docs/contracts/endpoint-matrix.md`.
+- Experimental predictive/orchestrator modules remain in-repo design and implementation assets; they are not part of the default public tool catalog until explicitly registered and documented.
 
 ### Testing & quality gates
 
 - `tests/test_mcp_conformance_suite.py` covers handshake, catalog discovery, and streaming behaviours.
-- `tests/test_predictive_regression.py` exercises guardrail outcomes and predictive routing.
+- `tests/test_tool_contracts.py` enforces output schema declarations for the registered resources.
 - `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
 - `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
 - Documentation builds (`scripts/build_docs.sh`) and CI workflows keep diagrams and links healthy.
-- The regression matrix in [`docs/testing_matrix.md`](docs/testing_matrix.md) summarizes the expected checks across transports and predictive workflows.
+- Experimental predictive/orchestrator suites remain valuable internal regression coverage, but they should not be presented as canonical public-surface checks.
 
 ---
 
 ## Roadmap
 
-- Expand predictive coverage beyond current TEST/OPERA/GenRA helpers.
-- Surface additional analytics (latency histograms, rate-limit breaches) through `/metrics`.
-- Optional SSE transport once MCP spec finalises streaming semantics.
+- Add CTX-backed golden payload capture for interop outputs so release checks cover both deterministic stubs and live upstream normalization.
+- Expand workflow contract coverage beyond the three current interop tools only where the public surface is stable enough to justify dedicated schemas.
+- Publish a cleaner contract manifest resource for downstream consumers that inventories portable objects, MCP response schemas, and live discovery metadata together.
+- Revisit predictive/orchestrator publication only after the default server, contracts, and docs all agree.
+
+---
+
+## Current limitations
+
+- Predictive and orchestrator code still exists in-repo, but it is not part of the default public MCP tool catalog.
+- CompTox MCP publishes AOP linkage summaries, but OECD-style mechanistic normalization still belongs in `aop-mcp`.
+- CompTox MCP publishes PBPK context bundles, but PBPK execution, qualification, uncertainty synthesis, and internal exposure objects still belong in `pbpk-mcp`.
+- BER logic, stop/continue/refine policy, and final NGRA decisions remain out of scope for this server.
+- Live evidence retrieval still depends on upstream CTX availability and API credentials.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, coding standards, and PR expectations.
+
+## Security policy
+
+See [SECURITY.md](SECURITY.md) for coordinated disclosure guidance and supported reporting channels.
+
+## Code of conduct
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for collaboration expectations across the project and suite.
+
+## Citation
+
+If you use this project in research or derived tooling, please cite:
+
+- Ivo Djidrovski. *BioRxiv preprint*. DOI / link: [10.64898/2026.02.06.703989v1](https://www.biorxiv.org/content/10.64898/2026.02.06.703989v1)
 
 ---
 
@@ -297,28 +435,3 @@ This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 - EPA's Center for Computational Toxicology and Exposure (CCTE)
 - The ctx-python project for the official CompTox Python bindings
 - The Model Context Protocol community for defining the automation surface we target
-## Acknowledgements / Origins
-
-ToxMCP was developed in the context of the **VHP4Safety** project (see: https://github.com/VHP4Safety) and related research/engineering efforts.
-
-Funding: Dutch Research Council (NWO) — NWA.1292.19.272 (NWA programme)
-
-This suite integrates with third-party data sources and services (e.g., EPA CompTox, ADMETlab, AOP resources, OECD QSAR Toolbox, Open Systems Pharmacology). Those upstream resources are owned and governed by their respective providers; users are responsible for meeting any access, API key, rate limit, and license/EULA requirements described in each module.
-
-## ✅ Citation
-
-Djidrovski, I. **ToxMCP: Guardrailed, Auditable Agentic Workflows for Computational Toxicology via the Model Context Protocol.** bioRxiv (2026). https://doi.org/10.64898/2026.02.06.703989
-
-```bibtex
-@article{djidrovski2026toxmcp,
-  title   = {ToxMCP: Guardrailed, Auditable Agentic Workflows for Computational Toxicology via the Model Context Protocol},
-  author  = {Djidrovski, Ivo},
-  journal = {bioRxiv},
-  year    = {2026},
-  doi     = {10.64898/2026.02.06.703989},
-  url     = {https://doi.org/10.64898/2026.02.06.703989}
-}
-```
-
-Citation metadata: [`CITATION.cff`](./CITATION.cff)
-

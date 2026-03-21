@@ -1,0 +1,50 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "lookupMode": "dtxsid",
+  "mappings": [
+    {
+      "aopId": "AOP:42",
+      "aopTitle": "Estrogen receptor activation leading to reproductive effects",
+      "keyEventId": "KE:1735",
+      "eventType": "molecular_initiating_event",
+      "eventLabel": "Activation of estrogen receptor",
+      "relationship": "linked_via_assay_mapping",
+      "evidenceDirection": "supports",
+      "confidence": 0.81
+    }
+  ],
+  "supportingAssays": [
+    {
+      "aeid": "AEID:1856",
+      "assayName": "ATG_ERa_TRANS_up",
+      "targetName": "Estrogen receptor alpha"
+    }
+  ],
+  "confidence": {
+    "score": 0.79,
+    "band": "moderate",
+    "basis": "Single-target concordance across linked ToxCast assays and AOP crosswalk coverage."
+  },
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "build_aop_linkage_summary",
+    "traceId": "ctx-example-aop-001",
+    "sources": [
+      {
+        "name": "CompTox Bioactivity AOP mapping",
+        "toolName": "get_bioactivity_aop",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:59:10Z",
+        "citation": "EPA CompTox AOP crosswalk endpoint"
+      }
+    ],
+    "notes": [
+      "CompTox-side linkage object only; downstream AOP normalization belongs in aop-mcp."
+    ]
+  }
+}

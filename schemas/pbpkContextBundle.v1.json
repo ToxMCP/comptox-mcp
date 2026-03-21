@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/pbpkContextBundle.v1.json",
+  "title": "CompTox PBPK Context Bundle v1",
+  "description": "Portable CompTox-side context package for downstream PBPK workflows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalIdentityRef",
+    "httkSlice",
+    "hazardAdmeIviveSlice",
+    "exposureHints",
+    "modelCardRefs",
+    "provenance",
+    "handoffTarget"
+  ],
+  "properties": {
+    "chemicalIdentityRef": {
+      "$ref": "https://epa.gov/comptox/schemas/chemicalIdentityRecord.v1.json"
+    },
+    "httkSlice": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/evidenceSlice"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "hazardAdmeIviveSlice": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/evidenceSlice"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "exposureHints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exposureHint"
+      }
+    },
+    "modelCardRefs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://epa.gov/comptox/schemas/comptox-model-card.schema.json"
+          },
+          {
+            "$ref": "#/$defs/modelCardReference"
+          }
+        ]
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "handoffTarget": {
+      "type": "string",
+      "const": "pbpk-mcp"
+    }
+  },
+  "$defs": {
+    "evidenceSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordCount",
+        "records"
+      ],
+      "properties": {
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "sourceTool": {
+          "type": "string"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "selectedMetrics": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "exposureHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hintType",
+        "value",
+        "source"
+      ],
+      "properties": {
+        "hintType": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        }
+      }
+    },
+    "modelCardReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelName",
+        "modelVersion"
+      ],
+      "properties": {
+        "modelName": {
+          "type": "string"
+        },
+        "modelVersion": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "cardUri": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "sourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceRecord"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

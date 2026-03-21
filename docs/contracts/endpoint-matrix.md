@@ -19,6 +19,6 @@ This matrix summarizes the upstream services the MCP server depends on, their fa
 - **Failover workflow:** Set `CTX_USE_LEGACY=1` to route all clients to the legacy host when the primary API reports sustained 5xx. Document the window in release notes.
 - **Fixtures for reproducibility:** Place captured payloads under `tests/golden/<resource>/<endpoint>.json` when network access is unavailable. The hazard smoke commands in `README.md` describe expected baseline outputs (BPA + PFOA).
 - **Logging:** `epacomp_tox.server.MCPServer` records upstream metadata (status, request ID, rate-limit headers). Surface these through MCP `structuredContent.metadata` for downstream debugging.
-- **Schema validation:** Responses for hazard tools are validated against the JSON Schemas in `docs/contracts/schemas/hazard/`. Extend this library as additional tool outputs are formalized.
+- **Schema validation:** Public response validation now covers the shared schemas under `docs/contracts/schemas/common/` plus dedicated `chemical/`, `cheminformatics/`, `hazard/`, `exposure/`, `bioactivity/`, `workflow/`, `metadata/`, and `predictive/` namespaces.
 
 Keep this document updated as new endpoints are added or mirrors change. Consistency here is a requirement for A-grade reproducibility reviews.

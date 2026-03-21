@@ -32,5 +32,9 @@ jobs:
           black --check src tests
           isort --check-only src tests
 
+      - name: Run public-surface release gates
+        run: |
+          pytest tests/test_tool_catalog_snapshot.py tests/test_cross_suite_handoffs.py -q
+
       - name: Run tests
         run: pytest

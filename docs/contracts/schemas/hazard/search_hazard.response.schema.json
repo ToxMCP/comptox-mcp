@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hazard.search_hazard.response",
+  "description": "Hazard dataset records returned for a single chemical lookup across ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, or HAWC selectors.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A hazard record from the selected CompTox hazard dataset.",
+    "additionalProperties": true,
+    "properties": {
+      "dtxsid": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "DSSTox substance identifier when present in the upstream payload."
+      },
+      "casrn": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "CAS Registry Number when present."
+      },
+      "preferredName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Preferred chemical name when present."
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Source dataset, agency, or citation label."
+      },
+      "effect": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Reported effect or endpoint label when applicable."
+      },
+      "value": {
+        "type": [
+          "number",
+          "string",
+          "null"
+        ],
+        "description": "Reported hazard value when applicable."
+      },
+      "unit": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Unit associated with the reported value."
+      }
+    }
+  }
+}

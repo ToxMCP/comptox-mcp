@@ -1,109 +1,100 @@
-# MCP Phase 2 Architecture Overview
+# EPA CompTox MCP Architecture Overview
 
-This document captures the end-to-end architecture for the EPA CompTox MCP as of the Phase 2 refresh. It ties together the transport, orchestrator, predictive micro-servers, metadata service, and audit tooling referenced across the README and developer guides.
+This document describes the current public architecture of the EPA CompTox MCP server.
 
-## 1. Component Stack
+The key boundary for `v0.2.0` is simple:
+
+- the default public server is an evidence and federation MCP
+- it exposes CompTox retrieval resources over MCP
+- predictive and orchestrator code in this repository remains experimental until it is explicitly registered, documented, and contract-stabilized
+
+## 1. Public component stack
 
 ```
 ┌───────────────────────────────┐
-│ Agentic SDK Clients           │
-│  • LLM agents & workflows     │
-│  • Conformance harness        │
+│ MCP Clients                   │
+│  • Codex / Gemini / Claude    │
+│  • notebooks / scripts        │
 └──────────────┬────────────────┘
                │ JSON-RPC (MCP)
 ┌──────────────▼────────────────┐
 │ FastAPI MCP Transport         │
+│  • `/mcp` HTTP                │
 │  • `/mcp/ws` WebSocket        │
-│  • Handshake negotiation      │
-│  • Tool/resource catalogues   │
-│  • Streaming + cancellation   │
-│  • Logging + heartbeat hooks  │
+│  • handshake + discovery      │
+│  • validation + audit hooks   │
 └──────────────┬────────────────┘
-               │ CQRS commands/events
-┌──────────────▼────────────────┐
-│ Orchestrator Service          │
-│  • Identifier resolution      │
-│  • Workflow sequencing        │
-│  • Policy enforcement         │
-│  • Audit bundle writer        │
-└──────────────┬────────────────┘
-         ┌─────┼───────────────────────────────────────────────┐
-         │     │                                               │
-┌────────▼─┐ ┌──▼────────┐ ┌──────────────┐ ┌──────────────────▼───┐
-│ CTX API  │ │ Metadata  │ │ Predictive   │ │ Observability & Audit │
-│ Resources│ │ Service   │ │ Micro-servers│ │ (S3, Elastic, etc.)   │
-│ (REST)   │ │ (model    │ │ (TEST/OPERA/ │ │ - Audit bundle store   │
-│          │ │ cards, AD │ │  GenRA)      │ │ - Structured logging   │
-└──────────┘ │ policies) │ └──────────────┘ │ - Metrics exporters    │
-             └───────────┘                  └────────────────────┘
+               │
+┌──────────────▼────────────────────────────────────────────┐
+│ Registered CompTox Resources                              │
+│  • chemical            • bioactivity                      │
+│  • exposure            • hazard                           │
+│  • chemical_list       • cheminformatics                  │
+│  • metadata            • interop                          │
+└──────────────┬────────────────────────────────────────────┘
+               │
+┌──────────────▼────────────────────────────────────────────┐
+│ Upstream Data Sources                                     │
+│  • CTX chemical, bioactivity, exposure, hazard APIs       │
+│  • packaged metadata bundles                              │
+└───────────────────────────────────────────────────────────┘
 ```
 
-## 2. Tool Execution Sequence
+## 2. Public execution model
 
-```
-Agent                     Transport                     Orchestrator                    Downstream Services
------                     ----------                    -------------                    -------------------
-initialize ─────────────▶ authenticate + negotiate
-                          ◀────────────── handshake (protocol, capabilities, session)
-tools/list ─────────────▶ returns catalog snapshot
-tools/call search_chemical
- arguments = {...} ─────▶ validate schema & quota
-                          events/log "routing search_chemical"
-                          ───────────▶ orchestrator.dispatch()
-                                                │
-                                                ├──▶ Metadata service hydrates model card
-                                                ├──▶ CTX chemical.search endpoint
-                                                └──▶ Policy engine enforces AD
-                          ◀────────── events/result chunk(s)
-tools/cancel? ──────────▶ (optional) propagate cancel token
-                          ◀────────── events/end + final JSON-RPC response
-```
+The default request path is:
 
-Key guarantees:
-- Transport emits structured events (`log`, `result`, `error`, `end`) aligned with MCP protocol `2025-06-18`.
-- Request IDs and CTX correlation IDs propagate through every component and are persisted in audit bundles.
-- Policy decisions (AD block/warn) are surfaced as structured payloads and added to the audit artefact alongside model provenance.
+1. MCP transport accepts `initialize`, `tools/list`, or `tools/call`.
+2. Tool registry validates the incoming schema.
+3. The selected resource calls the relevant CTX or local metadata backend.
+4. Output is normalized to MCP payload shape and validated against the configured response schema.
+5. The response returns as source-grounded evidence, not as a suite-level decision.
 
-## 3. Guardrail Enforcement Flow
+This is the public contract the README and release notes should describe.
 
-```
-┌──────────────┐      ┌──────────────────┐      ┌───────────────────┐      ┌────────────────────┐
-│ MCP Request  │ ---> │ Orchestrator     │ ---> │ Policy Engine      │ ---> │ Audit Bundle Store │
-└──────────────┘      │ 1. Resolve IDs   │      │ - AD rules (block) │      │ - request metadata │
-                      │ 2. Fetch metadata│      │ - AD rules (warn)  │      │ - AD verdict       │
-                      │ 3. Route service │      │ - Policy overrides │      │ - model provenance │
-                      └──────────────────┘      └───────────────────┘      └────────────────────┘
-                                   │
-                                   ▼
-                      Predictive Micro-server + CTX APIs
-```
+## 3. Resource ownership
 
-- Applicability-domain rules are sourced from `metadata/applicability_domains/` and reference the model card version.
-- Guardrail failures return structured `events/error` payloads with remediation hints while writing full artefacts to the audit store.
-- Audit bundles are retrievable via `orchestrator_get_audit_bundle` and contain MCP session IDs, CTX request IDs, AD rationale, and policy state.
+- `chemical`: identifier resolution, structures, details
+- `bioactivity`: ToxCast/Tox21 summaries, assays, AOP crosswalks
+- `exposure`: CPDat, HTTK, SEEM, MMDB, CCD
+- `hazard`: ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC
+- `metadata`: model cards and applicability definitions
+- `interop`: portable evidence-pack assembly plus AOP and PBPK handoff builders
+- `cheminformatics` and `chemical_list`: supporting utility/catalog helpers
 
-## 4. Success Metrics
+Together these resources make CompTox the suite's Tier-0 evidence ingress layer.
 
-- **Handshake Reliability**: 99.9% handshake success with protocol negotiation across supported agents.
-- **Guardrail Coverage**: 100% predictive workflows enforce AD policies with non-bypassable blocking in production environments.
-- **Audit Completeness**: Every orchestrated execution yields an audit bundle with provenance, AD verdict, and tool chain trace.
-- **Streaming Latency**: <500 ms between upstream completion and `events/result` delivery for median payloads.
-- **Documentation Parity**: README + docs/ content reflect current endpoints, policies, and release notes; CI fails if doc build or link checks break.
+## 4. Experimental modules in-repo
 
-## 5. Testing & Validation
+This repository also contains:
 
-- Conformance tests (`tests/test_mcp_conformance_suite.py`) cover handshake, catalog pagination, streaming, and cancellation paths.
-- Predictive regression tests validate AD behaviours, including block vs warn routing and remediation messaging.
-- `scripts/smoke_ctx.sh` performs live CTX smoke tests with environment-provided credentials.
-- Documentation automation (`scripts/build_docs.sh`, `.github/workflows/docs.yml`) ensures diagrams, examples, and references stay in sync.
-- QA checklists under `docs/qa/` provide human validation steps before releases (transport, orchestrator, predictive, metadata).
+- `src/epacomp_tox/predictive/`
+- `src/epacomp_tox/orchestrator/`
+- related tests, QA notes, and workflow design documents
 
-## 6. Configuration Reference
+These modules are valuable internal assets, but they are not part of the default public MCP surface today because `src/epacomp_tox/server.py` does not register them as resources.
 
-- `CTX_API_BASE_URL`, `CTX_USE_LEGACY`, `CTX_API_KEY`: CTX connectivity.
-- `MCP_MAX_SESSIONS`, `MCP_HEARTBEAT_SECONDS`, `MCP_STREAM_CHUNK_SIZE`: Transport behaviour.
-- `MCP_POLICY_PROFILE`: Selects guardrail profile (`dev`, `staging`, `prod`).
-- `AUDIT_BUNDLE_BUCKET`, `AUDIT_BUNDLE_PREFIX`: Audit storage targets.
-- `MODEL_METADATA_SCHEMA`: Override path to the JSON Schema when testing.
+Until that changes, documentation must treat them as:
 
-Refer to `docs/configuration.md` (pending) for the exhaustive list and defaults.
+- experimental
+- internal
+- non-canonical for the public tool catalog
+
+## 5. Validation and release discipline
+
+- Public response contracts live under `docs/contracts/schemas/`.
+- Current public schema coverage includes `common/`, `chemical/`, `cheminformatics/`, `hazard/`, `exposure/`, `bioactivity/`, `workflow/`, `metadata/`, and `predictive/`.
+- Root portable evidence objects under `schemas/` provide the cross-suite handoff layer, while `docs/contracts/schemas/` remains the MCP response-wrapper layer.
+- `tests/test_mcp_conformance_suite.py` and `tests/test_tool_contracts.py` are the current baseline gates for the registered public surface.
+
+## 6. Boundary statement for the suite
+
+CompTox MCP should be documented as:
+
+- a source-grounded evidence and federation MCP
+- not the suite orchestrator
+- not the owner of OECD AOP semantics
+- not the owner of PBPK qualification or internal exposure objects
+- not the owner of final NGRA decision logic
+
+That boundary keeps CompTox complementary to AOP MCP, PBPK MCP, O-QT MCP, and the future ToxClaw orchestration layer.

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hazard.batch_search_hazard.response",
+  "description": "Mapping from DTXSID to hazard dataset records for a batch hazard lookup.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "description": "A hazard record returned for a specific DTXSID in the batch request.",
+      "additionalProperties": true,
+      "properties": {
+        "dtxsid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "casrn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "preferredName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effect": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

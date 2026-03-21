@@ -7,13 +7,17 @@
     "search_hazard",
     "get_public_list_names",
     "get_full_list",
-    "search_toxprints"
+    "search_toxprints",
+    "assemble_comptox_evidence_pack",
+    "build_aop_linkage_summary",
+    "build_pbpk_context_bundle"
   ],
   "requiredResources": [
     "chemical",
     "exposure",
     "hazard",
     "chemical_list",
-    "cheminformatics"
+    "cheminformatics",
+    "interop"
   ]
 }

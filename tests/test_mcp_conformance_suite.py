@@ -72,6 +72,14 @@ class ConformanceServer(MCPServer):
             "description": "Cheminformatics helpers including ToxPrints",
             "tools": [{"name": "search_toxprints"}],
         },
+        "interop": {
+            "description": "Cross-suite evidence packaging and handoff builders for AOP and PBPK consumers",
+            "tools": [
+                {"name": "assemble_comptox_evidence_pack"},
+                {"name": "build_aop_linkage_summary"},
+                {"name": "build_pbpk_context_bundle"},
+            ],
+        },
     }
 
     def _initialize_resources(self) -> Dict[str, BaseResource]:

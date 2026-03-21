@@ -1,0 +1,51 @@
+{
+  "chemicalRef": {
+    "casrn": "80-05-7",
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A"
+  },
+  "confidence": {
+    "band": "moderate",
+    "score": 0.4
+  },
+  "lookupMode": "dtxsid",
+  "mappings": [
+    {
+      "aopId": "AOP:42",
+      "aopTitle": "Liver steatosis",
+      "confidence": 0.8,
+      "eventLabel": "PPARG activation",
+      "eventType": "molecular_initiating_event",
+      "evidenceDirection": "supports",
+      "keyEventId": "KE:123",
+      "relationship": "linked_via_toxcast_aeid"
+    },
+    {
+      "aopId": "AOP:77",
+      "aopTitle": "Hepatic stress signaling",
+      "confidence": 0.55,
+      "eventLabel": "AHR activation",
+      "eventType": "key_event",
+      "evidenceDirection": "supports",
+      "relationship": "linked_via_toxcast_aeid"
+    }
+  ],
+  "sourceTools": [
+    "search_chemical",
+    "get_bioactivity_summary_by_dtxsid",
+    "get_bioactivity_aop",
+    "get_bioactivity_aop"
+  ],
+  "supportingAssays": [
+    {
+      "aeid": "123",
+      "assayName": "PPAR activation assay",
+      "targetName": "PPARG"
+    },
+    {
+      "aeid": "456",
+      "assayName": "AhR reporter assay",
+      "targetName": "AHR"
+    }
+  ]
+}

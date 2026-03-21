@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "exposure.search_httk.response",
+  "description": "HTTK records returned by the CompTox exposure search surface.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A high-throughput toxicokinetic record.",
+    "additionalProperties": true,
+    "properties": {
+      "dtxsid": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "casrn": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "preferredName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "species": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "parameter": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "HTTK parameter name when the payload is parameterized."
+      },
+      "value": {
+        "type": [
+          "number",
+          "string",
+          "null"
+        ]
+      },
+      "unit": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

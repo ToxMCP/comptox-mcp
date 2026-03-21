@@ -1,0 +1,82 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "cpdat": {
+    "recordCount": 1,
+    "records": [
+      {
+        "productUseCategory": "Food contact material",
+        "presence": "reported"
+      }
+    ],
+    "sourceTool": "search_cpdat",
+    "retrievedAt": "2026-03-21T09:58:30Z"
+  },
+  "seem": {
+    "recordCount": 1,
+    "records": [
+      {
+        "population": "adult",
+        "medianExposure": 0.02,
+        "unit": "mg/kg-day"
+      }
+    ],
+    "sourceTool": "get_seem_general",
+    "retrievedAt": "2026-03-21T09:58:45Z"
+  },
+  "httk": {
+    "recordCount": 1,
+    "records": [
+      {
+        "model": "httk-3compartment",
+        "clint": 12.4,
+        "clintUnit": "uL/min/10^6 hepatocytes"
+      }
+    ],
+    "sourceTool": "search_httk",
+    "retrievedAt": "2026-03-21T09:59:00Z"
+  },
+  "mmdb": {
+    "recordCount": 1,
+    "records": [
+      {
+        "medium": "drinking_water",
+        "detectionFrequency": 0.18
+      }
+    ],
+    "sourceTool": "get_exposure_mmdb_aggregate_by_dtxsid",
+    "retrievedAt": "2026-03-21T09:59:15Z"
+  },
+  "qsurs": {
+    "recordCount": 1,
+    "records": [
+      {
+        "useDescriptor": "plasticizer",
+        "probability": 0.62
+      }
+    ],
+    "sourceTool": "search_qsurs",
+    "retrievedAt": "2026-03-21T09:59:30Z"
+  },
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "traceId": "ctx-example-exposure-001",
+    "sources": [
+      {
+        "name": "CompTox Exposure APIs",
+        "toolName": "search_cpdat",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:58:30Z",
+        "citation": "EPA CompTox exposure endpoints"
+      }
+    ],
+    "notes": [
+      "Illustrative exposure summary object."
+    ]
+  }
+}

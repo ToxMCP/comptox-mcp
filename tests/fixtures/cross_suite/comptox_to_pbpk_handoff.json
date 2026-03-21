@@ -1,0 +1,64 @@
+{
+  "chemicalIdentityRef": {
+    "casrn": "80-05-7",
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A"
+  },
+  "exposureHints": [
+    {
+      "context": "Screening exposure estimate from CompTox exposure resources.",
+      "hintType": "population_exposure",
+      "source": "SEEM",
+      "unit": "mg/kg-day",
+      "value": 0.12
+    },
+    {
+      "hintType": "product_use_signal",
+      "source": "CPDat",
+      "value": "food-contact"
+    },
+    {
+      "context": "probability=0.83",
+      "hintType": "functional_use_prediction",
+      "source": "QSURS",
+      "value": "thermal-paper"
+    }
+  ],
+  "handoffTarget": "pbpk-mcp",
+  "hazardAdmeIviveSlice": {
+    "recordCount": 1,
+    "selectedMetrics": {
+      "assay": "hepatocyte",
+      "intrinsicClearance": 0.91,
+      "parameter": "CLint",
+      "unit": "uL/min/10^6 cells"
+    },
+    "sourceTool": "get_hazard_adme_ivive"
+  },
+  "httkSlice": {
+    "recordCount": 1,
+    "selectedMetrics": {
+      "fractionUnboundPlasma": 0.07,
+      "intrinsicClearance": 1.2,
+      "parameter": "CLint",
+      "unit": "L/h/kg"
+    },
+    "sourceTool": "get_exposure_httk"
+  },
+  "modelCardRefs": [
+    {
+      "endpoint": "internal dose metrics",
+      "modelName": "HTTK PBPK Surrogate",
+      "modelVersion": "1.0"
+    }
+  ],
+  "sourceTools": [
+    "search_chemical",
+    "get_exposure_httk",
+    "get_hazard_adme_ivive",
+    "get_seem_general",
+    "search_cpdat",
+    "search_qsurs",
+    "metadata_get_model_card"
+  ]
+}

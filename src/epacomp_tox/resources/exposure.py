@@ -249,9 +249,18 @@ class ExposureResource(BaseResource):
         )
 
         for tool in tools:
-            tool["responseSchemaRef"] = schema_ref(
-                "common", "list_generic.response.schema"
+            schema_map = {
+                "search_cpdat": ("exposure", "search_cpdat.response.schema"),
+                "search_httk": ("exposure", "search_httk.response.schema"),
+                "get_exposure_httk": (
+                    "exposure",
+                    "get_exposure_httk.response.schema",
+                ),
+            }
+            schema_info = schema_map.get(
+                tool["name"], ("common", "list_generic.response.schema")
             )
+            tool["responseSchemaRef"] = schema_ref(*schema_info)
 
             # Ensure outputSchema is populated from the reference
             if "responseSchemaRef" in tool:

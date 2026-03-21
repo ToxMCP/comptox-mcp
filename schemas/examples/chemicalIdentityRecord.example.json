@@ -1,0 +1,29 @@
+{
+  "dtxsid": "DTXSID7020182",
+  "preferredName": "Bisphenol A",
+  "casrn": "80-05-7",
+  "inchikey": "IHQYDGMOQILFNV-UHFFFAOYSA-N",
+  "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+  "synonyms": [
+    "BPA",
+    "4,4'-Isopropylidenediphenol"
+  ],
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "traceId": "ctx-example-chemical-001",
+    "sources": [
+      {
+        "name": "CompTox Chemicals Dashboard API",
+        "toolName": "search_chemical",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:58:00Z",
+        "citation": "EPA CompTox Chemicals Dashboard"
+      }
+    ],
+    "notes": [
+      "Example identity record for portable handoff validation."
+    ]
+  }
+}

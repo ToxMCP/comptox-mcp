@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bioactivity.get_bioactivity_aop.response",
+  "description": "Adverse outcome pathway mapping records returned from CompTox bioactivity crosswalk queries.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A CompTox AOP mapping record.",
+    "additionalProperties": true,
+    "properties": {
+      "aopId": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "eventNumber": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "eventType": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "eventLabel": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "aeid": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "entrezGeneId": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      }
+    }
+  }
+}

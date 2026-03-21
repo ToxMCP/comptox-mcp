@@ -273,7 +273,22 @@ class BioactivityResource(BaseResource):
 
         list_schema = schema_ref("common", "list_generic.response.schema")
         schema_map = {
-            "get_bioactivity_assay": ("common", "object_or_list.response.schema"),
+            "search_bioactivity_terms": (
+                "bioactivity",
+                "search_bioactivity_terms.response.schema",
+            ),
+            "get_bioactivity_summary_by_dtxsid": (
+                "bioactivity",
+                "get_bioactivity_summary_by_dtxsid.response.schema",
+            ),
+            "get_bioactivity_assay": (
+                "bioactivity",
+                "get_bioactivity_assay.response.schema",
+            ),
+            "get_bioactivity_aop": (
+                "bioactivity",
+                "get_bioactivity_aop.response.schema",
+            ),
             "get_bioactivity_assay_count": ("common", "object.response.schema"),
         }
         for tool in tools:

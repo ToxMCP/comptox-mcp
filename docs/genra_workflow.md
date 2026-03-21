@@ -1,4 +1,7 @@
-# GenRA Read-Across Orchestrator Workflow
+# Experimental GenRA Read-Across Orchestrator Workflow
+
+> Status: experimental design and implementation note.
+> This workflow is not part of the default public MCP tool catalog exposed by `src/epacomp_tox/server.py` today.
 
 ## Purpose
 - Coordinate CTX data retrieval, predictive micro-services, and evidence synthesis into a repeatable read-across (RAx) workflow.
@@ -9,7 +12,7 @@
 This design operationalizes the research findings in `research.md` and satisfies Task 4.1 (“Design GenRA workflow specification”) ahead of the implementation subtasks in Task 4.2–4.6.
 
 ## Entry Points & Inputs
-- **Primary tool**: `orchestrator.run_genra_workflow`
+- **Planned/internal entry point**: `orchestrator.run_genra_workflow`
 - **Request contract** (Pydantic-style schema):
 
 ```json
@@ -37,6 +40,7 @@ This design operationalizes the research findings in `research.md` and satisfies
 
 - Unsupported identifiers or scenarios return `422` with structured error payloads.
 - `options.requireAdClearance` defaults to `true`; when `false`, the orchestrator still records AD denials but can proceed with warnings.
+- This document should not be interpreted as evidence that the workflow is currently registered in the default `tools/list` surface.
 
 ## Dependencies
 - **Identifier resolution**: `epacomp_tox.resources.chemical` tools (`search_chemical`, `get_chemical_details`) plus planned `IdentifierResolver`.

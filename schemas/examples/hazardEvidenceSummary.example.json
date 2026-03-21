@@ -1,0 +1,91 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "datasets": [
+    {
+      "dataset": "toxval",
+      "summaryLevel": "summary",
+      "recordCount": 2,
+      "records": [
+        {
+          "effect": "NOEL",
+          "value": 40,
+          "unit": "mg/kg-day",
+          "species": "Rat"
+        },
+        {
+          "effect": "LOAEL",
+          "value": 120,
+          "unit": "mg/kg-day",
+          "species": "Rat"
+        }
+      ],
+      "sourceTool": "search_hazard",
+      "retrievedAt": "2026-03-21T09:58:00Z"
+    },
+    {
+      "dataset": "cancer",
+      "summaryLevel": "summary",
+      "recordCount": 1,
+      "records": [
+        {
+          "agency": "IARC",
+          "classification": "Not classifiable as to carcinogenicity to humans"
+        }
+      ],
+      "sourceTool": "search_hazard",
+      "retrievedAt": "2026-03-21T09:58:00Z"
+    }
+  ],
+  "keyFindings": [
+    {
+      "statement": "ToxValDB includes repeated-dose oral values for Bisphenol A.",
+      "sourceDataset": "toxval",
+      "endpoint": "NOEL",
+      "value": 40,
+      "unit": "mg/kg-day",
+      "confidence": 0.77
+    },
+    {
+      "statement": "Cancer summary records are sparse relative to general hazard coverage.",
+      "sourceDataset": "cancer",
+      "context": "Use as a supporting line of evidence rather than a sole hazard basis."
+    }
+  ],
+  "references": [
+    {
+      "citation": "EPA CompTox Chemicals Dashboard hazard datasets for Bisphenol A.",
+      "url": "https://comptox.epa.gov/dashboard"
+    }
+  ],
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "traceId": "ctx-example-hazard-001",
+    "sources": [
+      {
+        "name": "CompTox Hazard APIs",
+        "toolName": "search_hazard",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:58:00Z",
+        "citation": "EPA CompTox hazard endpoints"
+      }
+    ],
+    "notes": [
+      "Illustrative hazard summary object."
+    ]
+  },
+  "requestMetadata": {
+    "sourceTools": [
+      "search_hazard",
+      "get_hazard_toxval"
+    ],
+    "requestedAt": "2026-03-21T09:58:00Z",
+    "summaryOnly": true,
+    "requestId": "hazard-example-request-001"
+  }
+}

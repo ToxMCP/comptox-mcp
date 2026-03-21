@@ -29,8 +29,8 @@ class HazardResource(BaseResource):
     ]
 
     @staticmethod
-    def _schema(name: str) -> Dict[str, str]:
-        return schema_ref("common", name)
+    def _schema(namespace: str, name: str) -> Dict[str, str]:
+        return schema_ref(namespace, name)
 
     @property
     def name(self) -> str:
@@ -365,12 +365,18 @@ class HazardResource(BaseResource):
             },
         ]
         for tool in tools:
-            schema_name = (
-                "mapping_list_generic.response.schema"
-                if tool["name"] == "batch_search_hazard"
-                else "list_generic.response.schema"
-            )
-            tool["responseSchemaRef"] = self._schema(schema_name)
+            if tool["name"] == "search_hazard":
+                tool["responseSchemaRef"] = self._schema(
+                    "hazard", "search_hazard.response.schema"
+                )
+            elif tool["name"] == "batch_search_hazard":
+                tool["responseSchemaRef"] = self._schema(
+                    "hazard", "batch_search_hazard.response.schema"
+                )
+            else:
+                tool["responseSchemaRef"] = self._schema(
+                    "common", "list_generic.response.schema"
+                )
 
             # Ensure outputSchema is populated from the reference
             if "responseSchemaRef" in tool:

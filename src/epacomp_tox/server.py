@@ -1,8 +1,10 @@
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from importlib import metadata
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import ValidationError
@@ -71,6 +73,7 @@ class MCPServer:
         from .resources.cheminformatics import CheminformaticsResource
         from .resources.exposure import ExposureResource
         from .resources.hazard import HazardResource
+        from .resources.interop import InteropResource
         from .resources.metadata import MetadataResource
 
         return {
@@ -81,6 +84,7 @@ class MCPServer:
             "chemical_list": ChemicalListResource(self.api_key),
             "cheminformatics": CheminformaticsResource(self.api_key),
             "metadata": MetadataResource(self.api_key),
+            "interop": InteropResource(self.api_key),
         }
 
     def get_resources(self) -> List[Dict[str, str]]:
@@ -281,7 +285,9 @@ class MCPServer:
             }
             if structured:
                 if isinstance(structured, dict):
-                    result["structuredContent"] = structured
+                    normalized_sc = dict(structured)
+                    normalized_sc.setdefault("data", dict(structured))
+                    result["structuredContent"] = normalized_sc
                 else:
                     # Normalize lists/scalars into a consistent envelope so metadata can be attached.
                     result["structuredContent"] = {"data": structured}
@@ -289,6 +295,9 @@ class MCPServer:
                 existing_sc = result.get("structuredContent")
                 if isinstance(existing_sc, dict):
                     existing_sc["metadata"] = combined_metadata
+                    data_payload = existing_sc.get("data")
+                    if isinstance(data_payload, dict):
+                        data_payload["metadata"] = combined_metadata
                 else:
                     result["structuredContent"] = {
                         "data": existing_sc,
@@ -337,6 +346,7 @@ class MCPServer:
                 if session_metadata:
                     merged["session"] = session_metadata
                 error_payload["metadata"] = merged
+            error_payload.setdefault("data", None)
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="error",
@@ -440,10 +450,21 @@ class MCPServer:
 
     @staticmethod
     def _resolve_version() -> str:
-        try:
-            return metadata.version("epacomp_tox")
-        except metadata.PackageNotFoundError:
-            return os.environ.get("EPACOMP_TOX_VERSION", "0.0.0-dev")
+        pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        if pyproject_path.exists():
+            match = re.search(
+                r'^version\s*=\s*"(?P<version>[^"]+)"',
+                pyproject_path.read_text(encoding="utf-8"),
+                re.MULTILINE,
+            )
+            if match:
+                return match.group("version")
+        for distribution_name in ("epacomp-tox-mcp", "epacomp_tox"):
+            try:
+                return metadata.version(distribution_name)
+            except metadata.PackageNotFoundError:
+                continue
+        return os.environ.get("EPACOMP_TOX_VERSION", "0.0.0-dev")
 
     @staticmethod
     def _format_metadata(
