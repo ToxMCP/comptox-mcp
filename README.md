@@ -354,6 +354,8 @@ Every successful tool invocation returns structured payloads designed for agents
 - Rotate `CTX_API_KEY` regularly and store secrets outside the repository (e.g. cloud secret manager or OS keychain).
 - Monitor `/metrics` for negotiated capability changes and unexpected spikes in `tools/call` failures.
 - Enable HTTPS/TLS at the ingress or reverse proxy layer.
+- Keep GitHub branch protection, dependency review, and CodeQL scanning enabled on the canonical repository.
+- Pin GitHub Actions workflows to immutable commit SHAs and update them intentionally during maintenance windows.
 - Follow coordinated vulnerability disclosure guidance in [`SECURITY.md`](SECURITY.md).
 
 ---
