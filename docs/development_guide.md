@@ -1,17 +1,19 @@
 # Development Guide
 
-This document provides guidance for developers who want to extend or modify the EPAComp Tox MCP implementation.
+This document provides guidance for developers who want to extend or modify the EPA CompTox MCP implementation.
+
+The released `v0.2.0` public server is an evidence-and-federation MCP. Predictive and orchestrator code still exists in-repo, but it is not part of the default public MCP surface unless explicitly registered and documented.
 
 ## Project Structure
 
 ```
 mcp_epacomp_tox/
 ├── src/epacomp_tox/
-│   ├── transport/            # Phase 2 MCP transport (FastAPI WebSocket)
-│   ├── orchestrator/         # GenRA orchestrator, workflow stages, audit writers
-│   ├── predictive/           # Predictive micro-server harness & services
+│   ├── transport/            # MCP HTTP + WebSocket transport
+│   ├── orchestrator/         # Experimental GenRA/orchestration assets
+│   ├── predictive/           # Experimental predictive micro-server assets
 │   ├── metadata/             # Model cards, applicability-domain stores, validators
-│   ├── resources/            # CTX REST resource adapters (chemical, exposure, etc.)
+│   ├── resources/            # Public CTX resource adapters + interop builders
 │   ├── health.py             # Liveness/readiness probes
 │   ├── server.py             # MCP server façade with tool/catalog wiring
 │   ├── client.py             # Lightweight MCP client for offline usage
@@ -36,8 +38,8 @@ mcp_epacomp_tox/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mcp_epacomp_tox.git
-cd mcp_epacomp_tox
+git clone https://github.com/ToxMCP/comptox-mcp.git
+cd comptox-mcp
 ```
 
 2. Create a virtual environment:
@@ -73,7 +75,7 @@ isort src tests
 
 ## Adding a New Resource
 
-Phase 2 routes tool execution through the orchestrator, but resource adapters remain the preferred place to implement low-level CTX calls. To add a new resource:
+Public MCP tools are registered directly from resources in `src/epacomp_tox/resources/`. To add a new public resource:
 
 1. Create a new file in the `src/epacomp_tox/resources/` directory:
 ```python
@@ -118,7 +120,7 @@ class NewResource(BaseResource):
             {
                 "name": "new_tool",
                 "description": "Description of the new tool",
-                "parameters": {
+                "inputSchema": {
                     "type": "object",
                     "properties": {
                         "param1": {
@@ -175,9 +177,18 @@ def _initialize_resources(self) -> Dict[str, Any]:
     return resources
 ```
 
-3. Add schema definitions for new tools, update `tests/test_resources.py`, and extend `tests/test_mcp_conformance_suite.py` or orchestrator workflow tests if the resource participates in higher-level flows.
+3. Add response schemas for new public tools, preferably under a dedicated namespace in `docs/contracts/schemas/`, and wire them with `responseSchemaRef` or `outputSchema`.
 
-Refer to `docs/architecture_overview.md` for how resources plug into the orchestrator and guardrail pipeline.
+4. If the resource publishes suite-facing portable objects, add or update root schemas in `schemas/` plus examples under `schemas/examples/`.
+
+5. Update tests:
+
+   - `tests/test_tool_contracts.py` for schema declarations
+   - `tests/test_mcp_conformance_suite.py` if the public discovery surface changes
+   - `tests/test_tool_catalog_snapshot.py` if the public tool catalog changes
+   - resource/domain tests such as `tests/test_domain_contracts.py` or `tests/test_interop_resource.py`
+
+Refer to `docs/architecture_overview.md` for the current public boundary and to `docs/contracts/README.md` for schema-layer expectations.
 
 ## Adding a New Tool to an Existing Resource
 
@@ -197,7 +208,7 @@ def get_tools(self) -> List[Dict[str, Any]]:
         {
             "name": "new_tool",
             "description": "Description of the new tool",
-            "parameters": {
+            "inputSchema": {
                 "type": "object",
                 "properties": {
                     "param1": {
@@ -253,7 +264,7 @@ def new_tool(self, param1: str) -> Any:
     return {"result": f"Processed {param1}"}
 ```
 
-4. Add tests for the new tool in `tests/test_resources.py`.
+4. Add tests for the new tool and update contract coverage if it changes the public surface.
 
 ## Customizing the API Integration
 

@@ -1,6 +1,8 @@
 # Model Cards & Guardrail Policies
 
-Phase 2 ships machine-readable model cards and applicability-domain (AD) policies for every predictive micro-server. This guide explains how to publish human-readable summaries, interpret guardrail outcomes, and follow the governance workflow required for release sign-off.
+> This guide primarily covers in-repo predictive and orchestrator assets. These components remain experimental and are not part of the default public MCP tool catalog in `v0.2.0`.
+
+This guide explains how to publish human-readable summaries for machine-readable model cards and applicability-domain (AD) policies, interpret guardrail outcomes, and follow the governance workflow required for release sign-off.
 
 ## 1. Rendering Model Cards
 
@@ -37,7 +39,7 @@ Guardrail definitions live in `metadata/applicability_domains/*.json` and are re
 - **Sparse analogue coverage (GenRA)**: Adjust search parameters (`analogue_limit`, evidence filters) or collect additional in vitro/in vivo evidence before rerunning.
 - **Policy overrides**: The orchestrator accepts policy profile overrides via `MCP_POLICY_PROFILE`. Overrides must be recorded in the audit bundle with reviewer sign-off.
 
-All failures produce guardrail events stored via `orchestrator_get_audit_bundle`, including AD rationale, policy state, and remediation hints.
+For internal predictive/orchestrator workflows, failures should be captured in the corresponding audit bundle or workflow record, including AD rationale, policy state, and remediation hints.
 
 ## 4. Governance & Sign-off Workflow
 

@@ -1,5 +1,7 @@
 # MCP Transport Compliance Plan
 
+> Historical/internal planning document. For the released public surface, prefer `README.md`, `docs/architecture_overview.md`, and the transport tests under `tests/`.
+
 This document captures the transport requirements for Model Context Protocol (MCP) Phase 2, the behaviour expected from the CompTox MCP server, and the gaps in the current implementation (`epacomp_tox.transport.websocket`). It is the contract driver for Task&nbsp;1 subtasks.
 
 ## 1. Handshake Lifecycle

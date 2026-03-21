@@ -1,5 +1,7 @@
 # Agentic SDK Integration Guide
 
+> Experimental integration guide. The current default public server contract is centered on `initialize`, `tools/list`, `resources/list`, and `tools/call`. Any event-streaming or predictive/orchestrator integration described here should be treated as non-canonical unless the corresponding capabilities are explicitly advertised by the live server.
+
 This guide walks through connecting the EPA CompTox Phase 2 MCP transport to the Agentic SDK. It covers the end-to-end handshake, streaming tool calls, and how to adapt the transport’s event stream into an Agentic agent workflow. Use it together with the quickstart script in `samples/agentic_sdk/python_phase2_quickstart.py`.
 
 ## 1. Prerequisites
