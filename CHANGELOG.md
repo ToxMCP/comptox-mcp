@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+- tightened repository governance with support, intake, review-ownership, and dependency-automation hygiene
+- expanded release discipline around public-surface validation and metadata consistency checks
+
 ## [0.2.0] - 2026-03-21
 
 - repositioned the public package and README around CompTox evidence federation

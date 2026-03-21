@@ -34,7 +34,15 @@ jobs:
 
       - name: Run public-surface release gates
         run: |
-          pytest tests/test_tool_catalog_snapshot.py tests/test_cross_suite_handoffs.py -q
+          pytest \
+            tests/test_release_metadata.py \
+            tests/test_tool_catalog_snapshot.py \
+            tests/test_tool_contracts.py \
+            tests/test_portable_schemas.py \
+            tests/test_domain_contracts.py \
+            tests/test_cross_suite_handoffs.py \
+            tests/test_mcp_conformance_suite.py \
+            -q
 
       - name: Run tests
         run: pytest
