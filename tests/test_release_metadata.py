@@ -42,9 +42,9 @@ def test_changelog_has_unreleased_section_and_current_release_entry() -> None:
     release_index = changelog.find(f"## [{version}]")
     assert unreleased_index != -1, "CHANGELOG must include an [Unreleased] section"
     assert release_index != -1, f"CHANGELOG must include the current release {version}"
-    assert unreleased_index < release_index, (
-        "CHANGELOG [Unreleased] section should appear before the current release entry"
-    )
+    assert (
+        unreleased_index < release_index
+    ), "CHANGELOG [Unreleased] section should appear before the current release entry"
 
 
 def test_project_urls_use_canonical_repository() -> None:
