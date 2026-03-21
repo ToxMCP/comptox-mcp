@@ -6,6 +6,7 @@
 - expanded release discipline around public-surface validation and metadata consistency checks
 - standardized GitHub workflow job names in preparation for required branch-protection status checks
 - upgraded GitHub Actions workflow dependencies toward Node 24-compatible versions and opted dependency review into the Node 24 runtime
+- pinned GitHub workflow actions to immutable SHAs, added CodeQL scanning, and added workflow-hardening regression coverage
 
 ## [0.2.0] - 2026-03-21
 
