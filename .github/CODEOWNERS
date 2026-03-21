@@ -1,0 +1,17 @@
+# Default ownership for the repository.
+* @senseibelbi
+
+# Public contract and discovery surface.
+/README.md @senseibelbi
+/CHANGELOG.md @senseibelbi
+/schemas/ @senseibelbi
+/docs/contracts/ @senseibelbi
+/src/epacomp_tox/server.py @senseibelbi
+/src/epacomp_tox/resources/ @senseibelbi
+/src/epacomp_tox/transport/ @senseibelbi
+
+# Repository process and automation.
+/.github/ @senseibelbi
+/CONTRIBUTING.md @senseibelbi
+/SECURITY.md @senseibelbi
+/SUPPORT.md @senseibelbi
