@@ -1,5 +1,7 @@
 # Predictive Micro-Server Harness
 
+> Experimental/internal guide. The predictive service harness described here is not part of the default public MCP tool catalog released in `v0.2.0`.
+
 Phase 2 introduces a shared harness for the TEST, OPERA, and GenRA predictive services. The goal is to give all model micro-servers a consistent structure for request validation, applicability-domain enforcement, and response formatting.
 
 ## Components
@@ -36,7 +38,7 @@ router = build_predictive_router(service_factory=lambda: TestConsensusService(co
 }), prefix="/test", tags=["TEST"])
 ```
 
-Mount the router on a FastAPI app or within the orchestrator transport to expose MCP-compatible REST endpoints.
+Mount the router on a FastAPI app or within an internal orchestrator transport when working on the experimental predictive stack.
 
 ## Next Steps
 
@@ -59,7 +61,7 @@ Each accepts a `PredictiveClient` implementation so integration with external ex
 
 - `GenRAClient` integrates the GenRA analogue search and evidence weighting workflow.
 
-Regression tests in `tests/test_predictive_regression.py` exercise block vs warn AD policies using the FastAPI router harness. These tests will be incorporated into CI once predictive services are wired into the orchestrator.
+Regression tests in `tests/test_predictive_regression.py` exercise block vs warn AD policies using the FastAPI router harness. These tests are useful internal coverage, but they should not be confused with the canonical public-surface release gates.
 
 ## Architecture Summary
 
@@ -81,7 +83,7 @@ The predictive routers expose FastAPI endpoints that now validate every response
 
 ### Predict endpoint example
 
-Run the service locally (see quick-start instructions in the README), then issue:
+Run the service locally only when working on the experimental predictive stack, then issue:
 
 ```bash
 curl -s http://localhost:8000/test/predict \

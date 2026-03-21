@@ -14,7 +14,7 @@
 ## Documentation & Architecture
 - [ ] Read `README.md` (architecture overview) and `docs/architecture_overview.md`.
 - [ ] Review guardrail policies in `docs/model_cards_and_policies.md`.
-- [ ] Walk through Agentic integration guidance in `docs/agentic_sdk_integration.md` and run the Python quickstart.
+- [ ] If working on experimental transports or internal integrations, review `docs/agentic_sdk_integration.md` and related workflow docs.
 - [ ] Review QA checklists in this folder to understand release expectations.
 
 ## First Contribution
@@ -24,7 +24,7 @@
 
 ## Release Readiness Awareness
 - [ ] Understand doc publishing pipeline (`scripts/build_docs.sh`, `.github/workflows/docs.yml` once configured).
-- [ ] Review deployment runbooks (transport, predictive services) and shadow an on-call rotation if applicable.
+- [ ] Review deployment runbooks for the public transport; treat predictive-service runbooks as experimental unless explicitly assigned to that workstream.
 - [ ] Attend guardrail/governance review to learn approval workflow.
 
 ## Confirmation
