@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    name: Tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:

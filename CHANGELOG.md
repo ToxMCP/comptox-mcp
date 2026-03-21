@@ -4,6 +4,7 @@
 
 - tightened repository governance with support, intake, review-ownership, and dependency-automation hygiene
 - expanded release discipline around public-surface validation and metadata consistency checks
+- standardized GitHub workflow job names in preparation for required branch-protection status checks
 
 ## [0.2.0] - 2026-03-21
 
