@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- documented the `v0.2.1` stabilization scope for interop golden payloads, contract-manifest publication, and narrow workflow-contract follow-up work
 - tightened repository governance with support, intake, review-ownership, and dependency-automation hygiene
 - expanded release discipline around public-surface validation and metadata consistency checks
 - standardized GitHub workflow job names in preparation for required branch-protection status checks
