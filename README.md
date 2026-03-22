@@ -108,7 +108,7 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 
 - **One MCP surface (`/mcp` HTTP + `/mcp/ws` WebSocket)** delivers discovery and execution across chemical, bioactivity, exposure, hazard, metadata, interop, and supporting utility catalogues.
 - **Evidence federation role** – CompTox acts as the suite's source-grounded evidence ingress layer for downstream AOP, PBPK, O-QT, and orchestration workflows.
-- **Guardrails + provenance** – JSON Schema validation, metadata attachments, and transport audit hooks improve downstream reproducibility.
+- **Guardrails + provenance** – JSON Schema validation, metadata attachments, transport audit hooks, and signed release attestations improve downstream reproducibility.
 - **Agent friendly** – tested with Codex CLI, Gemini CLI, and Claude (see [integration guide](docs/integration_guides/mcp_integration.md)).
 
 > Experimental predictive and orchestrator components still exist in this repository, but they are not part of the default public MCP tool catalog exposed by the server today.
@@ -357,6 +357,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - Keep GitHub branch protection, dependency review, and CodeQL scanning enabled on the canonical repository.
 - Pin GitHub Actions workflows to immutable commit SHAs and update them intentionally during maintenance windows.
 - Generate and retain a CycloneDX SBOM for release artifacts so downstream consumers can audit package composition.
+- Publish signed provenance and SBOM attestations for release artifacts so consumers can verify what was built and released.
 - Follow coordinated vulnerability disclosure guidance in [`SECURITY.md`](SECURITY.md).
 
 ---
