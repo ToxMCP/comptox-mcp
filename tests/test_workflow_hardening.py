@@ -46,8 +46,16 @@ def test_codeql_workflow_exists_with_python_analysis() -> None:
 def test_release_sbom_workflow_exists_with_pinned_tooling() -> None:
     text = _workflow_text("release-sbom.yml")
     assert "name: Release SBOM" in text
+    assert "id-token: write" in text
+    assert "attestations: write" in text
+    assert "artifact-metadata: write" in text
     assert "build==1.4.0" in text
     assert "cyclonedx-bom==7.2.2" in text
     assert "cyclonedx-py environment .sbom-venv" in text
+    assert "actions/attest@" in text
+    assert "subject-path: dist/*" in text
+    assert "sbom-path: artifacts/epacomp-tox-mcp.sbom.cdx.json" in text
+    assert "release-provenance.bundle.json" in text
+    assert "release-sbom-attestation.bundle.json" in text
     assert "gh release upload" in text
     assert "actions/upload-artifact@" in text

@@ -7,7 +7,7 @@
 - standardized GitHub workflow job names in preparation for required branch-protection status checks
 - upgraded GitHub Actions workflow dependencies toward Node 24-compatible versions and opted dependency review into the Node 24 runtime
 - pinned GitHub workflow actions to immutable SHAs, added CodeQL scanning, and added workflow-hardening regression coverage
-- added a release/workflow-dispatch pipeline that builds distributions and emits a CycloneDX SBOM artifact
+- added a release/workflow-dispatch pipeline that builds distributions, emits a CycloneDX SBOM artifact, and publishes signed provenance/SBOM attestations
 
 ## [0.2.0] - 2026-03-21
 

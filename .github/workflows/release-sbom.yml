@@ -8,6 +8,9 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   build-and-sbom:
@@ -49,6 +52,25 @@ jobs:
             --output-format JSON \
             --output-file artifacts/epacomp-tox-mcp.sbom.cdx.json
 
+      - name: Attest release provenance
+        id: attest-provenance
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: dist/*
+
+      - name: Attest release SBOM
+        id: attest-sbom
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: dist/*
+          sbom-path: artifacts/epacomp-tox-mcp.sbom.cdx.json
+
+      - name: Normalize attestation bundles
+        run: |
+          mkdir -p artifacts/attestations
+          cp "${{ steps.attest-provenance.outputs.bundle-path }}" artifacts/attestations/release-provenance.bundle.json
+          cp "${{ steps.attest-sbom.outputs.bundle-path }}" artifacts/attestations/release-sbom-attestation.bundle.json
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -56,6 +78,7 @@ jobs:
           path: |
             dist/*
             artifacts/epacomp-tox-mcp.sbom.cdx.json
+            artifacts/attestations/*.json
 
       - name: Attach artifacts to GitHub release
         if: github.event_name == 'release'
@@ -65,4 +88,5 @@ jobs:
           gh release upload "${{ github.event.release.tag_name }}" \
             dist/* \
             artifacts/epacomp-tox-mcp.sbom.cdx.json \
+            artifacts/attestations/*.json \
             --clobber
