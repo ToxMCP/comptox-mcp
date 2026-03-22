@@ -20,6 +20,7 @@ mcp_epacomp_tox/
 │   └── config.py             # Central configuration helpers (env parsing)
 ├── scripts/
 │   ├── mcp_ws_client.py      # Manual MCP conformance/smoke harness
+│   ├── mcp_interop_smoke.py  # Live interop smoke runner for the public handoff tools
 │   ├── smoke_ctx.sh          # CTX live smoke tests
 │   └── build_docs.sh         # MkDocs build wrapper (added in Task 7.6)
 ├── docs/                     # Markdown guides, architecture diagrams, runbooks
@@ -63,6 +64,11 @@ pytest
 Generate coverage and stricter MCP transport checks:
 ```bash
 pytest --cov=epacomp_tox tests/test_http_transport.py tests/test_websocket_transport.py
+```
+
+Run the live interop smoke against a running server when you need runtime confirmation of the AOP/PBPK handoff paths:
+```bash
+python scripts/mcp_interop_smoke.py --endpoint http://127.0.0.1:8000/mcp --json
 ```
 
 ## Code Style

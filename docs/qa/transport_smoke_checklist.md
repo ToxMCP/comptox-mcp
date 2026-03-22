@@ -9,6 +9,7 @@
 ## Transport Validation
 - [ ] Run `python scripts/mcp_ws_client.py --url ws://127.0.0.1:8000/mcp/ws --list-tools` (expect negotiated protocol `2025-06-18`).
 - [ ] Run `scripts/mcp_http_smoke.sh` (or `EPA_MCP_HTTP_ENDPOINT=<url> scripts/mcp_http_smoke.sh`) and confirm the HTTP transport returns protocol version and tool count.
+- [ ] Run `python scripts/mcp_interop_smoke.py --endpoint http://127.0.0.1:8000/mcp --json` and confirm all three interop tools return structured handoff objects.
 - [ ] Execute `--call-tool search_chemical --arguments '{"query":"toluene","search_type":"equals"}'` (observe streaming events and final result).
 - [ ] Trigger cancellation with `--cancel-after-ms 200` and confirm server logs show cancellation handling.
 - [ ] Inspect `docs/architecture_overview.md` to confirm deployment settings match staging/production environment (TLS, heartbeat, session limits).

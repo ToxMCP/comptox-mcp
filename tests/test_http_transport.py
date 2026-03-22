@@ -78,6 +78,33 @@ class NestedMetadataMCPServer(MCPServer):
         return {"echo": NestedMetadataEchoResource()}
 
 
+class DomainMetadataEchoResource(EchoResource):
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+        if tool_name != "echo":
+            raise ValueError("Unknown tool")
+        self._last_metadata = {
+            "resource": self.name,
+            "steps": {
+                "echo:call": {
+                    "metadata": {
+                        "rate_limit": RateLimitInfo(
+                            limit=None, remaining=None, reset=None
+                        )
+                    }
+                }
+            },
+        }
+        return {
+            "echo": parameters["text"],
+            "metadata": {"suiteRole": "evidence-federation"},
+        }
+
+
+class DomainMetadataMCPServer(MCPServer):
+    def _initialize_resources(self) -> Dict[str, BaseResource]:
+        return {"echo": DomainMetadataEchoResource()}
+
+
 def _create_app():
     server = DummyMCPServer(api_key="dummy-key", validate_health=False)
     return create_app(server=server)
@@ -85,6 +112,11 @@ def _create_app():
 
 def _create_nested_metadata_app():
     server = NestedMetadataMCPServer(api_key="dummy-key", validate_health=False)
+    return create_app(server=server)
+
+
+def _create_domain_metadata_app():
+    server = DomainMetadataMCPServer(api_key="dummy-key", validate_health=False)
     return create_app(server=server)
 
 
@@ -195,6 +227,35 @@ def test_http_transport_serializes_nested_metadata_rate_limit() -> None:
         assert response.status_code == 200
         payload = response.json()["result"]["structuredContent"]
         nested_rate_limit = payload["metadata"]["steps"]["echo:call"]["metadata"][
+            "rate_limit"
+        ]
+        assert nested_rate_limit == {
+            "limit": None,
+            "remaining": None,
+            "reset": None,
+        }
+
+
+def test_http_transport_preserves_domain_metadata_when_attaching_runtime_metadata() -> (
+    None
+):
+    app = _create_domain_metadata_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 13,
+                "method": "tools/call",
+                "params": {"name": "echo", "parameters": {"text": "hello"}},
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()["result"]["structuredContent"]
+        assert payload["metadata"] == {"suiteRole": "evidence-federation"}
+        assert payload["mcpMetadata"]["resource"] == "echo"
+        nested_rate_limit = payload["mcpMetadata"]["steps"]["echo:call"]["metadata"][
             "rate_limit"
         ]
         assert nested_rate_limit == {

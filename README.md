@@ -210,6 +210,9 @@ curl -s http://localhost:8000/healthz | jq .
 curl -s http://localhost:8000/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
+
+# live interop smoke
+python scripts/mcp_interop_smoke.py --endpoint http://localhost:8000/mcp --json
 ```
 
 ---
@@ -397,6 +400,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - `tests/test_tool_contracts.py` enforces output schema declarations for the registered resources.
 - `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
 - `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
+- `scripts/mcp_interop_smoke.py` validates the public interop tool path end-to-end over the HTTP transport.
 - Documentation builds (`scripts/build_docs.sh`) and CI workflows keep diagrams and links healthy.
 - Experimental predictive/orchestrator suites remain valuable internal regression coverage, but they should not be presented as canonical public-surface checks.
 
