@@ -9,6 +9,9 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PYPROJECT_PATH = ROOT_DIR / "pyproject.toml"
 README_PATH = ROOT_DIR / "README.md"
 CHANGELOG_PATH = ROOT_DIR / "CHANGELOG.md"
+RELEASE_VERIFICATION_GUIDE_PATH = (
+    ROOT_DIR / "docs" / "releases" / "release_artifact_verification.md"
+)
 
 
 def _read_text(path: Path) -> str:
@@ -58,3 +61,14 @@ def test_project_urls_use_canonical_repository() -> None:
     ]
     for expected in expected_urls:
         assert expected in pyproject
+
+
+def test_release_verification_guide_is_linked_and_actionable() -> None:
+    readme = _read_text(README_PATH)
+    guide = _read_text(RELEASE_VERIFICATION_GUIDE_PATH)
+    assert "docs/releases/release_artifact_verification.md" in readme
+    assert "gh attestation verify" in guide
+    assert "gh attestation download" in guide
+    assert "gh attestation trusted-root" in guide
+    assert "ToxMCP/comptox-mcp/.github/workflows/release-sbom.yml" in guide
+    assert "https://cyclonedx.org/bom" in guide

@@ -133,21 +133,22 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 1. [Architecture](#architecture)
 2. [Published schemas](#published-schemas)
 3. [Quick start](#quick-start)
-4. [Configuration](#configuration)
-5. [Tool catalog](#tool-catalog)
-6. [Running the server](#running-the-server)
-7. [Integrating with coding agents](#integrating-with-coding-agents)
-8. [Output artifacts](#output-artifacts)
-9. [Security checklist](#security-checklist)
-10. [Current limitations](#current-limitations)
-11. [Development notes](#development-notes)
-12. [Contributing](#contributing)
-13. [Security policy](#security-policy)
-14. [Support](#support)
-15. [Code of conduct](#code-of-conduct)
-16. [Citation](#citation)
-17. [Roadmap](#roadmap)
-18. [License](#license)
+4. [Release verification](#release-verification)
+5. [Configuration](#configuration)
+6. [Tool catalog](#tool-catalog)
+7. [Running the server](#running-the-server)
+8. [Integrating with coding agents](#integrating-with-coding-agents)
+9. [Output artifacts](#output-artifacts)
+10. [Security checklist](#security-checklist)
+11. [Current limitations](#current-limitations)
+12. [Development notes](#development-notes)
+13. [Contributing](#contributing)
+14. [Security policy](#security-policy)
+15. [Support](#support)
+16. [Code of conduct](#code-of-conduct)
+17. [Citation](#citation)
+18. [Roadmap](#roadmap)
+19. [License](#license)
 
 ---
 
@@ -195,6 +196,7 @@ Once the server is running:
 - Readiness check: `http://localhost:8000/readyz`
 - Architecture docs: `docs/architecture_overview.md`
 - Contract docs: `docs/contracts/README.md`
+- Release verification guide: `docs/releases/release_artifact_verification.md`
 
 ## Verification (smoke test)
 
@@ -209,6 +211,12 @@ curl -s http://localhost:8000/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
 ```
+
+---
+
+## Release verification
+
+For published GitHub releases, signed provenance/SBOM attestation verification is documented in [`docs/releases/release_artifact_verification.md`](docs/releases/release_artifact_verification.md).
 
 ---
 

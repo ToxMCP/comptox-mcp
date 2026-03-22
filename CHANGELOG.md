@@ -8,6 +8,7 @@
 - upgraded GitHub Actions workflow dependencies toward Node 24-compatible versions and opted dependency review into the Node 24 runtime
 - pinned GitHub workflow actions to immutable SHAs, added CodeQL scanning, and added workflow-hardening regression coverage
 - added a release/workflow-dispatch pipeline that builds distributions, emits a CycloneDX SBOM artifact, and publishes signed provenance/SBOM attestations
+- documented online and offline verification of signed release provenance and SBOM attestations for downstream consumers
 
 ## [0.2.0] - 2026-03-21
 
