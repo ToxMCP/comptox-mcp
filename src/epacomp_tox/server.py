@@ -472,17 +472,33 @@ class MCPServer:
     ) -> Optional[Dict[str, Any]]:
         if not metadata:
             return None
-        formatted: Dict[str, Any] = {}
-        for key, value in metadata.items():
-            if isinstance(value, RateLimitInfo):
-                formatted[key] = {
-                    "limit": value.limit,
-                    "remaining": value.remaining,
-                    "reset": value.reset,
-                }
-            else:
-                formatted[key] = value
-        return formatted or None
+        return MCPServer._normalize_metadata_value(metadata)
+
+    @classmethod
+    def _normalize_metadata_value(cls, value: Any) -> Any:
+        if isinstance(value, RateLimitInfo):
+            return {
+                "limit": value.limit,
+                "remaining": value.remaining,
+                "reset": value.reset,
+            }
+
+        normalized = to_serializable(value)
+        if normalized is not value:
+            return cls._normalize_metadata_value(normalized)
+
+        if isinstance(value, dict):
+            return {
+                key: cls._normalize_metadata_value(item) for key, item in value.items()
+            }
+
+        if isinstance(value, (list, tuple)):
+            return [cls._normalize_metadata_value(item) for item in value]
+
+        if isinstance(value, datetime):
+            return value.isoformat()
+
+        return value
 
     @staticmethod
     def _normalise_tool_definition(
