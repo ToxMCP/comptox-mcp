@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
+from ctxpy import CtxApiError
 from epacomp_tox.contracts import load_schema, schema_ref
 
 from .base import BaseResource
@@ -537,11 +538,11 @@ class InteropResource(BaseResource):
             resource=self.exposure_resource,
             tool_name="get_exposure_httk",
         )
-        mmdb = self.exposure_resource.get_exposure_mmdb_aggregate_by_dtxsid(
-            identity["dtxsid"]
-        )
-        self._record_step(
-            step_metadata,
+        mmdb = self._optional_records(
+            fetcher=lambda: self.exposure_resource.get_exposure_mmdb_aggregate_by_dtxsid(
+                identity["dtxsid"]
+            ),
+            step_metadata=step_metadata,
             step_name="exposure:mmdb",
             resource=self.exposure_resource,
             tool_name="get_exposure_mmdb_aggregate_by_dtxsid",
@@ -569,6 +570,48 @@ class InteropResource(BaseResource):
                 ],
             ),
         }
+
+    def _optional_records(
+        self,
+        *,
+        fetcher,
+        step_metadata: Dict[str, Dict[str, Any]],
+        step_name: str,
+        resource: BaseResource,
+        tool_name: str,
+        allow_statuses: Sequence[int] = (404,),
+    ) -> List[Dict[str, Any]]:
+        try:
+            records = fetcher()
+        except CtxApiError as exc:
+            if exc.status not in allow_statuses:
+                raise
+            step_metadata[step_name] = {
+                "resource": resource.name,
+                "tool": tool_name,
+                "metadata": self._drop_nones(
+                    {
+                        "status": exc.status,
+                        "request_id": exc.request_id,
+                        "rate_limit": exc.rate_limit,
+                        "retry_after": exc.retry_after,
+                        "optional": True,
+                        "missing": True,
+                        "error": str(exc),
+                        "detail": exc.detail,
+                    }
+                ),
+                "capturedAt": self._timestamp(),
+            }
+            return []
+
+        self._record_step(
+            step_metadata,
+            step_name=step_name,
+            resource=resource,
+            tool_name=tool_name,
+        )
+        return records
 
     def _build_bioactivity_evidence_summary(
         self,
