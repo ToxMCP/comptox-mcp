@@ -14,6 +14,9 @@ CHANGELOG_PATH = ROOT_DIR / "CHANGELOG.md"
 RELEASE_VERIFICATION_GUIDE_PATH = (
     ROOT_DIR / "docs" / "releases" / "release_artifact_verification.md"
 )
+V021_STABILIZATION_PLAN_PATH = (
+    ROOT_DIR / "docs" / "releases" / "v0.2.1_stabilization_plan.md"
+)
 TESTING_MATRIX_PATH = ROOT_DIR / "docs" / "testing_matrix.md"
 TRANSPORT_SMOKE_CHECKLIST_PATH = (
     ROOT_DIR / "docs" / "qa" / "transport_smoke_checklist.md"
@@ -80,6 +83,16 @@ def test_release_verification_guide_is_linked_and_actionable() -> None:
     assert "gh attestation trusted-root" in guide
     assert "ToxMCP/comptox-mcp/.github/workflows/release-sbom.yml" in guide
     assert "https://cyclonedx.org/bom" in guide
+
+
+def test_readme_roadmap_links_to_v021_stabilization_plan() -> None:
+    readme = _read_text(README_PATH)
+    plan = _read_text(V021_STABILIZATION_PLAN_PATH)
+    assert "docs/releases/v0.2.1_stabilization_plan.md" in readme
+    assert "`v0.2.1` stabilization" in readme
+    assert "CTX-backed golden payload capture" in plan
+    assert "Contract manifest resource" in plan
+    assert "Targeted workflow-contract expansion" in plan
 
 
 def test_live_interop_smoke_script_is_documented_and_has_help_output() -> None:

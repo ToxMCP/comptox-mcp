@@ -409,9 +409,10 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
+- Next target: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md)
 - Add CTX-backed golden payload capture for interop outputs so release checks cover both deterministic stubs and live upstream normalization.
-- Expand workflow contract coverage beyond the three current interop tools only where the public surface is stable enough to justify dedicated schemas.
 - Publish a cleaner contract manifest resource for downstream consumers that inventories portable objects, MCP response schemas, and live discovery metadata together.
+- Expand workflow contract coverage beyond the three current interop tools only where the public surface is stable enough to justify dedicated schemas.
 - Revisit predictive/orchestrator publication only after the default server, contracts, and docs all agree.
 
 ---
