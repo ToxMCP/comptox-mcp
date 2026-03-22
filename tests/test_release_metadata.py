@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 from epacomp_tox.server import MCPServer
@@ -12,6 +14,12 @@ CHANGELOG_PATH = ROOT_DIR / "CHANGELOG.md"
 RELEASE_VERIFICATION_GUIDE_PATH = (
     ROOT_DIR / "docs" / "releases" / "release_artifact_verification.md"
 )
+TESTING_MATRIX_PATH = ROOT_DIR / "docs" / "testing_matrix.md"
+TRANSPORT_SMOKE_CHECKLIST_PATH = (
+    ROOT_DIR / "docs" / "qa" / "transport_smoke_checklist.md"
+)
+DEVELOPMENT_GUIDE_PATH = ROOT_DIR / "docs" / "development_guide.md"
+INTEROP_SMOKE_SCRIPT_PATH = ROOT_DIR / "scripts" / "mcp_interop_smoke.py"
 
 
 def _read_text(path: Path) -> str:
@@ -72,3 +80,26 @@ def test_release_verification_guide_is_linked_and_actionable() -> None:
     assert "gh attestation trusted-root" in guide
     assert "ToxMCP/comptox-mcp/.github/workflows/release-sbom.yml" in guide
     assert "https://cyclonedx.org/bom" in guide
+
+
+def test_live_interop_smoke_script_is_documented_and_has_help_output() -> None:
+    docs = "\n".join(
+        (
+            _read_text(README_PATH),
+            _read_text(TESTING_MATRIX_PATH),
+            _read_text(TRANSPORT_SMOKE_CHECKLIST_PATH),
+            _read_text(DEVELOPMENT_GUIDE_PATH),
+        )
+    )
+    assert "scripts/mcp_interop_smoke.py" in docs
+
+    result = subprocess.run(
+        [sys.executable, str(INTEROP_SMOKE_SCRIPT_PATH), "--help"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "build_aop_linkage_summary" in result.stdout
+    assert "assemble_comptox_evidence_pack" in result.stdout
+    assert "--dtxsid" in result.stdout

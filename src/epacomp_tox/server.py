@@ -294,10 +294,16 @@ class MCPServer:
             if combined_metadata:
                 existing_sc = result.get("structuredContent")
                 if isinstance(existing_sc, dict):
-                    existing_sc["metadata"] = combined_metadata
+                    metadata_key = (
+                        "mcpMetadata" if "metadata" in existing_sc else "metadata"
+                    )
+                    existing_sc[metadata_key] = combined_metadata
                     data_payload = existing_sc.get("data")
                     if isinstance(data_payload, dict):
-                        data_payload["metadata"] = combined_metadata
+                        data_metadata_key = (
+                            "mcpMetadata" if "metadata" in data_payload else "metadata"
+                        )
+                        data_payload[data_metadata_key] = combined_metadata
                 else:
                     result["structuredContent"] = {
                         "data": existing_sc,
