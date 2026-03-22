@@ -401,6 +401,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
 - `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
 - `scripts/mcp_interop_smoke.py` validates the public interop tool path end-to-end over the HTTP transport.
+- `.github/workflows/live-interop-smoke.yml` runs the interop smoke path in GitHub Actions on demand or on a weekly schedule when `CTX_API_KEY` is configured.
 - Documentation builds (`scripts/build_docs.sh`) and CI workflows keep diagrams and links healthy.
 - Experimental predictive/orchestrator suites remain valuable internal regression coverage, but they should not be presented as canonical public-surface checks.
 

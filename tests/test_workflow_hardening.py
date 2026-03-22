@@ -59,3 +59,15 @@ def test_release_sbom_workflow_exists_with_pinned_tooling() -> None:
     assert "release-sbom-attestation.bundle.json" in text
     assert "gh release upload" in text
     assert "actions/upload-artifact@" in text
+
+
+def test_live_interop_smoke_workflow_exists_with_pinned_tooling() -> None:
+    text = _workflow_text("live-interop-smoke.yml")
+    assert "name: Live Interop Smoke" in text
+    assert "workflow_dispatch:" in text
+    assert 'cron: "45 5 * * 1"' in text
+    assert "secrets.CTX_API_KEY" in text
+    assert "actions/checkout@" in text
+    assert "actions/setup-python@" in text
+    assert "uvicorn epacomp_tox.transport.websocket:app" in text
+    assert "scripts/mcp_interop_smoke.py" in text

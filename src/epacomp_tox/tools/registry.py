@@ -37,6 +37,7 @@ class ToolRegistry:
         *,
         annotations: Optional[Dict[str, Any]] = None,
     ) -> None:
+        wrapped_tools: List[str] = []
         for tool in resource.get_tools():
             name = tool["name"]
             if name in self._tools:
@@ -60,9 +61,7 @@ class ToolRegistry:
             if output_schema and output_schema.get("type") != "object":
                 # Wrap non-object schemas (e.g. arrays) in a standard envelope to match server behavior
                 # and satisfy MCP/Gemini requirements for tool output schemas.
-                logger.warning(
-                    f"Wrapping outputSchema for tool '{name}' (type: {output_schema.get('type')}) in object envelope."
-                )
+                wrapped_tools.append(name)
                 output_schema = {
                     "type": "object",
                     "properties": {"data": output_schema},
@@ -86,6 +85,13 @@ class ToolRegistry:
                 parameters_model=parameters_model,
                 annotations=combined_annotations,
                 response_schema_ref=response_schema_ref,
+            )
+
+        if wrapped_tools:
+            logger.debug(
+                "Wrapped non-object output schemas for resource '%s': %s",
+                resource.name,
+                ", ".join(sorted(wrapped_tools)),
             )
 
     def get_registration(self, name: str) -> ToolRegistration:

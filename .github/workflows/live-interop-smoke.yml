@@ -1,0 +1,67 @@
+name: Live Interop Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-interop-smoke
+  cancel-in-progress: false
+
+jobs:
+  live-interop-smoke:
+    name: Live Interop Smoke
+    if: ${{ secrets.CTX_API_KEY != '' }}
+    runs-on: ubuntu-latest
+    env:
+      CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
+      EPA_MCP_HTTP_ENDPOINT: http://127.0.0.1:8016/mcp
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start MCP server
+        run: |
+          nohup uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8016 > /tmp/live-interop-smoke.log 2>&1 &
+          echo $! > /tmp/live-interop-smoke.pid
+
+      - name: Wait for health check
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8016/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server did not become healthy in time" >&2
+          cat /tmp/live-interop-smoke.log >&2 || true
+          exit 1
+
+      - name: Run live interop smoke
+        run: python scripts/mcp_interop_smoke.py --endpoint "$EPA_MCP_HTTP_ENDPOINT" --json
+
+      - name: Dump server log on failure
+        if: ${{ failure() }}
+        run: cat /tmp/live-interop-smoke.log >&2 || true
+
+      - name: Stop MCP server
+        if: ${{ always() }}
+        run: |
+          if [[ -f /tmp/live-interop-smoke.pid ]]; then
+            kill "$(cat /tmp/live-interop-smoke.pid)" || true
+          fi
