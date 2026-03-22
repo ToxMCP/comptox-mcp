@@ -41,3 +41,13 @@ def test_codeql_workflow_exists_with_python_analysis() -> None:
     assert "build-mode: none" in text
     assert "github/codeql-action/init@" in text
     assert "github/codeql-action/analyze@" in text
+
+
+def test_release_sbom_workflow_exists_with_pinned_tooling() -> None:
+    text = _workflow_text("release-sbom.yml")
+    assert "name: Release SBOM" in text
+    assert "build==1.4.0" in text
+    assert "cyclonedx-bom==7.2.2" in text
+    assert "cyclonedx-py environment .sbom-venv" in text
+    assert "gh release upload" in text
+    assert "actions/upload-artifact@" in text

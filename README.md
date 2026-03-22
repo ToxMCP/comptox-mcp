@@ -356,6 +356,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - Enable HTTPS/TLS at the ingress or reverse proxy layer.
 - Keep GitHub branch protection, dependency review, and CodeQL scanning enabled on the canonical repository.
 - Pin GitHub Actions workflows to immutable commit SHAs and update them intentionally during maintenance windows.
+- Generate and retain a CycloneDX SBOM for release artifacts so downstream consumers can audit package composition.
 - Follow coordinated vulnerability disclosure guidance in [`SECURITY.md`](SECURITY.md).
 
 ---

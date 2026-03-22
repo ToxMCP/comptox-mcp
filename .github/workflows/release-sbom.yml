@@ -1,0 +1,68 @@
+name: Release SBOM
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-sbom:
+    name: Build Dist And SBOM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install build and SBOM tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build==1.4.0 cyclonedx-bom==7.2.2
+
+      - name: Build package distributions
+        run: python -m build --sdist --wheel
+
+      - name: Create isolated environment for SBOM target
+        run: |
+          python -m venv .sbom-venv
+          . .sbom-venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          mkdir -p artifacts
+          cyclonedx-py environment .sbom-venv \
+            --pyproject pyproject.toml \
+            --mc-type library \
+            --output-reproducible \
+            --spec-version 1.6 \
+            --output-format JSON \
+            --output-file artifacts/epacomp-tox-mcp.sbom.cdx.json
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-dist-and-sbom
+          path: |
+            dist/*
+            artifacts/epacomp-tox-mcp.sbom.cdx.json
+
+      - name: Attach artifacts to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            dist/* \
+            artifacts/epacomp-tox-mcp.sbom.cdx.json \
+            --clobber
