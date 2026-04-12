@@ -21,6 +21,22 @@ from .offline import (
     build_offline_orchestrator,
 )
 from .predictive import PredictiveCoordinator
+from .reference_panel import (
+    LiveConcordanceCaseResult,
+    LiveConcordancePanelCase,
+    LiveConcordancePanelReport,
+    LiveConcordancePanelSummary,
+    build_default_live_concordance_panel,
+    generate_live_concordance_panel_report,
+    render_live_concordance_panel_markdown,
+)
+from .validation import (
+    ScenarioValidationResult,
+    ScientificValidationReport,
+    ValidationSummary,
+    generate_offline_validation_report,
+    render_validation_report_markdown,
+)
 from .workflow import GenRAOrchestrator
 
 __all__ = [
@@ -44,4 +60,16 @@ __all__ = [
     "PredictiveTask",
     "EvidenceSynthesis",
     "EvidenceScore",
+    "LiveConcordancePanelCase",
+    "LiveConcordanceCaseResult",
+    "LiveConcordancePanelSummary",
+    "LiveConcordancePanelReport",
+    "build_default_live_concordance_panel",
+    "generate_live_concordance_panel_report",
+    "render_live_concordance_panel_markdown",
+    "ScientificValidationReport",
+    "ScenarioValidationResult",
+    "ValidationSummary",
+    "generate_offline_validation_report",
+    "render_validation_report_markdown",
 ]
