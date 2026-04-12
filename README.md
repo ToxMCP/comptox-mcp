@@ -75,15 +75,14 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
-## What's New In v0.2.1
+## What's New In v0.2.2
 
-- Hardened `resolve_chemical_identifier` so upstream permissive name matching no longer appears as a false exact resolution; partial names now surface as `ambiguous`, and invalid identifiers normalize to `not_found`.
-- Made `/readyz` prove authenticated CTX capability instead of generic reachability, while keeping `/healthz` as a pure liveness probe.
-- Added and stabilized the public `prioritization` and `manifest` resources alongside additive provenance fields in the interop payloads.
-- Added CTX-backed interop golden-payload capture plus a release-oriented live smoke runner in `scripts/release_smoke.py`.
-- Continued hardening the in-repo experimental scientific engine with structured evidence synthesis, AD sidecar evaluation, mechanistic-context derivation, and analogue provenance, without publishing those modules as default public tools.
+- Published a clean `v0.2.2` patch-release layer over the already-shipped `0.2.1` public-surface hardening work, without changing the default MCP boundary.
+- Aligned README, architecture notes, changelog, and release metadata around the current patch version so downstream users see one coherent release story.
+- Kept the protected-branch release path CI-clean by removing broken docs-link assumptions and normalizing formatting/import ordering across the touched Python and test files.
+- Left the public server role unchanged: CompTox MCP remains an evidence-federation and screening-prioritization surface, while predictive and orchestrator modules stay experimental.
 
-See the full release notes in [`docs/releases/v0.2.1_release_description.md`](docs/releases/v0.2.1_release_description.md).
+See the full release notes in [`docs/releases/v0.2.2_release_description.md`](docs/releases/v0.2.2_release_description.md).
 
 ## Published Schemas
 
@@ -425,8 +424,9 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
+- Completed: [`v0.2.2` release cleanup](docs/releases/v0.2.2_release_description.md)
 - Completed: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md) and the matching [`v0.2.1` release description](docs/releases/v0.2.1_release_description.md)
-- `v0.2.2` should focus on packaging and operational polish rather than reopening the public boundary.
+- `v0.2.3` should focus on packaging and operational polish rather than reopening the public boundary.
 - Promote `scripts/release_smoke.py` and the live interop capture path into repeatable CI/release automation.
 - Tighten downstream-facing documentation around deterministic identifier usage so agents prefer DTXSID/CAS over partial-name inputs.
 - Expand screening prioritization only where additional quantitative signals can be added without overstating risk semantics.

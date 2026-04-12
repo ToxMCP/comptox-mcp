@@ -23,7 +23,7 @@ The commands below assume the canonical repository is `ToxMCP/comptox-mcp`.
 Download the published release assets into a temporary directory:
 
 ```bash
-TAG=v0.2.1
+TAG=v0.2.2
 mkdir -p /tmp/comptox-release
 gh release download "$TAG" \
   -R ToxMCP/comptox-mcp \

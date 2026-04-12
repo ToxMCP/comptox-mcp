@@ -14,6 +14,9 @@ CHANGELOG_PATH = ROOT_DIR / "CHANGELOG.md"
 RELEASE_VERIFICATION_GUIDE_PATH = (
     ROOT_DIR / "docs" / "releases" / "release_artifact_verification.md"
 )
+V021_RELEASE_DESCRIPTION_PATH = (
+    ROOT_DIR / "docs" / "releases" / "v0.2.1_release_description.md"
+)
 V021_STABILIZATION_PLAN_PATH = (
     ROOT_DIR / "docs" / "releases" / "v0.2.1_stabilization_plan.md"
 )
@@ -37,6 +40,12 @@ def _project_version() -> str:
     )
     assert match, "Project version not found in pyproject.toml"
     return match.group("version")
+
+
+def _current_release_description_path() -> Path:
+    return (
+        ROOT_DIR / "docs" / "releases" / f"v{_project_version()}_release_description.md"
+    )
 
 
 def test_server_version_matches_project_metadata() -> None:
@@ -85,11 +94,23 @@ def test_release_verification_guide_is_linked_and_actionable() -> None:
     assert "https://cyclonedx.org/bom" in guide
 
 
-def test_readme_roadmap_links_to_v021_stabilization_plan() -> None:
+def test_release_description_exists_for_current_project_version() -> None:
+    release_description_path = _current_release_description_path()
+    assert release_description_path.exists()
+    release_description = _read_text(release_description_path)
+    version = _project_version()
+    assert f"# v{version} Release Description" in release_description
+
+
+def test_readme_roadmap_links_to_current_release_and_v021_stabilization_plan() -> None:
+    version = _project_version()
     readme = _read_text(README_PATH)
+    v021_release_description = _read_text(V021_RELEASE_DESCRIPTION_PATH)
     plan = _read_text(V021_STABILIZATION_PLAN_PATH)
+    assert f"docs/releases/v{version}_release_description.md" in readme
+    assert f"`v{version}` release cleanup" in readme
     assert "docs/releases/v0.2.1_stabilization_plan.md" in readme
-    assert "`v0.2.1` stabilization" in readme
+    assert "v0.2.1" in v021_release_description
     assert "CTX-backed golden payload capture" in plan
     assert "Contract manifest resource" in plan
     assert "Targeted workflow-contract expansion" in plan
