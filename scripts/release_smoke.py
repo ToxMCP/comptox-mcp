@@ -7,12 +7,12 @@ import argparse
 import asyncio
 import json
 import sys
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse, urlunparse
-import urllib.error
-import urllib.request
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT_DIR / "src"
@@ -27,6 +27,7 @@ class ReleaseSmokeError(RuntimeError):
 @dataclass
 class SmokeSummary:
     endpoint: str
+    server_version: str
     healthz: Dict[str, Any]
     readyz: Dict[str, Any]
     manifest: Dict[str, Any]
@@ -70,7 +71,9 @@ def _http_json(url: str, *, timeout: float = 15.0) -> Dict[str, Any]:
         raise ReleaseSmokeError(f"{url} returned HTTP {exc.code}: {detail}") from exc
 
 
-def _rpc(endpoint: str, method: str, params: Dict[str, Any], *, request_id: int) -> Dict[str, Any]:
+def _rpc(
+    endpoint: str, method: str, params: Dict[str, Any], *, request_id: int
+) -> Dict[str, Any]:
     payload = json.dumps(
         {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}
     ).encode("utf-8")
@@ -95,7 +98,9 @@ def _rpc(endpoint: str, method: str, params: Dict[str, Any], *, request_id: int)
     return decoded["result"]
 
 
-async def _websocket_smoke(ws_url: str) -> Dict[str, Any]:
+async def _websocket_smoke(
+    ws_url: str, *, require_version: Optional[str] = None
+) -> Dict[str, Any]:
     import websockets
 
     async with websockets.connect(ws_url, open_timeout=15) as websocket:
@@ -117,6 +122,12 @@ async def _websocket_smoke(ws_url: str) -> Dict[str, Any]:
             )
         )
         initialize = json.loads(await websocket.recv())
+        server_version = initialize["result"]["serverInfo"].get("version")
+        if require_version and server_version != require_version:
+            raise ReleaseSmokeError(
+                "WebSocket initialize reported an unexpected server version: "
+                f"expected {require_version!r}, got {server_version!r}."
+            )
 
         initialized_notification_seen = False
         try:
@@ -162,7 +173,9 @@ async def _websocket_smoke(ws_url: str) -> Dict[str, Any]:
         }
 
 
-def run_release_smoke(endpoint: str) -> SmokeSummary:
+def run_release_smoke(
+    endpoint: str, *, require_version: Optional[str] = None
+) -> SmokeSummary:
     healthz = _http_json(_derive_url(endpoint, "/healthz"))
     if healthz["status_code"] != 200 or healthz["body"].get("status") != "ok":
         raise ReleaseSmokeError(f"Unexpected /healthz payload: {healthz}")
@@ -185,6 +198,12 @@ def run_release_smoke(endpoint: str) -> SmokeSummary:
         },
         request_id=1,
     )
+    server_version = initialize["serverInfo"].get("version")
+    if require_version and server_version != require_version:
+        raise ReleaseSmokeError(
+            "HTTP initialize reported an unexpected server version: "
+            f"expected {require_version!r}, got {server_version!r}."
+        )
     tools = _rpc(endpoint, "tools/list", {}, request_id=2)
     resources = _rpc(endpoint, "resources/list", {}, request_id=3)
 
@@ -210,7 +229,10 @@ def run_release_smoke(endpoint: str) -> SmokeSummary:
         {"name": "resolve_chemical_identifier", "arguments": {"identifier": "50-00-0"}},
         request_id=5,
     )["structuredContent"]
-    if resolve_exact.get("status") != "resolved" or resolve_exact.get("searchModeUsed") != "equals":
+    if (
+        resolve_exact.get("status") != "resolved"
+        or resolve_exact.get("searchModeUsed") != "equals"
+    ):
         raise ReleaseSmokeError(f"Exact resolution smoke failed: {resolve_exact}")
 
     resolve_ambiguous = _rpc(
@@ -291,8 +313,13 @@ def run_release_smoke(endpoint: str) -> SmokeSummary:
 
     if _payload_dtxsid(evidence_pack) != "DTXSID2020006":
         raise ReleaseSmokeError("Evidence-pack smoke returned the wrong chemical.")
-    if "knownDataGaps" not in evidence_pack or "generatedFromTools" not in evidence_pack:
-        raise ReleaseSmokeError("Evidence-pack smoke is missing additive provenance fields.")
+    if (
+        "knownDataGaps" not in evidence_pack
+        or "generatedFromTools" not in evidence_pack
+    ):
+        raise ReleaseSmokeError(
+            "Evidence-pack smoke is missing additive provenance fields."
+        )
     if _payload_dtxsid(aop_summary) != "DTXSID2020006":
         raise ReleaseSmokeError("AOP smoke returned the wrong chemical.")
     if _payload_dtxsid(pbpk_bundle) != "DTXSID2020006":
@@ -302,12 +329,14 @@ def run_release_smoke(endpoint: str) -> SmokeSummary:
         _websocket_smoke(
             _derive_url(endpoint, "/mcp/ws")
             .replace("http://", "ws://")
-            .replace("https://", "wss://")
+            .replace("https://", "wss://"),
+            require_version=require_version,
         )
     )
 
     return SmokeSummary(
         endpoint=endpoint,
+        server_version=server_version,
         healthz=healthz,
         readyz=readyz,
         manifest={
@@ -333,7 +362,9 @@ def run_release_smoke(endpoint: str) -> SmokeSummary:
         },
         prioritization={
             "chemicalRef": prioritization.get("chemicalRef"),
-            "priorityBand": prioritization.get("prioritization", {}).get("priorityBand"),
+            "priorityBand": prioritization.get("prioritization", {}).get(
+                "priorityBand"
+            ),
             "knownDataGaps": prioritization.get("knownDataGaps"),
         },
         interop={
@@ -367,19 +398,24 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Emit machine-readable JSON",
     )
+    parser.add_argument(
+        "--require-version",
+        help="Assert that both HTTP and WebSocket initialize report this server version.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
-        summary = run_release_smoke(args.endpoint)
+        summary = run_release_smoke(args.endpoint, require_version=args.require_version)
     except ReleaseSmokeError as exc:
         print(f"Release smoke failed: {exc}", file=sys.stderr)
         return 1
 
     payload = {
         "endpoint": summary.endpoint,
+        "serverVersion": summary.server_version,
         "healthz": summary.healthz,
         "readyz": summary.readyz,
         "manifest": summary.manifest,
