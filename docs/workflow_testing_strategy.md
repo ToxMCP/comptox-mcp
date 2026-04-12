@@ -12,13 +12,14 @@
 | --- | --- | --- | --- |
 | **Unit** | Request parsing, AD policy enforcement, metadata serialization | `tests/test_resources.py`, `tests/test_predictive_services.py`, orchestrator unit suites | Expand coverage for new policy hooks, audit persistence failure modes |
 | **Contract / Integration** | MCP transport (handshake, discovery, tools), model metadata, predictive micro-servers | Conformance suite (Task 1), `tests/test_mcp_conformance_suite.py`, `tests/test_predictive_regression.py` | Dedicated transport harness exercising malformed frames, auth flow, timeout recovery |
-| **End-to-End Workflows** | Identifier resolution → CTX staging → predictive execution → audit bundle persistence | `tests/test_orchestrator_stages.py`, `scripts/demo_genra_orchestrator.py` | Scenario suites for acute toxicity, exposure prioritization, GenRA RAx with golden bundles & HTML/json reporting |
+| **End-to-End Workflows** | Identifier resolution → CTX staging → predictive execution → audit bundle persistence | `tests/test_orchestrator_stages.py`, `tests/workflows/test_scientific_validation_report.py`, `scripts/scientific_validation_report.py` | Scenario suites for acute toxicity, exposure prioritization, GenRA RAx with bundle-backed validation reports |
 | **Load / Stress** | Multi-chemical batches, concurrency, transport back-pressure | — | Locust/k6 scripts targeting websocket transport + predictive services with real/sandbox data |
 
 ## Tooling & Data
 - **Core test runner:** `pytest` (unit, integration, orchestrator scenarios). Leverage parametrization for scenario coverage.
 - **Transport conformance:** existing JSON fixtures + MCP conformance suite wired into harness.
-- **Scenario execution:** CLI wrappers (existing demo script, upcoming scenario drivers) to facilitate golden bundle capture.
+- **Scenario execution:** `scripts/scientific_validation_report.py` runs the offline orchestrator suite and emits JSON/Markdown scorecards alongside persisted audit bundles.
+- **Live concordance drift checks:** `scripts/live_concordance_panel.py` runs curated CTX ToxVal cases through the real evidence synthesizer so endpoint/value matching drift is visible immediately.
 - **Load testing:** Locust (Python) for websocket / REST endpoints and k6 for HTTP micro-services. Reusable configuration files with environment overrides for sandbox vs. staging.
 - **Data fixtures:** curated sandbox identifiers (DTXSID, CASRN) per scenario with expected AD outcomes. Store under `tests/fixtures/workflows/`.
 
@@ -31,7 +32,8 @@
 
 ## Reporting & Diagnostics
 - **Audit bundles:** persisted via `AuditBundleStore` with SHA256 checksums and attachments; CLI (`scripts/genra_bundle_cli.py`) supports retrieval for failure analysis.
-- **Scenario reports:** generate HTML dashboards summarizing branch outcomes, AD statuses, and evidence bands; archive alongside bundle metadata.
+- **Scenario reports:** `scripts/scientific_validation_report.py` generates reproducible JSON/Markdown scorecards summarizing scenario status, AD clearance, evidence-band outcomes, and interop attachment coverage.
+- **Concordance panel reports:** `scripts/live_concordance_panel.py` generates pass/fail scorecards for curated live ToxVal cases, including matched effect, observed value, predicted value, and expectation drift.
 - **Telemetry hooks:** ensure orchestrator logging includes workflowRunId to correlate with transport/predictive logs.
 
 ## Action Plan
@@ -47,6 +49,7 @@
    - Record coverage via conformance suite output.
 3. **Predictive Scenario Coverage**
    - Extend regression fixtures to include AD failure cases; ensure evidence synthesis metrics validated.
+   - Add live concordance reference cases that intentionally exercise both match and mismatch outcomes against stable CTX ToxVal selectors.
 4. **Load Testing Scripts**
    - Author Locust file targeting websocket endpoints; parameterize chemical lists and concurrency.
    - Provide k6 script for REST-based predictive services.

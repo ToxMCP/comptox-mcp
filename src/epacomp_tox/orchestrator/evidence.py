@@ -304,12 +304,12 @@ class EvidenceSynthesizer:
 
         for record in hazard_records:
             observed_endpoint = self._normalize_text(
-                self._pick_value(record, "endpoint", "effect", "assay")
+                self._pick_observed_endpoint(record)
             )
             if not observed_endpoint or observed_endpoint != predicted_endpoint:
                 continue
 
-            observed_value = self._pick_value(record, "value", "score", "ac50")
+            observed_value = self._pick_observed_value(record)
             if observed_value is None:
                 continue
 
@@ -352,6 +352,26 @@ class EvidenceSynthesizer:
             return {"status": "match", "message": "", "metadata": {}}
 
         return None
+
+    def _pick_observed_endpoint(self, record: dict[str, Any]) -> Any:
+        return self._pick_value(
+            record,
+            "endpoint",
+            "effect",
+            "assay",
+            "toxicologicalEffect",
+            "toxvalType",
+        )
+
+    def _pick_observed_value(self, record: dict[str, Any]) -> Any:
+        return self._pick_value(
+            record,
+            "value",
+            "score",
+            "ac50",
+            "toxvalNumeric",
+            "toxvalNumericOriginal",
+        )
 
     def _resolve_confidence_band(
         self,
