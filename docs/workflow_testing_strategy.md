@@ -1,6 +1,6 @@
 # Workflow Testing Strategy – MCP Phase 2
 
-> Historical/internal workflow-planning document. The released `v0.2.0` public MCP server is centered on evidence federation and interop; predictive and orchestrator workflow coverage described here remains experimental and non-canonical for the default public surface.
+> Historical/internal workflow-planning document. The released `v0.2.2` public MCP server is centered on evidence federation and interop; predictive and orchestrator workflow coverage described here remains experimental and non-canonical for the default public surface.
 
 ## Objectives
 - Guarantee transport, predictive, and orchestrator services behave reliably across success, guardrail, and failure scenarios.

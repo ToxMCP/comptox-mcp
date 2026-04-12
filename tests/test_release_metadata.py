@@ -26,6 +26,15 @@ TRANSPORT_SMOKE_CHECKLIST_PATH = (
 )
 DEVELOPMENT_GUIDE_PATH = ROOT_DIR / "docs" / "development_guide.md"
 INTEROP_SMOKE_SCRIPT_PATH = ROOT_DIR / "scripts" / "mcp_interop_smoke.py"
+CURRENT_BOUNDARY_DOC_PATHS = (
+    ROOT_DIR / "docs" / "development_guide.md",
+    ROOT_DIR / "docs" / "predictive_services.md",
+    ROOT_DIR / "docs" / "model_cards_and_policies.md",
+    ROOT_DIR / "docs" / "workflow_testing_strategy.md",
+    ROOT_DIR / "docs" / "dev_experience_content_plan.md",
+    ROOT_DIR / "docs" / "observability_requirements.md",
+    ROOT_DIR / "docs" / "releases" / "mcp_phase2_planning_snapshot.md",
+)
 
 
 def _read_text(path: Path) -> str:
@@ -152,3 +161,12 @@ def test_live_interop_fixture_refresh_path_is_documented() -> None:
     assert "tests/golden/interop_live" in docs
     assert "--capture-dir" in docs
     assert "--refresh-live-fixtures" in docs
+
+
+def test_current_boundary_docs_reference_current_release_version() -> None:
+    version = _project_version()
+    for path in CURRENT_BOUNDARY_DOC_PATHS:
+        text = _read_text(path)
+        assert (
+            f"v{version}" in text
+        ), f"{path} should reference the current release version"
