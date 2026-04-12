@@ -68,7 +68,7 @@ The image exposes port `8000` and ships with `/app/gunicorn_conf.py` plus `/app/
 `create_app` now exposes:
 
 - `GET /healthz`: liveness signal, returns immediate 200 when the process is responsive.
-- `GET /readyz`: readiness probe. Performs a CTX connectivity check via `MCPServer.check_health`. When the upstream API is temporarily unreachable the endpoint returns HTTP 503. If a prior successful probe exists it will be returned with `status: degraded`.
+- `GET /readyz`: readiness probe. Performs a strict authenticated CTX probe via `MCPServer.check_health(probe_mode="readiness")` against stable upstream API routes. Bare reachability to `/ctx-api/health` is not enough. The endpoint returns HTTP 503 when CTX credentials are missing, rejected, or when no authenticated probe succeeds. If a prior successful probe exists it will be returned with `status: degraded`.
 - `GET /metrics`: Prometheus-compatible transport metrics derived from `MCPServer.get_transport_metrics()`. Gauges report session counts (`status=active|closed`) and negotiated capability adoption (`capability=tools.streams`, `scope=all|active`, `state=enabled|disabled`). Integrate the scrape endpoint with your platform’s monitoring stack—see `deploy/prometheus_scrape.yaml` for a vanilla Prometheus job and `deploy/otel_collector_metrics.yaml` for an OpenTelemetry Collector pipeline.
 
 Configure Kubernetes probes (example):
@@ -88,6 +88,8 @@ readinessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 ```
+
+`/readyz` is intentionally stricter than `/healthz`. Use it only when the deployment is expected to have working CTX credentials and authenticated upstream access.
 
 ## TLS and Network Hardening
 

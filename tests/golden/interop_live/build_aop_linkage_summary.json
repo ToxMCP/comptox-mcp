@@ -1,0 +1,202 @@
+{
+  "chemicalRef": {
+    "casrn": "103-90-2",
+    "dtxsid": "DTXSID2020006",
+    "preferredName": "Acetaminophen"
+  },
+  "confidence": {
+    "band": "none",
+    "basis": "Derived from available assay endpoint links and CompTox AOP crosswalk coverage.",
+    "score": 0.0
+  },
+  "data": {
+    "chemicalRef": {
+      "casrn": "103-90-2",
+      "dtxsid": "DTXSID2020006",
+      "preferredName": "Acetaminophen"
+    },
+    "confidence": {
+      "band": "none",
+      "basis": "Derived from available assay endpoint links and CompTox AOP crosswalk coverage.",
+      "score": 0.0
+    },
+    "generatedFromTools": [
+      "get_bioactivity_summary_by_dtxsid",
+      "search_chemical"
+    ],
+    "knownDataGaps": [
+      "bioactivity:assays",
+      "bioactivity:aop"
+    ],
+    "limitations": [
+      "Missing or empty evidence slice: bioactivity:assays.",
+      "Missing or empty evidence slice: bioactivity:aop.",
+      "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+    ],
+    "lookupMode": "dtxsid",
+    "mappings": [],
+    "metadata": {
+      "resource": "interop",
+      "session": {
+        "clientInfo": {
+          "name": "http-client",
+          "userAgent": "Python-urllib/3.11"
+        },
+        "sessionId": "a96ddd20-247a-4c75-80e5-0cf2cd9e5da5"
+      },
+      "steps": {
+        "bioactivity:summary": {
+          "capturedAt": "2026-04-11T17:18:05Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "bioactivity",
+          "tool": "get_bioactivity_summary_by_dtxsid"
+        },
+        "chemical:search": {
+          "capturedAt": "2026-04-11T17:18:04Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "chemical",
+          "tool": "search_chemical"
+        }
+      }
+    },
+    "provenance": {
+      "generatedAt": "2026-04-11T17:18:05Z",
+      "generatedBy": "build_aop_linkage_summary",
+      "notes": [
+        "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+      ],
+      "sourceMcp": "epacomp-tox-mcp",
+      "sources": [
+        {
+          "citation": "CompTox MCP resource chemical",
+          "name": "chemical via search_chemical",
+          "retrievedAt": "2026-04-11T17:18:04Z",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource bioactivity",
+          "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+          "retrievedAt": "2026-04-11T17:18:05Z",
+          "toolName": "get_bioactivity_summary_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api"
+        }
+      ],
+      "traceId": "build_aop_linkage_summary-2026-04-11T17:18:05Z"
+    },
+    "provenanceSummary": {
+      "generatedAt": "2026-04-11T17:18:05Z",
+      "generatedBy": "build_aop_linkage_summary",
+      "noteCount": 1,
+      "sourceCount": 2,
+      "sourceTools": [
+        "get_bioactivity_summary_by_dtxsid",
+        "search_chemical"
+      ]
+    },
+    "supportingAssays": []
+  },
+  "generatedFromTools": [
+    "get_bioactivity_summary_by_dtxsid",
+    "search_chemical"
+  ],
+  "knownDataGaps": [
+    "bioactivity:assays",
+    "bioactivity:aop"
+  ],
+  "limitations": [
+    "Missing or empty evidence slice: bioactivity:assays.",
+    "Missing or empty evidence slice: bioactivity:aop.",
+    "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+  ],
+  "lookupMode": "dtxsid",
+  "mappings": [],
+  "metadata": {
+    "resource": "interop",
+    "session": {
+      "clientInfo": {
+        "name": "http-client",
+        "userAgent": "Python-urllib/3.11"
+      },
+      "sessionId": "a96ddd20-247a-4c75-80e5-0cf2cd9e5da5"
+    },
+    "steps": {
+      "bioactivity:summary": {
+        "capturedAt": "2026-04-11T17:18:05Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "bioactivity",
+        "tool": "get_bioactivity_summary_by_dtxsid"
+      },
+      "chemical:search": {
+        "capturedAt": "2026-04-11T17:18:04Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "chemical",
+        "tool": "search_chemical"
+      }
+    }
+  },
+  "provenance": {
+    "generatedAt": "2026-04-11T17:18:05Z",
+    "generatedBy": "build_aop_linkage_summary",
+    "notes": [
+      "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+    ],
+    "sourceMcp": "epacomp-tox-mcp",
+    "sources": [
+      {
+        "citation": "CompTox MCP resource chemical",
+        "name": "chemical via search_chemical",
+        "retrievedAt": "2026-04-11T17:18:04Z",
+        "toolName": "search_chemical",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource bioactivity",
+        "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+        "retrievedAt": "2026-04-11T17:18:05Z",
+        "toolName": "get_bioactivity_summary_by_dtxsid",
+        "url": "https://comptox.epa.gov/ctx-api"
+      }
+    ],
+    "traceId": "build_aop_linkage_summary-2026-04-11T17:18:05Z"
+  },
+  "provenanceSummary": {
+    "generatedAt": "2026-04-11T17:18:05Z",
+    "generatedBy": "build_aop_linkage_summary",
+    "noteCount": 1,
+    "sourceCount": 2,
+    "sourceTools": [
+      "get_bioactivity_summary_by_dtxsid",
+      "search_chemical"
+    ]
+  },
+  "supportingAssays": []
+}

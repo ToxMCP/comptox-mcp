@@ -53,7 +53,11 @@ class IdentifierResolver:
         self._cache: Dict[Tuple[str, str], Tuple[float, IdentifierResolution]] = {}
 
     def resolve(
-        self, identifier: str, identifier_type: Optional[str] = None
+        self,
+        identifier: str,
+        identifier_type: Optional[str] = None,
+        *,
+        allow_fallback: bool = False,
     ) -> IdentifierResolution:
         """Resolve an identifier to a canonical DTXSID."""
         normalized_value = (identifier or "").strip()
@@ -61,7 +65,11 @@ class IdentifierResolver:
             raise IdentifierResolutionError("Identifier value is required.")
 
         normalized_type = self._normalize_type(identifier_type, normalized_value)
-        cache_key = (normalized_value.lower(), normalized_type)
+        cache_key = (
+            normalized_value.lower(),
+            normalized_type,
+            "fallback" if allow_fallback else "exact",
+        )
         cached = self._cache.get(cache_key)
         now = self._time_fn()
         if cached and (self.cache_ttl == 0 or now - cached[0] <= self.cache_ttl):
@@ -71,6 +79,9 @@ class IdentifierResolver:
         warnings: List[str] = []
         matched_record: Dict[str, Any]
         detail_record: Dict[str, Any]
+        resolution_status = "exact"
+        search_mode_used = "equals"
+        candidate_count = 1
 
         if normalized_type == "dtxsid":
             detail_record = self._fetch_details(
@@ -80,11 +91,17 @@ class IdentifierResolver:
             )
             matched_record = detail_record
         else:
-            matched_record = self._search_for_match(
+            (
+                matched_record,
+                resolution_status,
+                search_mode_used,
+                candidate_count,
+            ) = self._search_for_match(
                 identifier=normalized_value,
                 identifier_type=normalized_type,
                 trace=trace,
                 warnings=warnings,
+                allow_fallback=allow_fallback,
             )
             detail_record = self._fetch_details(
                 identifier=self._extract_dtxsid(matched_record),
@@ -99,6 +116,9 @@ class IdentifierResolver:
             detail_record=detail_record,
             warnings=warnings,
             trace=trace,
+            resolution_status=resolution_status,
+            search_mode_used=search_mode_used,
+            candidate_count=candidate_count,
         )
         if self.cache_ttl:
             self._cache[cache_key] = (now, resolution)
@@ -131,12 +151,15 @@ class IdentifierResolver:
         identifier_type: str,
         trace: List[MetadataTrace],
         warnings: List[str],
-    ) -> Dict[str, Any]:
+        allow_fallback: bool,
+    ) -> tuple[Dict[str, Any], str, str, int]:
         search_modes = self._SEARCH_ORDER.get(identifier_type)
         if not search_modes:
             raise IdentifierResolutionError(
                 f"Identifier type '{identifier_type}' is not searchable."
             )
+        if not allow_fallback:
+            search_modes = ("equals",)
 
         last_error: Optional[Exception] = None
         for mode in search_modes:
@@ -158,11 +181,15 @@ class IdentifierResolver:
             if not candidates:
                 continue
             if len(candidates) > 1:
-                warnings.append(
-                    f"Multiple matches found for '{identifier}' using search mode '{mode}'. "
-                    "Using the first result."
+                raise IdentifierResolutionError(
+                    f"Multiple matches found for '{identifier}' using search mode '{mode}'."
                 )
-            return candidates[0]
+            if mode != "equals":
+                warnings.append(
+                    f"Identifier '{identifier}' resolved using fallback search mode '{mode}'."
+                )
+            status = "fallback" if mode != "equals" else "exact"
+            return candidates[0], status, mode, len(candidates)
 
         if last_error:
             raise IdentifierResolutionError(
@@ -218,6 +245,9 @@ class IdentifierResolver:
         detail_record: Dict[str, Any],
         warnings: List[str],
         trace: List[MetadataTrace],
+        resolution_status: str,
+        search_mode_used: str,
+        candidate_count: int,
     ) -> IdentifierResolution:
         dtxsid = self._extract_dtxsid(detail_record or matched_record)
         synonyms = self._extract_synonyms(detail_record)
@@ -234,6 +264,9 @@ class IdentifierResolver:
             input_identifier=input_value,
             input_type=input_type,
             dtxsid=dtxsid,
+            resolution_status=resolution_status,
+            search_mode_used=search_mode_used,
+            candidate_count=candidate_count,
             matched_record=matched_record,
             detail_record=detail_record,
             preferred_name=preferred_name,

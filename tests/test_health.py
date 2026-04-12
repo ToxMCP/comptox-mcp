@@ -36,11 +36,15 @@ class TestCheckCtxHealth(unittest.TestCase):
 
         self.assertTrue(result["ok"])
         self.assertEqual(result["status"], 200)
+        self.assertEqual(result["probeMode"], "readiness")
+        self.assertTrue(result["authenticated"])
         self.assertIn("url", result)
         mock_urlopen.assert_called_once()
 
     @mock.patch("urllib.request.urlopen")
-    def test_health_check_treats_404_as_ok(self, mock_urlopen: mock.MagicMock) -> None:
+    def test_reachability_check_treats_404_as_ok(
+        self, mock_urlopen: mock.MagicMock
+    ) -> None:
         error = urllib.error.HTTPError(
             url="https://example.com/ctx-api/health",
             code=404,
@@ -50,12 +54,41 @@ class TestCheckCtxHealth(unittest.TestCase):
         )
         mock_urlopen.side_effect = error
 
-        result = check_ctx_health()
+        result = check_ctx_health(probe_mode="reachability")
 
         self.assertTrue(result["ok"])
         self.assertEqual(result["status"], 404)
+        self.assertEqual(result["probeMode"], "reachability")
+        self.assertFalse(result["authenticated"])
         self.assertIn("url", result)
         mock_urlopen.assert_called_once()
+
+    @mock.patch("urllib.request.urlopen")
+    def test_readiness_check_raises_on_auth_failure(
+        self, mock_urlopen: mock.MagicMock
+    ) -> None:
+        failure = urllib.error.HTTPError(
+            url="https://example.com/ctx-api/chemical/detail/search/by-dtxsid/DTXSID7020182",
+            code=401,
+            msg="Unauthorized",
+            hdrs=None,
+            fp=None,
+        )
+        mock_urlopen.side_effect = failure
+
+        with self.assertRaisesRegex(RuntimeError, "readiness probe failed"):
+            check_ctx_health()
+
+        self.assertEqual(mock_urlopen.call_count, 1)
+
+    @mock.patch("epacomp_tox.health.get_api_key", side_effect=ValueError("missing"))
+    def test_readiness_check_requires_api_key(
+        self, mock_get_api_key: mock.MagicMock
+    ) -> None:
+        with self.assertRaisesRegex(RuntimeError, "requires CTX_API_KEY"):
+            check_ctx_health(api_key=None)
+
+        mock_get_api_key.assert_called_once()
 
     @mock.patch("urllib.request.urlopen")
     def test_health_check_raises_on_repeated_failure(
@@ -63,7 +96,7 @@ class TestCheckCtxHealth(unittest.TestCase):
     ) -> None:
         failures = [
             urllib.error.HTTPError(
-                url="https://example.com/ctx-api/health",
+                url="https://example.com/ctx-api/chemical/detail/search/by-dtxsid/DTXSID7020182",
                 code=503,
                 msg="Service Unavailable",
                 hdrs=None,
@@ -71,7 +104,7 @@ class TestCheckCtxHealth(unittest.TestCase):
             ),
             urllib.error.URLError("temporary DNS failure"),
             urllib.error.HTTPError(
-                url="https://example.com/ctx-api",
+                url="https://example.com/ctx-api/bioactivity/assay/count",
                 code=502,
                 msg="Bad Gateway",
                 hdrs=None,

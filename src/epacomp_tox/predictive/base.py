@@ -4,11 +4,15 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
+from epacomp_tox.predictive.ad_evaluators import (
+    ApplicabilityDomainEvaluator,
+    build_ad_evaluator,
+)
 
 
 class PredictiveRequest(BaseModel):
@@ -16,6 +20,7 @@ class PredictiveRequest(BaseModel):
 
     chemical_identifier: str
     identifier_type: str = "dtxsid"
+    ad_inputs: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ADCheckResult(BaseModel):
@@ -23,7 +28,7 @@ class ADCheckResult(BaseModel):
 
     in_domain: bool
     confidence: float
-    details: Dict[str, Any] = {}
+    details: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PredictiveResponse(BaseModel):
@@ -31,7 +36,7 @@ class PredictiveResponse(BaseModel):
 
     prediction: Dict[str, Any]
     applicability_domain: ADCheckResult
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PredictiveServiceBase(ABC):
@@ -42,28 +47,53 @@ class PredictiveServiceBase(ABC):
         *,
         config: Dict[str, Any],
         ad_store: Optional[ApplicabilityDomainStore] = None,
+        ad_evaluator: Optional[ApplicabilityDomainEvaluator] = None,
     ) -> None:
         self.config = config
         self.logger = logger.getChild(self.__class__.__name__)
         self.ad_store = ad_store or ApplicabilityDomainStore()
         self.ad_definition = self._resolve_ad_definition()
+        self.ad_evaluator = ad_evaluator or build_ad_evaluator(self.config)
 
-    def predict(self, request: PredictiveRequest) -> PredictiveResponse:
+    def prepare_request(self, request: PredictiveRequest) -> PredictiveRequest:
+        """Allow services to enrich requests before AD/prediction execution."""
+        return request
+
+    def backfill_request_from_outputs(
+        self,
+        request: PredictiveRequest,
+        *,
+        ad_result: Optional[ADCheckResult],
+        prediction_payload: Optional[Dict[str, Any]],
+    ) -> PredictiveRequest:
+        """Allow services to enrich stored request provenance after execution."""
+        return request
+
+    def predict(
+        self,
+        request: PredictiveRequest,
+        *,
+        ad_result: Optional[ADCheckResult] = None,
+    ) -> PredictiveResponse:
         """Run applicability domain check, prediction, and assemble response."""
-        ad_result = self.check_applicability_domain(request)
-        policy_metadata = self._apply_ad_policy(request, ad_result)
+        checked_ad_result = ad_result or self.check_applicability_domain(request)
+        policy_metadata = self._apply_ad_policy(request, checked_ad_result)
         payload = self._predict_impl(request)
-        metadata = self._build_metadata(request, ad_result)
+        metadata = self._build_metadata(request, checked_ad_result, payload)
         metadata.update(policy_metadata)
         return PredictiveResponse(
             prediction=payload,
-            applicability_domain=ad_result,
+            applicability_domain=checked_ad_result,
             metadata=metadata,
         )
 
     def check_applicability_domain(self, request: PredictiveRequest) -> ADCheckResult:
         """Evaluate whether the request falls within the validated domain."""
-        return self._check_ad_impl(request)
+        return self.ad_evaluator.evaluate(
+            request,
+            definition=self.ad_definition,
+            delegated_check=self._check_ad_impl,
+        )
 
     @abstractmethod
     def _predict_impl(self, request: PredictiveRequest) -> Dict[str, Any]:
@@ -74,7 +104,10 @@ class PredictiveServiceBase(ABC):
         """Model-specific AD evaluation."""
 
     def _build_metadata(
-        self, request: PredictiveRequest, ad_result: ADCheckResult
+        self,
+        request: PredictiveRequest,
+        ad_result: ADCheckResult,
+        prediction_payload: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Hook for adding provenance/telemetry to responses."""
         metadata: Dict[str, Any] = {
@@ -90,6 +123,17 @@ class PredictiveServiceBase(ABC):
                 "model": self.ad_definition.get("model"),
                 "version": self.ad_definition.get("version"),
             }
+        metadata["adEvaluator"] = ad_result.details.get(
+            "adEvaluator", getattr(self.ad_evaluator, "name", "unknown")
+        )
+        metadata["adEnforcementLocation"] = ad_result.details.get(
+            "adEnforcementLocation",
+            getattr(self.ad_evaluator, "enforcement_location", "delegated-service"),
+        )
+        if "adFallbackUsed" in ad_result.details:
+            metadata["adFallbackUsed"] = ad_result.details["adFallbackUsed"]
+        if "adFallbackReason" in ad_result.details:
+            metadata["adFallbackReason"] = ad_result.details["adFallbackReason"]
         return metadata
 
     def _resolve_ad_definition(self) -> Optional[Dict[str, Any]]:

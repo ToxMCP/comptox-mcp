@@ -48,8 +48,14 @@
   "modelCardRefs": [
     {
       "endpoint": "internal dose metrics",
+      "limitations": [
+        "Use only for screening contexts."
+      ],
       "modelName": "HTTK PBPK Surrogate",
-      "modelVersion": "1.0"
+      "modelVersion": "1.0",
+      "warnings": [
+        "Does not perform PBPK simulation itself."
+      ]
     }
   ],
   "sourceTools": [

@@ -7,7 +7,9 @@
     "chemical_list",
     "cheminformatics",
     "metadata",
-    "interop"
+    "interop",
+    "prioritization",
+    "manifest"
   ],
   "tool_names": [
     "assemble_comptox_evidence_pack",
@@ -45,6 +47,7 @@
     "get_chemical_extra_data",
     "get_chemical_fate_details",
     "get_chemical_fate_summary",
+    "get_contract_manifest",
     "get_cpdat_vocabulary",
     "get_exposure_ccd_chem_weight_fractions",
     "get_exposure_ccd_functional_use",
@@ -84,6 +87,8 @@
     "metadata_get_model_card",
     "metadata_list_applicability_domain",
     "opsin_convert_name",
+    "prioritize_risk_signals",
+    "resolve_chemical_identifier",
     "search_bioactivity_terms",
     "search_chemical",
     "search_cpdat",

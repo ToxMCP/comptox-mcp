@@ -124,7 +124,7 @@ def _display_event(event: Dict[str, Any]) -> None:
 
 async def run_client(args: argparse.Namespace) -> None:
     print(f"Connecting to {args.url}", file=sys.stderr)
-    async with Recorder(args.record) as recorder:
+    with Recorder(args.record) as recorder:
         async with websockets.connect(args.url) as ws:
             initialize = {
                 "jsonrpc": "2.0",

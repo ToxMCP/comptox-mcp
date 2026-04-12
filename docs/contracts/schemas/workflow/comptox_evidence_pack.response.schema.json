@@ -55,6 +55,36 @@
       ],
       "additionalProperties": true
     },
+    "identityResolution": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": true,
@@ -64,6 +94,13 @@
         "createdAt",
         "suiteRole"
       ]
+    },
+    "mcpMetadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
     },
     "audit": {
       "type": "object",

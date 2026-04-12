@@ -36,6 +36,14 @@ class PredictiveCoordinator:
         """Register or replace a predictive service."""
         self._services[name] = service
 
+    def prepare_task(self, task: PredictiveTask) -> PredictiveTask:
+        """Allow the backing service to enrich a task request before execution."""
+        service = self._ensure_service(task.service)
+        prepared_request = service.prepare_request(task.request)
+        if prepared_request is task.request:
+            return task
+        return task.model_copy(update={"request": prepared_request})
+
     def run(
         self,
         tasks: Iterable[PredictiveTask],
@@ -52,7 +60,8 @@ class PredictiveCoordinator:
         guardrails: List[GuardrailEvent] = []
         succeeded = True
 
-        for task in tasks:
+        for incoming_task in tasks:
+            task = self.prepare_task(incoming_task)
             service = self._ensure_service(task.service)
             ad_result: Optional[ADCheckResult] = None
             try:
@@ -84,6 +93,11 @@ class PredictiveCoordinator:
             policy = self._resolve_policy(service)
             if not ad_result.in_domain and (require or policy == "block"):
                 succeeded = False
+                backfilled_request = service.backfill_request_from_outputs(
+                    task.request,
+                    ad_result=ad_result,
+                    prediction_payload=None,
+                )
                 guardrails.append(
                     self._make_guardrail_event(
                         component=task.service,
@@ -100,7 +114,7 @@ class PredictiveCoordinator:
                         status="denied",
                         scenario=task.scenario,
                         label=task.label,
-                        request=task.request,
+                        request=backfilled_request,
                         ad=ad_result,
                         metadata={"policy": policy},
                     )
@@ -108,9 +122,14 @@ class PredictiveCoordinator:
                 continue
 
             try:
-                prediction = service.predict(task.request)
+                prediction = service.predict(task.request, ad_result=ad_result)
             except Exception as exc:  # pragma: no cover - defensive
                 succeeded = False
+                backfilled_request = service.backfill_request_from_outputs(
+                    task.request,
+                    ad_result=ad_result,
+                    prediction_payload=None,
+                )
                 guardrails.append(
                     self._make_guardrail_event(
                         component=task.service,
@@ -127,7 +146,7 @@ class PredictiveCoordinator:
                         status="error",
                         scenario=task.scenario,
                         label=task.label,
-                        request=task.request,
+                        request=backfilled_request,
                         ad=ad_result,
                         error=str(exc),
                         metadata={"policy": policy},
@@ -151,13 +170,19 @@ class PredictiveCoordinator:
                     step_status = "denied"
                     succeeded = False
 
+            backfilled_request = service.backfill_request_from_outputs(
+                task.request,
+                ad_result=prediction.applicability_domain,
+                prediction_payload=prediction.prediction,
+            )
+
             results.append(
                 PredictiveStepResult(
                     service=task.service,
                     status=step_status,
                     scenario=task.scenario,
                     label=task.label,
-                    request=task.request,
+                    request=backfilled_request,
                     ad=prediction.applicability_domain,
                     prediction=prediction.prediction,
                     metadata=prediction.metadata,

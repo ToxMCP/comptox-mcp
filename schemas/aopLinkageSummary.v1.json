@@ -41,6 +41,26 @@
     "confidence": {
       "$ref": "#/$defs/confidence"
     },
+    "identityResolution": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "provenance": {
       "$ref": "#/$defs/provenance"
     }

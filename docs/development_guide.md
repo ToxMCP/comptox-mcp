@@ -71,6 +71,15 @@ Run the live interop smoke against a running server when you need runtime confir
 python scripts/mcp_interop_smoke.py --endpoint http://127.0.0.1:8000/mcp --json
 ```
 
+Refresh the reviewable live interop fixtures only when upstream CTX drift has been accepted deliberately:
+```bash
+python scripts/mcp_interop_smoke.py \
+  --endpoint http://127.0.0.1:8000/mcp \
+  --capture-dir tests/golden/interop_live \
+  --refresh-live-fixtures \
+  --json
+```
+
 ## Code Style
 
 This project follows PEP 8 style guidelines. You can use black and isort to format your code:

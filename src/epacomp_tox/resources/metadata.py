@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Dict, List
 
 from epacomp_tox.contracts import schema_ref
@@ -151,7 +152,7 @@ class MetadataResource(BaseResource):
                     "checksum": item["checksum"],
                     "lastModified": item["lastModified"],
                 }
-                payload.append(data)
+                payload.append(self._annotate_model_card_entry(data))
             return {
                 "modelCards": payload,
                 "nextCursor": next_cursor,
@@ -164,7 +165,9 @@ class MetadataResource(BaseResource):
                 limit=limit, cursor=cursor
             )
             return {
-                "applicabilityDomains": defs,
+                "applicabilityDomains": [
+                    self._annotate_applicability_definition(item) for item in defs
+                ],
                 "nextCursor": next_cursor,
             }
 
@@ -173,6 +176,47 @@ class MetadataResource(BaseResource):
             definition = self.ad_store.get_definition(model_name)
             if not definition:
                 raise ValueError(f"No applicability domain found for {model_name}")
-            return definition
+            return self._annotate_applicability_definition(definition)
 
         raise ValueError(f"Unknown tool: {tool_name}")
+
+    def _annotate_model_card_entry(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+        payload = deepcopy(entry)
+        card = payload.get("card", {})
+        documented_criteria = card.get("applicabilityDomain", {}).get("criteria") or []
+        payload["documentedCriteria"] = documented_criteria
+        payload["delegatedCriteria"] = documented_criteria
+        payload["locallyEnforcedCriteria"] = ["policy", "errorCode"]
+        payload["enforcementLocation"] = "delegated-service"
+        payload["guardrailStatus"] = {
+            "mode": "delegated-policy-only",
+            "summary": (
+                "Detailed applicability criteria are documented for downstream and "
+                "service-level enforcement. This MCP currently enforces only policy "
+                "and error-code handling locally."
+            ),
+            "documentedCriteriaCount": len(documented_criteria),
+            "locallyEnforcedCriteria": ["policy", "errorCode"],
+        }
+        return payload
+
+    def _annotate_applicability_definition(
+        self, definition: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        payload = deepcopy(definition)
+        documented_criteria = payload.get("criteria") or []
+        payload["documentedCriteria"] = documented_criteria
+        payload["delegatedCriteria"] = documented_criteria
+        payload["locallyEnforcedCriteria"] = ["policy", "errorCode"]
+        payload["enforcementLocation"] = "delegated-service"
+        payload["guardrailStatus"] = {
+            "mode": "delegated-policy-only",
+            "summary": (
+                "Detailed applicability criteria are delegated to the predictive "
+                "service implementation. This MCP locally enforces only policy and "
+                "error-code handling."
+            ),
+            "documentedCriteriaCount": len(documented_criteria),
+            "locallyEnforcedCriteria": ["policy", "errorCode"],
+        }
+        return payload

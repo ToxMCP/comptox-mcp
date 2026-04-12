@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chemical.resolve_chemical_identifier.response",
+  "description": "Deterministic identifier-resolution result for a single chemical input.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "inputIdentifier",
+    "inputType",
+    "canonicalDtxsid",
+    "preferredName",
+    "casrn",
+    "searchModeUsed",
+    "candidateCount",
+    "candidates",
+    "warnings"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["resolved", "ambiguous", "not_found"]
+    },
+    "inputIdentifier": {
+      "type": "string"
+    },
+    "inputType": {
+      "type": "string"
+    },
+    "canonicalDtxsid": {
+      "type": ["string", "null"]
+    },
+    "preferredName": {
+      "type": ["string", "null"]
+    },
+    "casrn": {
+      "type": ["string", "null"]
+    },
+    "searchModeUsed": {
+      "type": ["string", "null"]
+    },
+    "candidateCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dtxsid": {"type": ["string", "null"]},
+          "dtxcid": {"type": ["string", "null"]},
+          "casrn": {"type": ["string", "null"]},
+          "preferredName": {"type": ["string", "null"]},
+          "smiles": {"type": ["string", "null"]},
+          "searchName": {"type": ["string", "null"]},
+          "searchValue": {"type": ["string", "null"]},
+          "rank": {"type": ["integer", "null"]},
+          "synonyms": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

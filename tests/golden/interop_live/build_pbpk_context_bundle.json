@@ -1,0 +1,1488 @@
+{
+  "chemicalIdentityRef": {
+    "casrn": "103-90-2",
+    "dtxsid": "DTXSID2020006",
+    "inchikey": null,
+    "preferredName": "Acetaminophen",
+    "provenance": {
+      "generatedAt": "2026-04-11T17:18:05Z",
+      "generatedBy": "resolve_identity_record",
+      "notes": [
+        "Identity resolved through the CompTox chemical search surface."
+      ],
+      "sourceMcp": "epacomp-tox-mcp",
+      "sources": [
+        {
+          "citation": "CompTox MCP resource chemical",
+          "name": "chemical via search_chemical",
+          "retrievedAt": "2026-04-11T17:18:05Z",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api"
+        }
+      ],
+      "traceId": "resolve_identity_record-2026-04-11T17:18:05Z"
+    },
+    "smiles": "CC(=O)NC1=CC=C(O)C=C1",
+    "synonyms": []
+  },
+  "data": {
+    "chemicalIdentityRef": {
+      "casrn": "103-90-2",
+      "dtxsid": "DTXSID2020006",
+      "inchikey": null,
+      "preferredName": "Acetaminophen",
+      "provenance": {
+        "generatedAt": "2026-04-11T17:18:05Z",
+        "generatedBy": "resolve_identity_record",
+        "notes": [
+          "Identity resolved through the CompTox chemical search surface."
+        ],
+        "sourceMcp": "epacomp-tox-mcp",
+        "sources": [
+          {
+            "citation": "CompTox MCP resource chemical",
+            "name": "chemical via search_chemical",
+            "retrievedAt": "2026-04-11T17:18:05Z",
+            "toolName": "search_chemical",
+            "url": "https://comptox.epa.gov/ctx-api"
+          }
+        ],
+        "traceId": "resolve_identity_record-2026-04-11T17:18:05Z"
+      },
+      "smiles": "CC(=O)NC1=CC=C(O)C=C1",
+      "synonyms": []
+    },
+    "exposureHints": [],
+    "generatedFromTools": [
+      "get_exposure_httk",
+      "get_hazard_adme_ivive",
+      "get_seem_general",
+      "metadata_get_model_card",
+      "search_chemical",
+      "search_cpdat",
+      "search_qsurs"
+    ],
+    "handoffTarget": "pbpk-mcp",
+    "hazardAdmeIviveSlice": {
+      "recordCount": 18,
+      "records": [
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Clint",
+          "dtxsid": "DTXSID2020006",
+          "id": 30332,
+          "measured": "0.3598",
+          "model": "NA",
+          "percentile": "NA",
+          "predicted": "NA",
+          "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+          "species": "Human",
+          "unit": "uL/min/million hepatocytes"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Fup",
+          "dtxsid": "DTXSID2020006",
+          "id": 30333,
+          "measured": "0.9398",
+          "model": "NA",
+          "percentile": "NA",
+          "predicted": "NA",
+          "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+          "species": "Human",
+          "unit": null
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Vd",
+          "dtxsid": "DTXSID2020006",
+          "id": 30334,
+          "measured": "NA",
+          "model": "1compartment",
+          "percentile": "NA",
+          "predicted": "1.043",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "L/kg"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Days.Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30335,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "NA",
+          "predicted": "6",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "Days"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "TK.Half.Life",
+          "dtxsid": "DTXSID2020006",
+          "id": 30336,
+          "measured": "NA",
+          "model": "1compartment",
+          "percentile": "NA",
+          "predicted": "4.446",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "hours"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30337,
+          "measured": "NA",
+          "model": "3compartmentss",
+          "percentile": "50%",
+          "predicted": "0.3854",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30338,
+          "measured": "NA",
+          "model": "3compartmentss",
+          "percentile": "95%",
+          "predicted": "1.015",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30339,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "50%",
+          "predicted": "0.3844",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30340,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "95%",
+          "predicted": "1.014",
+          "reference": "NA",
+          "species": "Human",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Clint",
+          "dtxsid": "DTXSID2020006",
+          "id": 30341,
+          "measured": "15.83",
+          "model": "NA",
+          "percentile": "NA",
+          "predicted": "NA",
+          "reference": "https://doi.org/10.1124/dmd.117.077040",
+          "species": "Rat",
+          "unit": "uL/min/million hepatocytes"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Fup",
+          "dtxsid": "DTXSID2020006",
+          "id": 30342,
+          "measured": "0.82",
+          "model": "NA",
+          "percentile": "NA",
+          "predicted": "NA",
+          "reference": "https://doi.org/10.1124/dmd.31.5.580",
+          "species": "Rat",
+          "unit": null
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Vd",
+          "dtxsid": "DTXSID2020006",
+          "id": 30343,
+          "measured": "NA",
+          "model": "1compartment",
+          "percentile": "NA",
+          "predicted": "0.9446",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "L/kg"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Days.Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30344,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "NA",
+          "predicted": "4",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "Days"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "TK.Half.Life",
+          "dtxsid": "DTXSID2020006",
+          "id": 30345,
+          "measured": "NA",
+          "model": "1compartment",
+          "percentile": "NA",
+          "predicted": "0.1705",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "hours"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30346,
+          "measured": "NA",
+          "model": "3compartmentss",
+          "percentile": "50%",
+          "predicted": "0.01227",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30347,
+          "measured": "NA",
+          "model": "3compartmentss",
+          "percentile": "95%",
+          "predicted": "0.09466",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30348,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "50%",
+          "predicted": "0.01229",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "description": "Css",
+          "dtxsid": "DTXSID2020006",
+          "id": 30349,
+          "measured": "NA",
+          "model": "PBTK",
+          "percentile": "95%",
+          "predicted": "0.09471",
+          "reference": "NA",
+          "species": "Rat",
+          "unit": "mg/L"
+        }
+      ],
+      "retrievedAt": "2026-04-11T17:18:10Z",
+      "selectedMetrics": {
+        "unit": "uL/min/million hepatocytes"
+      },
+      "sourceTool": "get_hazard_adme_ivive"
+    },
+    "httkSlice": {
+      "recordCount": 18,
+      "records": [
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25120,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Css",
+          "percentile": "95%",
+          "predicted": 0.02419,
+          "predictedText": "0.02419",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25121,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Css",
+          "percentile": "50%",
+          "predicted": 0.003538,
+          "predictedText": "0.003538",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25122,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "3compartmentss",
+          "parameter": "Css",
+          "percentile": "95%",
+          "predicted": 0.02336,
+          "predictedText": "0.02336",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25123,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "3compartmentss",
+          "parameter": "Css",
+          "percentile": "50%",
+          "predicted": 0.003411,
+          "predictedText": "0.003411",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25124,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "1compartment",
+          "parameter": "TK.Half.Life",
+          "percentile": "NA",
+          "predicted": 0.3681,
+          "predictedText": "0.3681",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "hours"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25125,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Days.Css",
+          "percentile": "NA",
+          "predicted": 0,
+          "predictedText": "0",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "Days"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25126,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "1compartment",
+          "parameter": "Vd",
+          "percentile": "NA",
+          "predicted": 0.944,
+          "predictedText": "0.944",
+          "reference": "NA",
+          "species": "Rat",
+          "units": "L/kg"
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25127,
+          "measured": 0.82,
+          "measuredText": "0.82",
+          "model": "NA",
+          "parameter": "Fup",
+          "percentile": "NA",
+          "predicted": null,
+          "predictedText": "NA",
+          "reference": "https://doi.org/10.1124/dmd.31.5.580",
+          "species": "Rat",
+          "units": null
+        },
+        {
+          "dataSourceSpecies": "Rat",
+          "dtxsid": "DTXSID2020006",
+          "id": 25128,
+          "measured": 15.83,
+          "measuredText": "15.83",
+          "model": "NA",
+          "parameter": "Clint",
+          "percentile": "NA",
+          "predicted": null,
+          "predictedText": "NA",
+          "reference": "https://doi.org/10.1124/dmd.117.077040",
+          "species": "Rat",
+          "units": "uL/min/million hepatocytes"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25129,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Css",
+          "percentile": "95%",
+          "predicted": 1.042,
+          "predictedText": "1.042",
+          "reference": "NA",
+          "species": "Human",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25130,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Css",
+          "percentile": "50%",
+          "predicted": 0.399,
+          "predictedText": "0.399",
+          "reference": "NA",
+          "species": "Human",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25131,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "3compartmentss",
+          "parameter": "Css",
+          "percentile": "95%",
+          "predicted": 1.044,
+          "predictedText": "1.044",
+          "reference": "NA",
+          "species": "Human",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25132,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "3compartmentss",
+          "parameter": "Css",
+          "percentile": "50%",
+          "predicted": 0.4002,
+          "predictedText": "0.4002",
+          "reference": "NA",
+          "species": "Human",
+          "units": "mg/L"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25133,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "1compartment",
+          "parameter": "TK.Half.Life",
+          "percentile": "NA",
+          "predicted": 4.655,
+          "predictedText": "4.655",
+          "reference": "NA",
+          "species": "Human",
+          "units": "hours"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25134,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "PBTK",
+          "parameter": "Days.Css",
+          "percentile": "NA",
+          "predicted": 0,
+          "predictedText": "0",
+          "reference": "NA",
+          "species": "Human",
+          "units": "Days"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25135,
+          "measured": null,
+          "measuredText": "NA",
+          "model": "1compartment",
+          "parameter": "Vd",
+          "percentile": "NA",
+          "predicted": 1.043,
+          "predictedText": "1.043",
+          "reference": "NA",
+          "species": "Human",
+          "units": "L/kg"
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25136,
+          "measured": 0.9398,
+          "measuredText": "0.9398",
+          "model": "NA",
+          "parameter": "Fup",
+          "percentile": "NA",
+          "predicted": null,
+          "predictedText": "NA",
+          "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+          "species": "Human",
+          "units": null
+        },
+        {
+          "dataSourceSpecies": "Human",
+          "dtxsid": "DTXSID2020006",
+          "id": 25137,
+          "measured": 0.3598,
+          "measuredText": "0.3598",
+          "model": "NA",
+          "parameter": "Clint",
+          "percentile": "NA",
+          "predicted": null,
+          "predictedText": "NA",
+          "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+          "species": "Human",
+          "units": "uL/min/million hepatocytes"
+        }
+      ],
+      "retrievedAt": "2026-04-11T17:18:10Z",
+      "selectedMetrics": {
+        "parameter": "Css"
+      },
+      "sourceTool": "get_exposure_httk"
+    },
+    "knownDataGaps": [
+      "metadata:model_cards",
+      "exposure:hints"
+    ],
+    "limitations": [
+      "Missing or empty evidence slice: metadata:model_cards.",
+      "Missing or empty evidence slice: exposure:hints.",
+      "CompTox provides PBPK context only; execution and internal exposure outputs belong in pbpk-mcp."
+    ],
+    "metadata": {
+      "resource": "interop",
+      "session": {
+        "clientInfo": {
+          "name": "http-client",
+          "userAgent": "Python-urllib/3.11"
+        },
+        "sessionId": "ee408d31-d667-425e-84fb-01aa09a28c12"
+      },
+      "steps": {
+        "chemical:search": {
+          "capturedAt": "2026-04-11T17:18:05Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "chemical",
+          "tool": "search_chemical"
+        },
+        "exposure:cpdat": {
+          "capturedAt": "2026-04-11T17:18:09Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "exposure",
+          "tool": "search_cpdat"
+        },
+        "exposure:httk": {
+          "capturedAt": "2026-04-11T17:18:06Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "exposure",
+          "tool": "get_exposure_httk"
+        },
+        "exposure:qsurs": {
+          "capturedAt": "2026-04-11T17:18:10Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "exposure",
+          "tool": "search_qsurs"
+        },
+        "exposure:seem": {
+          "capturedAt": "2026-04-11T17:18:08Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "exposure",
+          "tool": "get_seem_general"
+        },
+        "hazard:adme_ivive": {
+          "capturedAt": "2026-04-11T17:18:06Z",
+          "metadata": {
+            "rate_limit": {
+              "limit": null,
+              "remaining": null,
+              "reset": null
+            },
+            "status": 200
+          },
+          "resource": "hazard",
+          "tool": "get_hazard_adme_ivive"
+        },
+        "metadata:model_cards": {
+          "capturedAt": "2026-04-11T17:18:10Z",
+          "metadata": {},
+          "resource": "metadata",
+          "tool": "metadata_get_model_card"
+        }
+      }
+    },
+    "modelCardRefs": [],
+    "provenance": {
+      "generatedAt": "2026-04-11T17:18:10Z",
+      "generatedBy": "build_pbpk_context_bundle",
+      "notes": [
+        "CompTox provides PBPK context only; execution and internal exposure outputs belong in pbpk-mcp."
+      ],
+      "sourceMcp": "epacomp-tox-mcp",
+      "sources": [
+        {
+          "citation": "CompTox MCP resource chemical",
+          "name": "chemical via search_chemical",
+          "retrievedAt": "2026-04-11T17:18:05Z",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource exposure",
+          "name": "exposure via get_exposure_httk",
+          "retrievedAt": "2026-04-11T17:18:06Z",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource hazard",
+          "name": "hazard via get_hazard_adme_ivive",
+          "retrievedAt": "2026-04-11T17:18:06Z",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource exposure",
+          "name": "exposure via get_seem_general",
+          "retrievedAt": "2026-04-11T17:18:08Z",
+          "toolName": "get_seem_general",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource exposure",
+          "name": "exposure via search_cpdat",
+          "retrievedAt": "2026-04-11T17:18:09Z",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource exposure",
+          "name": "exposure via search_qsurs",
+          "retrievedAt": "2026-04-11T17:18:10Z",
+          "toolName": "search_qsurs",
+          "url": "https://comptox.epa.gov/ctx-api"
+        },
+        {
+          "citation": "CompTox MCP resource metadata",
+          "name": "metadata via metadata_get_model_card",
+          "retrievedAt": "2026-04-11T17:18:10Z",
+          "toolName": "metadata_get_model_card",
+          "url": "https://github.com/ToxMCP/comptox-mcp/tree/main/metadata"
+        }
+      ],
+      "traceId": "build_pbpk_context_bundle-2026-04-11T17:18:10Z"
+    },
+    "provenanceSummary": {
+      "generatedAt": "2026-04-11T17:18:10Z",
+      "generatedBy": "build_pbpk_context_bundle",
+      "noteCount": 1,
+      "sourceCount": 7,
+      "sourceTools": [
+        "get_exposure_httk",
+        "get_hazard_adme_ivive",
+        "get_seem_general",
+        "metadata_get_model_card",
+        "search_chemical",
+        "search_cpdat",
+        "search_qsurs"
+      ]
+    }
+  },
+  "exposureHints": [],
+  "generatedFromTools": [
+    "get_exposure_httk",
+    "get_hazard_adme_ivive",
+    "get_seem_general",
+    "metadata_get_model_card",
+    "search_chemical",
+    "search_cpdat",
+    "search_qsurs"
+  ],
+  "handoffTarget": "pbpk-mcp",
+  "hazardAdmeIviveSlice": {
+    "recordCount": 18,
+    "records": [
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Clint",
+        "dtxsid": "DTXSID2020006",
+        "id": 30332,
+        "measured": "0.3598",
+        "model": "NA",
+        "percentile": "NA",
+        "predicted": "NA",
+        "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+        "species": "Human",
+        "unit": "uL/min/million hepatocytes"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Fup",
+        "dtxsid": "DTXSID2020006",
+        "id": 30333,
+        "measured": "0.9398",
+        "model": "NA",
+        "percentile": "NA",
+        "predicted": "NA",
+        "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+        "species": "Human",
+        "unit": null
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Vd",
+        "dtxsid": "DTXSID2020006",
+        "id": 30334,
+        "measured": "NA",
+        "model": "1compartment",
+        "percentile": "NA",
+        "predicted": "1.043",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "L/kg"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Days.Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30335,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "NA",
+        "predicted": "6",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "Days"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "TK.Half.Life",
+        "dtxsid": "DTXSID2020006",
+        "id": 30336,
+        "measured": "NA",
+        "model": "1compartment",
+        "percentile": "NA",
+        "predicted": "4.446",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "hours"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30337,
+        "measured": "NA",
+        "model": "3compartmentss",
+        "percentile": "50%",
+        "predicted": "0.3854",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30338,
+        "measured": "NA",
+        "model": "3compartmentss",
+        "percentile": "95%",
+        "predicted": "1.015",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30339,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "50%",
+        "predicted": "0.3844",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30340,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "95%",
+        "predicted": "1.014",
+        "reference": "NA",
+        "species": "Human",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Clint",
+        "dtxsid": "DTXSID2020006",
+        "id": 30341,
+        "measured": "15.83",
+        "model": "NA",
+        "percentile": "NA",
+        "predicted": "NA",
+        "reference": "https://doi.org/10.1124/dmd.117.077040",
+        "species": "Rat",
+        "unit": "uL/min/million hepatocytes"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Fup",
+        "dtxsid": "DTXSID2020006",
+        "id": 30342,
+        "measured": "0.82",
+        "model": "NA",
+        "percentile": "NA",
+        "predicted": "NA",
+        "reference": "https://doi.org/10.1124/dmd.31.5.580",
+        "species": "Rat",
+        "unit": null
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Vd",
+        "dtxsid": "DTXSID2020006",
+        "id": 30343,
+        "measured": "NA",
+        "model": "1compartment",
+        "percentile": "NA",
+        "predicted": "0.9446",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "L/kg"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Days.Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30344,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "NA",
+        "predicted": "4",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "Days"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "TK.Half.Life",
+        "dtxsid": "DTXSID2020006",
+        "id": 30345,
+        "measured": "NA",
+        "model": "1compartment",
+        "percentile": "NA",
+        "predicted": "0.1705",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "hours"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30346,
+        "measured": "NA",
+        "model": "3compartmentss",
+        "percentile": "50%",
+        "predicted": "0.01227",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30347,
+        "measured": "NA",
+        "model": "3compartmentss",
+        "percentile": "95%",
+        "predicted": "0.09466",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30348,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "50%",
+        "predicted": "0.01229",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "description": "Css",
+        "dtxsid": "DTXSID2020006",
+        "id": 30349,
+        "measured": "NA",
+        "model": "PBTK",
+        "percentile": "95%",
+        "predicted": "0.09471",
+        "reference": "NA",
+        "species": "Rat",
+        "unit": "mg/L"
+      }
+    ],
+    "retrievedAt": "2026-04-11T17:18:10Z",
+    "selectedMetrics": {
+      "unit": "uL/min/million hepatocytes"
+    },
+    "sourceTool": "get_hazard_adme_ivive"
+  },
+  "httkSlice": {
+    "recordCount": 18,
+    "records": [
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25120,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Css",
+        "percentile": "95%",
+        "predicted": 0.02419,
+        "predictedText": "0.02419",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25121,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Css",
+        "percentile": "50%",
+        "predicted": 0.003538,
+        "predictedText": "0.003538",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25122,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "3compartmentss",
+        "parameter": "Css",
+        "percentile": "95%",
+        "predicted": 0.02336,
+        "predictedText": "0.02336",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25123,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "3compartmentss",
+        "parameter": "Css",
+        "percentile": "50%",
+        "predicted": 0.003411,
+        "predictedText": "0.003411",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25124,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "1compartment",
+        "parameter": "TK.Half.Life",
+        "percentile": "NA",
+        "predicted": 0.3681,
+        "predictedText": "0.3681",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "hours"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25125,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Days.Css",
+        "percentile": "NA",
+        "predicted": 0,
+        "predictedText": "0",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "Days"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25126,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "1compartment",
+        "parameter": "Vd",
+        "percentile": "NA",
+        "predicted": 0.944,
+        "predictedText": "0.944",
+        "reference": "NA",
+        "species": "Rat",
+        "units": "L/kg"
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25127,
+        "measured": 0.82,
+        "measuredText": "0.82",
+        "model": "NA",
+        "parameter": "Fup",
+        "percentile": "NA",
+        "predicted": null,
+        "predictedText": "NA",
+        "reference": "https://doi.org/10.1124/dmd.31.5.580",
+        "species": "Rat",
+        "units": null
+      },
+      {
+        "dataSourceSpecies": "Rat",
+        "dtxsid": "DTXSID2020006",
+        "id": 25128,
+        "measured": 15.83,
+        "measuredText": "15.83",
+        "model": "NA",
+        "parameter": "Clint",
+        "percentile": "NA",
+        "predicted": null,
+        "predictedText": "NA",
+        "reference": "https://doi.org/10.1124/dmd.117.077040",
+        "species": "Rat",
+        "units": "uL/min/million hepatocytes"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25129,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Css",
+        "percentile": "95%",
+        "predicted": 1.042,
+        "predictedText": "1.042",
+        "reference": "NA",
+        "species": "Human",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25130,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Css",
+        "percentile": "50%",
+        "predicted": 0.399,
+        "predictedText": "0.399",
+        "reference": "NA",
+        "species": "Human",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25131,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "3compartmentss",
+        "parameter": "Css",
+        "percentile": "95%",
+        "predicted": 1.044,
+        "predictedText": "1.044",
+        "reference": "NA",
+        "species": "Human",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25132,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "3compartmentss",
+        "parameter": "Css",
+        "percentile": "50%",
+        "predicted": 0.4002,
+        "predictedText": "0.4002",
+        "reference": "NA",
+        "species": "Human",
+        "units": "mg/L"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25133,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "1compartment",
+        "parameter": "TK.Half.Life",
+        "percentile": "NA",
+        "predicted": 4.655,
+        "predictedText": "4.655",
+        "reference": "NA",
+        "species": "Human",
+        "units": "hours"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25134,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "PBTK",
+        "parameter": "Days.Css",
+        "percentile": "NA",
+        "predicted": 0,
+        "predictedText": "0",
+        "reference": "NA",
+        "species": "Human",
+        "units": "Days"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25135,
+        "measured": null,
+        "measuredText": "NA",
+        "model": "1compartment",
+        "parameter": "Vd",
+        "percentile": "NA",
+        "predicted": 1.043,
+        "predictedText": "1.043",
+        "reference": "NA",
+        "species": "Human",
+        "units": "L/kg"
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25136,
+        "measured": 0.9398,
+        "measuredText": "0.9398",
+        "model": "NA",
+        "parameter": "Fup",
+        "percentile": "NA",
+        "predicted": null,
+        "predictedText": "NA",
+        "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+        "species": "Human",
+        "units": null
+      },
+      {
+        "dataSourceSpecies": "Human",
+        "dtxsid": "DTXSID2020006",
+        "id": 25137,
+        "measured": 0.3598,
+        "measuredText": "0.3598",
+        "model": "NA",
+        "parameter": "Clint",
+        "percentile": "NA",
+        "predicted": null,
+        "predictedText": "NA",
+        "reference": "https://data.europa.eu/89h/a2ff867f-db80-4acf-8e5c-e45502713bee",
+        "species": "Human",
+        "units": "uL/min/million hepatocytes"
+      }
+    ],
+    "retrievedAt": "2026-04-11T17:18:10Z",
+    "selectedMetrics": {
+      "parameter": "Css"
+    },
+    "sourceTool": "get_exposure_httk"
+  },
+  "knownDataGaps": [
+    "metadata:model_cards",
+    "exposure:hints"
+  ],
+  "limitations": [
+    "Missing or empty evidence slice: metadata:model_cards.",
+    "Missing or empty evidence slice: exposure:hints.",
+    "CompTox provides PBPK context only; execution and internal exposure outputs belong in pbpk-mcp."
+  ],
+  "metadata": {
+    "resource": "interop",
+    "session": {
+      "clientInfo": {
+        "name": "http-client",
+        "userAgent": "Python-urllib/3.11"
+      },
+      "sessionId": "ee408d31-d667-425e-84fb-01aa09a28c12"
+    },
+    "steps": {
+      "chemical:search": {
+        "capturedAt": "2026-04-11T17:18:05Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "chemical",
+        "tool": "search_chemical"
+      },
+      "exposure:cpdat": {
+        "capturedAt": "2026-04-11T17:18:09Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "exposure",
+        "tool": "search_cpdat"
+      },
+      "exposure:httk": {
+        "capturedAt": "2026-04-11T17:18:06Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "exposure",
+        "tool": "get_exposure_httk"
+      },
+      "exposure:qsurs": {
+        "capturedAt": "2026-04-11T17:18:10Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "exposure",
+        "tool": "search_qsurs"
+      },
+      "exposure:seem": {
+        "capturedAt": "2026-04-11T17:18:08Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "exposure",
+        "tool": "get_seem_general"
+      },
+      "hazard:adme_ivive": {
+        "capturedAt": "2026-04-11T17:18:06Z",
+        "metadata": {
+          "rate_limit": {
+            "limit": null,
+            "remaining": null,
+            "reset": null
+          },
+          "status": 200
+        },
+        "resource": "hazard",
+        "tool": "get_hazard_adme_ivive"
+      },
+      "metadata:model_cards": {
+        "capturedAt": "2026-04-11T17:18:10Z",
+        "metadata": {},
+        "resource": "metadata",
+        "tool": "metadata_get_model_card"
+      }
+    }
+  },
+  "modelCardRefs": [],
+  "provenance": {
+    "generatedAt": "2026-04-11T17:18:10Z",
+    "generatedBy": "build_pbpk_context_bundle",
+    "notes": [
+      "CompTox provides PBPK context only; execution and internal exposure outputs belong in pbpk-mcp."
+    ],
+    "sourceMcp": "epacomp-tox-mcp",
+    "sources": [
+      {
+        "citation": "CompTox MCP resource chemical",
+        "name": "chemical via search_chemical",
+        "retrievedAt": "2026-04-11T17:18:05Z",
+        "toolName": "search_chemical",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource exposure",
+        "name": "exposure via get_exposure_httk",
+        "retrievedAt": "2026-04-11T17:18:06Z",
+        "toolName": "get_exposure_httk",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource hazard",
+        "name": "hazard via get_hazard_adme_ivive",
+        "retrievedAt": "2026-04-11T17:18:06Z",
+        "toolName": "get_hazard_adme_ivive",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource exposure",
+        "name": "exposure via get_seem_general",
+        "retrievedAt": "2026-04-11T17:18:08Z",
+        "toolName": "get_seem_general",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource exposure",
+        "name": "exposure via search_cpdat",
+        "retrievedAt": "2026-04-11T17:18:09Z",
+        "toolName": "search_cpdat",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource exposure",
+        "name": "exposure via search_qsurs",
+        "retrievedAt": "2026-04-11T17:18:10Z",
+        "toolName": "search_qsurs",
+        "url": "https://comptox.epa.gov/ctx-api"
+      },
+      {
+        "citation": "CompTox MCP resource metadata",
+        "name": "metadata via metadata_get_model_card",
+        "retrievedAt": "2026-04-11T17:18:10Z",
+        "toolName": "metadata_get_model_card",
+        "url": "https://github.com/ToxMCP/comptox-mcp/tree/main/metadata"
+      }
+    ],
+    "traceId": "build_pbpk_context_bundle-2026-04-11T17:18:10Z"
+  },
+  "provenanceSummary": {
+    "generatedAt": "2026-04-11T17:18:10Z",
+    "generatedBy": "build_pbpk_context_bundle",
+    "noteCount": 1,
+    "sourceCount": 7,
+    "sourceTools": [
+      "get_exposure_httk",
+      "get_hazard_adme_ivive",
+      "get_seem_general",
+      "metadata_get_model_card",
+      "search_chemical",
+      "search_cpdat",
+      "search_qsurs"
+    ]
+  }
+}

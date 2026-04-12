@@ -16,3 +16,7 @@ class PredictiveClient(ABC):
     @abstractmethod
     def check_applicability_domain(self, request: PredictiveRequest) -> ADCheckResult:
         """Evaluate applicability domain for the request."""
+
+    def search_analogues(self, request: PredictiveRequest) -> Any:
+        """Optional analogue-search hook used by read-across workflows."""
+        return None

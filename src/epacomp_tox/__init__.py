@@ -21,16 +21,60 @@ from .orchestrator import (
     PredictiveTask,
     build_offline_orchestrator,
 )
+from .predictive.ad_evaluators import (
+    ADEvaluatorError,
+    ApplicabilityDomainEvaluator,
+    DelegatedServiceADEvaluator,
+    ExternalChemistryServiceADEvaluator,
+    build_ad_evaluator,
+)
+from .predictive.ad_sidecar import (
+    ADEvaluationRequest,
+    build_reference_ad_sidecar_app,
+    evaluate_reference_ad,
+)
 from .predictive.base import (
     ADCheckResult,
     PredictiveRequest,
     PredictiveResponse,
     PredictiveServiceBase,
 )
+from .predictive.descriptor_providers import (
+    DescriptorContext,
+    DescriptorProvider,
+    DescriptorProviderError,
+    ExternalChemistryDescriptorProvider,
+    build_descriptor_provider_from_env,
+)
+from .predictive.rule_providers import (
+    ExpertRuleContext,
+    ExpertRuleProvider,
+    ExpertRuleProviderError,
+    ExternalExpertRuleProvider,
+    build_rule_provider_from_env,
+)
 from .server import MCPServer
 
 __all__ = [
     "MCPServer",
+    "ApplicabilityDomainEvaluator",
+    "ADEvaluatorError",
+    "DelegatedServiceADEvaluator",
+    "ExternalChemistryServiceADEvaluator",
+    "build_ad_evaluator",
+    "ADEvaluationRequest",
+    "build_reference_ad_sidecar_app",
+    "evaluate_reference_ad",
+    "DescriptorContext",
+    "DescriptorProvider",
+    "DescriptorProviderError",
+    "ExternalChemistryDescriptorProvider",
+    "build_descriptor_provider_from_env",
+    "ExpertRuleContext",
+    "ExpertRuleProvider",
+    "ExpertRuleProviderError",
+    "ExternalExpertRuleProvider",
+    "build_rule_provider_from_env",
     "PredictiveServiceBase",
     "PredictiveRequest",
     "PredictiveResponse",

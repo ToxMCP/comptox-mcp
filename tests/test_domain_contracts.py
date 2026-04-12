@@ -6,11 +6,17 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 from epacomp_tox.resources.bioactivity import BioactivityResource
+from epacomp_tox.resources.chemical import ChemicalResource
 from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.hazard import HazardResource
 from epacomp_tox.resources.interop import InteropResource
+from epacomp_tox.resources.manifest import ContractManifestResource
+from epacomp_tox.resources.prioritization import PrioritizationResource
 
 SCHEMA_PATHS = [
+    Path(
+        "docs/contracts/schemas/chemical/resolve_chemical_identifier.response.schema.json"
+    ),
     Path("docs/contracts/schemas/hazard/search_hazard.response.schema.json"),
     Path("docs/contracts/schemas/hazard/batch_search_hazard.response.schema.json"),
     Path("docs/contracts/schemas/exposure/search_cpdat.response.schema.json"),
@@ -29,6 +35,8 @@ SCHEMA_PATHS = [
     Path("docs/contracts/schemas/workflow/aop_linkage_summary.response.schema.json"),
     Path("docs/contracts/schemas/workflow/pbpk_context_bundle.response.schema.json"),
     Path("docs/contracts/schemas/workflow/comptox_evidence_pack.response.schema.json"),
+    Path("docs/contracts/schemas/risk/prioritize_risk_signals.response.schema.json"),
+    Path("docs/contracts/schemas/manifest/get_contract_manifest.response.schema.json"),
 ]
 
 
@@ -55,6 +63,14 @@ def test_hazard_tools_use_domain_specific_response_schemas() -> None:
     assert tools["batch_search_hazard"]["responseSchemaRef"] == {
         "namespace": "hazard",
         "name": "batch_search_hazard.response.schema",
+    }
+
+
+def test_chemical_tools_use_domain_specific_response_schemas() -> None:
+    tools = _tool_map(ChemicalResource(api_key="fake"))
+    assert tools["resolve_chemical_identifier"]["responseSchemaRef"] == {
+        "namespace": "chemical",
+        "name": "resolve_chemical_identifier.response.schema",
     }
 
 
@@ -107,4 +123,22 @@ def test_workflow_tools_use_domain_specific_response_schemas() -> None:
     assert tools["build_pbpk_context_bundle"]["responseSchemaRef"] == {
         "namespace": "workflow",
         "name": "pbpk_context_bundle.response.schema",
+    }
+
+
+def test_risk_tools_use_domain_specific_response_schemas() -> None:
+    tools = _tool_map(PrioritizationResource(api_key="fake"))
+    assert tools["prioritize_risk_signals"]["responseSchemaRef"] == {
+        "namespace": "risk",
+        "name": "prioritize_risk_signals.response.schema",
+    }
+
+
+def test_manifest_tools_use_domain_specific_response_schemas() -> None:
+    tools = _tool_map(
+        ContractManifestResource(api_key="fake", server_getter=lambda: None)
+    )
+    assert tools["get_contract_manifest"]["responseSchemaRef"] == {
+        "namespace": "manifest",
+        "name": "get_contract_manifest.response.schema",
     }

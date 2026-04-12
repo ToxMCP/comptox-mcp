@@ -129,9 +129,58 @@ class DummyMCPServer(MCPServer):
         return {"echo": EchoResource(), "slow": SlowResource()}
 
 
+class PrioritizationEchoResource(BaseResource):
+    @property
+    def name(self) -> str:
+        return "prioritization"
+
+    @property
+    def description(self) -> str:
+        return "Prioritization test resource"
+
+    def __init__(self, api_key: str = "dummy"):
+        super().__init__(api_key)
+
+    def get_tools(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "name": "prioritize_risk_signals",
+                "description": "Return a deterministic prioritization payload",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"dtxsid": {"type": "string"}},
+                    "required": ["dtxsid"],
+                },
+            }
+        ]
+
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+        if tool_name != "prioritize_risk_signals":
+            raise ValueError("Unknown tool")
+        self._last_metadata = {"resource": self.name}
+        return {
+            "chemicalRef": {"dtxsid": parameters["dtxsid"]},
+            "prioritization": {"priorityBand": "higher", "marginOfExposure": 50.0},
+        }
+
+
+class PrioritizationMCPServer(MCPServer):
+    def _initialize_resources(self) -> Dict[str, BaseResource]:
+        return {"prioritization": PrioritizationEchoResource()}
+
+
 @contextmanager
 def _connect():
     server = DummyMCPServer(api_key="dummy-key", validate_health=False)
+    app = create_app(server=server)
+    with TestClient(app) as client:
+        with client.websocket_connect("/mcp/ws") as websocket:
+            yield server, websocket
+
+
+@contextmanager
+def _connect_prioritization():
+    server = PrioritizationMCPServer(api_key="dummy-key", validate_health=False)
     app = create_app(server=server)
     with TestClient(app) as client:
         with client.websocket_connect("/mcp/ws") as websocket:
@@ -419,3 +468,23 @@ def test_metrics_endpoint_reports_transport_summary():
             and line.strip().endswith("1.0")
             for line in body.splitlines()
         )
+
+
+def test_websocket_resources_read_infers_prioritization_tool_from_resource_uri():
+    with _connect_prioritization() as (_, websocket):
+        _initialize(websocket, capabilities={"tools": {"streams": False}})
+        websocket.send_json(
+            {
+                "jsonrpc": "2.0",
+                "id": 102,
+                "method": "resources/read",
+                "params": {
+                    "uri": "resource://prioritization?dtxsid=DTXSID7020182",
+                },
+            }
+        )
+        response = websocket.receive_json()
+        assert response["id"] == 102
+        result = response["result"]["structuredContent"]
+        assert result["chemicalRef"]["dtxsid"] == "DTXSID7020182"
+        assert result["prioritization"]["priorityBand"] == "higher"

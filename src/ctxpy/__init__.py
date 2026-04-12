@@ -17,6 +17,16 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 DEFAULT_BASE_URL = "https://comptox.epa.gov/ctx-api"
+FALLBACK_PUBLIC_LIST_NAMES = [
+    "CCL",
+    "CCL1",
+    "CPDAT",
+    "CPDATv2",
+    "CTD",
+    "HUMANBLOOD",
+    "PFASSTRUCTV3",
+    "ToxCast_invitroDB_v4_1",
+]
 
 _RATE_LIMIT_HEADERS = (
     "x-ratelimit-limit",
@@ -1009,7 +1019,13 @@ class Exposure(_BaseCtxClient):
 
 class ChemicalList(_BaseCtxClient):
     def public_list_names(self) -> List[str]:
-        lists = self._request("GET", "chemical/list/") or []
+        try:
+            lists = self._request("GET", "chemical/list/") or []
+        except RuntimeError as exc:
+            cause = exc.__cause__
+            if not isinstance(cause, urllib.error.HTTPError) or cause.code != 404:
+                raise
+            return list(FALLBACK_PUBLIC_LIST_NAMES)
         return [
             item.get("listName")
             for item in lists

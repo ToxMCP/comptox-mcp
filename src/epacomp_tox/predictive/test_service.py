@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from ctxpy import CtxApiError
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
+from epacomp_tox.predictive.ad_evaluators import ApplicabilityDomainEvaluator
 from epacomp_tox.predictive.base import (
     ADCheckResult,
     PredictiveRequest,
@@ -48,8 +49,13 @@ class TestConsensusPredictiveService(PredictiveServiceBase):
         config: Dict[str, Any],
         client: Optional[PredictiveClient] = None,
         ad_store: Optional[ApplicabilityDomainStore] = None,
+        ad_evaluator: Optional[ApplicabilityDomainEvaluator] = None,
     ) -> None:
-        super().__init__(config=config, ad_store=ad_store)
+        super().__init__(
+            config=config,
+            ad_store=ad_store,
+            ad_evaluator=ad_evaluator,
+        )
         self.client = client
 
     def _ensure_client(self) -> PredictiveClient:

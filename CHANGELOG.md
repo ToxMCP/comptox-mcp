@@ -2,7 +2,6 @@
 
 ## [Unreleased]
 
-- documented the `v0.2.1` stabilization scope for interop golden payloads, contract-manifest publication, and narrow workflow-contract follow-up work
 - tightened repository governance with support, intake, review-ownership, and dependency-automation hygiene
 - expanded release discipline around public-surface validation and metadata consistency checks
 - standardized GitHub workflow job names in preparation for required branch-protection status checks
@@ -10,6 +9,16 @@
 - pinned GitHub workflow actions to immutable SHAs, added CodeQL scanning, and added workflow-hardening regression coverage
 - added a release/workflow-dispatch pipeline that builds distributions, emits a CycloneDX SBOM artifact, and publishes signed provenance/SBOM attestations
 - documented online and offline verification of signed release provenance and SBOM attestations for downstream consumers
+
+## [0.2.1] - 2026-04-12
+
+- hardened `resolve_chemical_identifier` so partial-name upstream matches no longer masquerade as exact identity
+- normalized invalid identifier searches to the documented `not_found` resolver contract instead of surfacing raw upstream 4xx envelopes
+- made `/readyz` require an authenticated CTX probe while keeping `/healthz` as a pure liveness check
+- stabilized the public `prioritization` and `manifest` resources and additive interop provenance fields
+- added CTX-backed interop live-fixture capture plus a reusable `scripts/release_smoke.py` release-validation path
+- documented the `v0.2.1` release surface, release notes, and release-prep verification sweep
+- continued internal predictive/orchestrator hardening without publishing those modules as default public MCP tools
 
 ## [0.2.0] - 2026-03-21
 

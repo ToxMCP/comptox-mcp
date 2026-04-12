@@ -60,6 +60,44 @@ class StubChemicalResource(StubResource):
             }
         ]
 
+    def get_chemical_details(
+        self, identifier: str, id_type: str, subset: str = "default"
+    ) -> Dict[str, Any]:
+        return {
+            "dtxsid": "DTXSID7020182",
+            "preferredName": "Bisphenol A",
+            "casrn": "80-05-7",
+            "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+            "synonyms": ["BPA", "Bisphenol-A"],
+        }
+
+    def resolve_chemical_identifier(
+        self,
+        *,
+        identifier: str,
+        identifier_type: str | None = None,
+        allow_fallback: bool = False,
+        max_candidates: int = 5,
+    ) -> Dict[str, Any]:
+        return {
+            "status": "resolved",
+            "inputIdentifier": identifier,
+            "inputType": identifier_type or "casrn",
+            "canonicalDtxsid": "DTXSID7020182",
+            "preferredName": "Bisphenol A",
+            "casrn": "80-05-7",
+            "searchModeUsed": "equals",
+            "candidateCount": 1,
+            "candidates": [
+                {
+                    "dtxsid": "DTXSID7020182",
+                    "preferredName": "Bisphenol A",
+                    "casrn": "80-05-7",
+                }
+            ],
+            "warnings": [],
+        }
+
 
 class StubHazardResource(StubResource):
     def __init__(self) -> None:
@@ -113,6 +151,18 @@ class StubExposureResource(StubResource):
 class StubBioactivityResource(StubResource):
     def __init__(self) -> None:
         super().__init__("bioactivity")
+
+    def get_bioactivity_aed(self, dtxsid: str) -> List[Dict[str, Any]]:
+        return [
+            {
+                "aeid": "123",
+                "aedVal": 6.0,
+                "aedType": "administered_equivalent_dose",
+                "aedValUnit": "mg/kg-day",
+                "httkModel": "3compartment",
+                "httkVersion": "3.0",
+            }
+        ]
 
     def get_bioactivity_summary_by_dtxsid(self, dtxsid: str) -> List[Dict[str, Any]]:
         return [
@@ -185,6 +235,10 @@ class StubMetadataResource(StubResource):
                             "version": "1.0",
                             "description": "Toxicokinetic context model for screening PBPK setup.",
                             "modelType": "PBPK",
+                        },
+                        "intendedUse": {
+                            "limitations": ["Use only for screening contexts."],
+                            "warnings": ["Does not perform PBPK simulation itself."],
                         },
                         "oecdValidationPrinciples": {
                             "definedEndpoint": {"description": "internal dose metrics"}

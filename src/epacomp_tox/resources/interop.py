@@ -65,6 +65,25 @@ class InteropResource(BaseResource):
                             "type": "string",
                             "description": "DSSTox substance identifier to package.",
                         },
+                        "identifier": {
+                            "type": "string",
+                            "description": "Optional non-DTXSID identifier to resolve before packaging.",
+                        },
+                        "identifier_type": {
+                            "type": "string",
+                            "enum": ["dtxsid", "casrn", "name", "smiles", "inchikey"],
+                            "description": "Optional identifier category when `identifier` is supplied.",
+                        },
+                        "allow_fallback": {
+                            "type": "boolean",
+                            "default": False,
+                        },
+                        "max_candidates": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 25,
+                            "default": 5,
+                        },
                         "hazard_datasets": {
                             "type": "array",
                             "items": {
@@ -100,7 +119,7 @@ class InteropResource(BaseResource):
                             "default": 10,
                         },
                     },
-                    "required": ["dtxsid"],
+                    "anyOf": [{"required": ["dtxsid"]}, {"required": ["identifier"]}],
                 },
                 "responseSchemaRef": schema_ref(
                     "workflow", "comptox_evidence_pack.response.schema"
@@ -116,6 +135,25 @@ class InteropResource(BaseResource):
                             "type": "string",
                             "description": "DSSTox substance identifier to summarize.",
                         },
+                        "identifier": {
+                            "type": "string",
+                            "description": "Optional non-DTXSID identifier to resolve before building the summary.",
+                        },
+                        "identifier_type": {
+                            "type": "string",
+                            "enum": ["dtxsid", "casrn", "name", "smiles", "inchikey"],
+                            "description": "Optional identifier category when `identifier` is supplied.",
+                        },
+                        "allow_fallback": {
+                            "type": "boolean",
+                            "default": False,
+                        },
+                        "max_candidates": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 25,
+                            "default": 5,
+                        },
                         "aeids": {
                             "type": "array",
                             "items": {"type": "string"},
@@ -128,7 +166,7 @@ class InteropResource(BaseResource):
                             "default": 10,
                         },
                     },
-                    "required": ["dtxsid"],
+                    "anyOf": [{"required": ["dtxsid"]}, {"required": ["identifier"]}],
                 },
                 "responseSchemaRef": schema_ref(
                     "workflow", "aop_linkage_summary.response.schema"
@@ -144,12 +182,31 @@ class InteropResource(BaseResource):
                             "type": "string",
                             "description": "DSSTox substance identifier to summarize.",
                         },
+                        "identifier": {
+                            "type": "string",
+                            "description": "Optional non-DTXSID identifier to resolve before building the bundle.",
+                        },
+                        "identifier_type": {
+                            "type": "string",
+                            "enum": ["dtxsid", "casrn", "name", "smiles", "inchikey"],
+                            "description": "Optional identifier category when `identifier` is supplied.",
+                        },
+                        "allow_fallback": {
+                            "type": "boolean",
+                            "default": False,
+                        },
+                        "max_candidates": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 25,
+                            "default": 5,
+                        },
                         "model_name": {
                             "type": "string",
                             "description": "Optional model-card name filter.",
                         },
                     },
-                    "required": ["dtxsid"],
+                    "anyOf": [{"required": ["dtxsid"]}, {"required": ["identifier"]}],
                 },
                 "responseSchemaRef": schema_ref(
                     "workflow", "pbpk_context_bundle.response.schema"
@@ -167,7 +224,11 @@ class InteropResource(BaseResource):
         step_metadata: Dict[str, Dict[str, Any]] = {}
         if tool_name == "assemble_comptox_evidence_pack":
             result = self.assemble_comptox_evidence_pack(
-                dtxsid=parameters["dtxsid"],
+                dtxsid=parameters.get("dtxsid"),
+                identifier=parameters.get("identifier"),
+                identifier_type=parameters.get("identifier_type"),
+                allow_fallback=parameters.get("allow_fallback", False),
+                max_candidates=parameters.get("max_candidates", 5),
                 hazard_datasets=parameters.get("hazard_datasets"),
                 include_exposure=parameters.get("include_exposure", True),
                 include_bioactivity=parameters.get("include_bioactivity", True),
@@ -179,14 +240,22 @@ class InteropResource(BaseResource):
             )
         elif tool_name == "build_aop_linkage_summary":
             result = self.build_aop_linkage_summary(
-                dtxsid=parameters["dtxsid"],
+                dtxsid=parameters.get("dtxsid"),
+                identifier=parameters.get("identifier"),
+                identifier_type=parameters.get("identifier_type"),
+                allow_fallback=parameters.get("allow_fallback", False),
+                max_candidates=parameters.get("max_candidates", 5),
                 aeids=parameters.get("aeids"),
                 max_assays=parameters.get("max_assays", 10),
                 step_metadata=step_metadata,
             )
         elif tool_name == "build_pbpk_context_bundle":
             result = self.build_pbpk_context_bundle(
-                dtxsid=parameters["dtxsid"],
+                dtxsid=parameters.get("dtxsid"),
+                identifier=parameters.get("identifier"),
+                identifier_type=parameters.get("identifier_type"),
+                allow_fallback=parameters.get("allow_fallback", False),
+                max_candidates=parameters.get("max_candidates", 5),
                 model_name=parameters.get("model_name"),
                 step_metadata=step_metadata,
             )
@@ -202,7 +271,11 @@ class InteropResource(BaseResource):
     def assemble_comptox_evidence_pack(
         self,
         *,
-        dtxsid: str,
+        dtxsid: Optional[str] = None,
+        identifier: Optional[str] = None,
+        identifier_type: Optional[str] = None,
+        allow_fallback: bool = False,
+        max_candidates: int = 5,
         hazard_datasets: Optional[Sequence[str]] = None,
         include_exposure: bool = True,
         include_bioactivity: bool = True,
@@ -214,7 +287,14 @@ class InteropResource(BaseResource):
     ) -> Dict[str, Any]:
         steps = step_metadata if step_metadata is not None else {}
         timestamp = self._timestamp()
-        identity = self._resolve_identity_record(dtxsid, steps)
+        identity, identity_resolution = self._resolve_requested_identity(
+            dtxsid=dtxsid,
+            identifier=identifier,
+            identifier_type=identifier_type,
+            allow_fallback=allow_fallback,
+            max_candidates=max_candidates,
+            step_metadata=steps,
+        )
 
         hazard_summary = self._build_hazard_evidence_summary(
             identity=identity,
@@ -277,7 +357,7 @@ class InteropResource(BaseResource):
         )
         model_card_refs = pbpk_bundle["modelCardRefs"] if pbpk_bundle else []
 
-        return {
+        payload = {
             "chemicalIdentity": identity,
             "hazardEvidenceSummary": hazard_summary,
             "exposureEvidenceSummary": exposure_summary,
@@ -310,38 +390,85 @@ class InteropResource(BaseResource):
                 "pbpkContext": "summary" if pbpk_bundle else "none",
             },
         }
+        return self._annotate_public_payload(
+            payload,
+            identity_resolution=identity_resolution,
+            source_tools=source_tools,
+            known_data_gaps=self._known_data_gaps_for_pack(
+                hazard_summary=hazard_summary,
+                exposure_summary=exposure_summary,
+                bioactivity_summary=bioactivity_summary,
+                aop_summary=aop_summary,
+                pbpk_bundle=pbpk_bundle,
+            ),
+        )
 
     def build_aop_linkage_summary(
         self,
         *,
-        dtxsid: str,
+        dtxsid: Optional[str] = None,
+        identifier: Optional[str] = None,
+        identifier_type: Optional[str] = None,
+        allow_fallback: bool = False,
+        max_candidates: int = 5,
         aeids: Optional[Sequence[str]] = None,
         max_assays: int = 10,
         step_metadata: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         steps = step_metadata if step_metadata is not None else {}
-        return self._build_aop_linkage_summary(
+        identity, identity_resolution = self._resolve_requested_identity(
             dtxsid=dtxsid,
-            identity=self._resolve_identity_record(dtxsid, steps),
+            identifier=identifier,
+            identifier_type=identifier_type,
+            allow_fallback=allow_fallback,
+            max_candidates=max_candidates,
+            step_metadata=steps,
+        )
+        payload = self._build_aop_linkage_summary(
+            dtxsid=identity["dtxsid"],
+            identity=identity,
             provided_aeids=aeids,
             max_assays=max_assays,
             step_metadata=steps,
+        )
+        return self._annotate_public_payload(
+            payload,
+            identity_resolution=identity_resolution,
+            source_tools=self._source_tools_from_steps(steps),
+            known_data_gaps=self._known_data_gaps_for_aop(payload),
         )
 
     def build_pbpk_context_bundle(
         self,
         *,
-        dtxsid: str,
+        dtxsid: Optional[str] = None,
+        identifier: Optional[str] = None,
+        identifier_type: Optional[str] = None,
+        allow_fallback: bool = False,
+        max_candidates: int = 5,
         model_name: Optional[str] = None,
         step_metadata: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         steps = step_metadata if step_metadata is not None else {}
-        identity = self._resolve_identity_record(dtxsid, steps)
-        return self._build_pbpk_context_bundle(
+        identity, identity_resolution = self._resolve_requested_identity(
             dtxsid=dtxsid,
+            identifier=identifier,
+            identifier_type=identifier_type,
+            allow_fallback=allow_fallback,
+            max_candidates=max_candidates,
+            step_metadata=steps,
+        )
+        payload = self._build_pbpk_context_bundle(
+            dtxsid=identity["dtxsid"],
             identity=identity,
             model_name=model_name,
             step_metadata=steps,
+        )
+        return self._annotate_public_payload(
+            payload,
+            identity_resolution=identity_resolution,
+            source_tools=self._source_tools_from_steps(steps),
+            known_data_gaps=self._known_data_gaps_for_pbpk(payload),
         )
 
     def _resolve_identity_record(
@@ -386,6 +513,52 @@ class InteropResource(BaseResource):
                 ],
             ),
         }
+
+    def _resolve_requested_identity(
+        self,
+        *,
+        dtxsid: Optional[str],
+        identifier: Optional[str],
+        identifier_type: Optional[str],
+        allow_fallback: bool,
+        max_candidates: int,
+        step_metadata: Dict[str, Dict[str, Any]],
+    ) -> tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
+        normalized_sid = (dtxsid or "").strip().upper() or None
+        normalized_identifier = (identifier or "").strip() or None
+        if normalized_identifier:
+            resolution = self.chemical_resource.resolve_chemical_identifier(
+                identifier=normalized_identifier,
+                identifier_type=identifier_type,
+                allow_fallback=allow_fallback,
+                max_candidates=max_candidates,
+            )
+            self._record_step(
+                step_metadata,
+                step_name="chemical:resolve",
+                resource=self.chemical_resource,
+                tool_name="resolve_chemical_identifier",
+            )
+            if resolution["status"] != "resolved" or not resolution.get(
+                "canonicalDtxsid"
+            ):
+                raise ValueError(
+                    f"Unable to resolve identifier '{normalized_identifier}': {resolution['status']}"
+                )
+            canonical_sid = str(resolution["canonicalDtxsid"]).upper()
+            if normalized_sid and normalized_sid != canonical_sid:
+                raise ValueError(
+                    "Provided dtxsid does not match the resolved canonical identifier."
+                )
+            return self._resolve_identity_record(canonical_sid, step_metadata), (
+                resolution
+                if str(resolution.get("inputType", "")).lower() != "dtxsid"
+                else None
+            )
+
+        if not normalized_sid:
+            raise ValueError("dtxsid or identifier is required.")
+        return self._resolve_identity_record(normalized_sid, step_metadata), None
 
     def _build_hazard_evidence_summary(
         self,
@@ -913,6 +1086,10 @@ class InteropResource(BaseResource):
                         "modelName": model_details.get("name", "Unknown model"),
                         "modelVersion": model_details.get("version", "unknown"),
                         "endpoint": endpoint,
+                        "limitations": card.get("intendedUse", {}).get(
+                            "limitations", []
+                        ),
+                        "warnings": card.get("intendedUse", {}).get("warnings", []),
                     }
                 )
             )
@@ -1142,6 +1319,147 @@ class InteropResource(BaseResource):
             "traceId": f"{generated_by}-{self._timestamp()}",
             "sources": sources or [self._default_source_record()],
             "notes": notes or [],
+        }
+
+    def _annotate_public_payload(
+        self,
+        payload: Dict[str, Any],
+        *,
+        identity_resolution: Optional[Dict[str, Any]],
+        source_tools: Sequence[str],
+        known_data_gaps: Sequence[str],
+    ) -> Dict[str, Any]:
+        annotated = dict(payload)
+        limitations = self._limitations_for_payload(
+            identity_resolution=identity_resolution,
+            known_data_gaps=known_data_gaps,
+            payload=annotated,
+        )
+        annotated["knownDataGaps"] = list(known_data_gaps)
+        annotated["limitations"] = limitations
+        annotated["generatedFromTools"] = list(source_tools)
+        annotated["provenanceSummary"] = self._provenance_summary_for_payload(
+            payload=annotated,
+            source_tools=source_tools,
+        )
+        if identity_resolution:
+            annotated["identityResolution"] = identity_resolution
+        return annotated
+
+    def _source_tools_from_steps(
+        self, step_metadata: Dict[str, Dict[str, Any]]
+    ) -> List[str]:
+        return sorted(
+            {
+                info.get("tool")
+                for info in step_metadata.values()
+                if isinstance(info, dict) and info.get("tool")
+            }
+        )
+
+    def _known_data_gaps_for_pack(
+        self,
+        *,
+        hazard_summary: Optional[Dict[str, Any]],
+        exposure_summary: Optional[Dict[str, Any]],
+        bioactivity_summary: Optional[Dict[str, Any]],
+        aop_summary: Optional[Dict[str, Any]],
+        pbpk_bundle: Optional[Dict[str, Any]],
+    ) -> List[str]:
+        gaps: List[str] = []
+        if hazard_summary:
+            for dataset in hazard_summary.get("datasets", []):
+                if dataset.get("recordCount", 0) == 0:
+                    gaps.append(f"hazard:{dataset.get('dataset', 'unknown')}")
+        if exposure_summary:
+            for key in ("cpdat", "seem", "httk", "mmdb", "qsurs"):
+                if exposure_summary.get(key, {}).get("recordCount", 0) == 0:
+                    gaps.append(f"exposure:{key}")
+        if (
+            bioactivity_summary
+            and bioactivity_summary.get("summary", {}).get("assayCount", 0) == 0
+        ):
+            gaps.append("bioactivity:summary")
+        gaps.extend(self._known_data_gaps_for_aop(aop_summary))
+        gaps.extend(self._known_data_gaps_for_pbpk(pbpk_bundle))
+        return sorted(dict.fromkeys(gaps))
+
+    def _known_data_gaps_for_aop(self, payload: Optional[Dict[str, Any]]) -> List[str]:
+        if not payload:
+            return []
+        gaps: List[str] = []
+        if not payload.get("supportingAssays"):
+            gaps.append("bioactivity:assays")
+        if not payload.get("mappings"):
+            gaps.append("bioactivity:aop")
+        return gaps
+
+    def _known_data_gaps_for_pbpk(self, payload: Optional[Dict[str, Any]]) -> List[str]:
+        if not payload:
+            return []
+        gaps: List[str] = []
+        if payload.get("httkSlice", {}).get("recordCount", 0) == 0:
+            gaps.append("exposure:httk")
+        if payload.get("hazardAdmeIviveSlice", {}).get("recordCount", 0) == 0:
+            gaps.append("hazard:adme_ivive")
+        if not payload.get("modelCardRefs"):
+            gaps.append("metadata:model_cards")
+        if not payload.get("exposureHints"):
+            gaps.append("exposure:hints")
+        return gaps
+
+    def _limitations_for_payload(
+        self,
+        *,
+        identity_resolution: Optional[Dict[str, Any]],
+        known_data_gaps: Sequence[str],
+        payload: Dict[str, Any],
+    ) -> List[str]:
+        limitations: List[str] = []
+        if identity_resolution and identity_resolution.get("searchModeUsed") not in (
+            None,
+            "equals",
+        ):
+            limitations.append(
+                "Identity resolution required a fallback search mode; confirm manually before downstream use."
+            )
+        for gap in known_data_gaps:
+            limitations.append(f"Missing or empty evidence slice: {gap}.")
+
+        for model_ref in payload.get("modelCardRefs", []):
+            for field_name in ("limitations", "warnings"):
+                for entry in model_ref.get(field_name, []):
+                    if isinstance(entry, str):
+                        limitations.append(
+                            f"{model_ref.get('modelName', 'Model card')}: {entry}"
+                        )
+
+        provenance = payload.get("provenance") or payload.get("audit") or {}
+        for note in provenance.get("notes", []):
+            if isinstance(note, str) and note not in limitations:
+                limitations.append(note)
+        return limitations
+
+    def _provenance_summary_for_payload(
+        self,
+        *,
+        payload: Dict[str, Any],
+        source_tools: Sequence[str],
+    ) -> Dict[str, Any]:
+        provenance = payload.get("provenance") or payload.get("audit") or {}
+        sources = provenance.get("sources", [])
+        return {
+            "generatedBy": provenance.get("generatedBy")
+            or payload.get("audit", {}).get("generatedBy"),
+            "generatedAt": provenance.get("generatedAt")
+            or payload.get("audit", {}).get("generatedAt"),
+            "sourceCount": len(sources) if isinstance(sources, list) else 0,
+            "sourceTools": list(source_tools),
+            "noteCount": (
+                len(provenance.get("notes", []))
+                if isinstance(provenance.get("notes"), list)
+                else 0
+            ),
         }
 
     def _record_step(
