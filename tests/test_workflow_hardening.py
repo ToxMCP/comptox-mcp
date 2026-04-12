@@ -71,3 +71,19 @@ def test_live_interop_smoke_workflow_exists_with_pinned_tooling() -> None:
     assert "actions/setup-python@" in text
     assert "uvicorn epacomp_tox.transport.websocket:app" in text
     assert "scripts/mcp_interop_smoke.py" in text
+
+
+def test_scientific_validation_workflow_exists_with_artifact_capture() -> None:
+    text = _workflow_text("scientific-validation.yml")
+    assert "name: Scientific Validation" in text
+    assert "workflow_dispatch:" in text
+    assert 'cron: "15 2 * * 2"' in text
+    assert "secrets.CTX_API_KEY" in text
+    assert "actions/checkout@" in text
+    assert "actions/setup-python@" in text
+    assert "actions/upload-artifact@" in text
+    assert 'pip install -e ".[dev]"' in text
+    assert "scripts/scientific_validation_report.py" in text
+    assert "scripts/live_concordance_panel.py" in text
+    assert "artifacts/scientific-validation/offline/report.json" in text
+    assert "artifacts/scientific-validation/live/report.json" in text
