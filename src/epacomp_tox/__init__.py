@@ -55,7 +55,10 @@ from .predictive.rule_providers import (
 )
 from .server import MCPServer
 
+__version__ = MCPServer._resolve_version()
+
 __all__ = [
+    "__version__",
     "MCPServer",
     "ApplicabilityDomainEvaluator",
     "ADEvaluatorError",

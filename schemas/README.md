@@ -5,6 +5,10 @@ The `schemas/` directory publishes portable evidence objects for cross-suite han
 - `docs/contracts/schemas/`: MCP response wrappers for live tool responses.
 - `schemas/`: portable objects that downstream MCPs and orchestrators can consume without depending on a specific transport call.
 
+Portable schema versions are intentionally independent from package patch releases.
+For example, a package cleanup release may tighten docs, tests, or release tooling
+without changing the `*.v1.json` portable object family.
+
 Current portable objects:
 
 - `chemicalIdentityRecord.v1.json`
