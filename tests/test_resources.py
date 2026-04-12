@@ -60,6 +60,141 @@ class TestChemicalResource(unittest.TestCase):
         mock_client.msready.assert_called_once_with(by="mass", start=100.0, end=150.0)
         self.assertEqual(result, [{"mass": 123.4}])
 
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_returns_resolved_exact_match(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.return_value = [
+            {
+                "dtxsid": "DTXSID0000001",
+                "preferredName": "Formaldehyde",
+                "casrn": "50-00-0",
+                "rank": 1,
+            }
+        ]
+        mock_client.details.return_value = {
+            "dtxsid": "DTXSID0000001",
+            "preferredName": "Formaldehyde",
+            "casrn": "50-00-0",
+            "synonyms": ["Methanal"],
+        }
+
+        resource = ChemicalResource(api_key="fake")
+        result = resource.resolve_chemical_identifier(identifier="50-00-0")
+
+        self.assertEqual(result["status"], "resolved")
+        self.assertEqual(result["canonicalDtxsid"], "DTXSID0000001")
+        self.assertEqual(result["searchModeUsed"], "equals")
+        self.assertEqual(result["warnings"], [])
+        self.assertEqual(result["candidates"][0]["synonyms"], ["Methanal"])
+
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_returns_ambiguous_without_silent_selection(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.return_value = [
+            {"dtxsid": "DTXSID0000001", "preferredName": "Example", "rank": 1},
+            {"dtxsid": "DTXSID0000002", "preferredName": "Example", "rank": 2},
+        ]
+
+        resource = ChemicalResource(api_key="fake")
+        result = resource.resolve_chemical_identifier(
+            identifier="Example",
+            identifier_type="name",
+        )
+
+        self.assertEqual(result["status"], "ambiguous")
+        self.assertEqual(result["candidateCount"], 2)
+        self.assertEqual(result["canonicalDtxsid"], None)
+        mock_client.details.assert_not_called()
+
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_uses_fallback_only_when_enabled(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.side_effect = [
+            [],
+            [],
+            [{"dtxsid": "DTXSID0000001", "preferredName": "Example", "rank": 1}],
+        ]
+        mock_client.details.return_value = {
+            "dtxsid": "DTXSID0000001",
+            "preferredName": "Example",
+        }
+
+        resource = ChemicalResource(api_key="fake")
+        not_found = resource.resolve_chemical_identifier(
+            identifier="Exam",
+            identifier_type="name",
+            allow_fallback=False,
+        )
+        self.assertEqual(not_found["status"], "not_found")
+
+        resolved = resource.resolve_chemical_identifier(
+            identifier="Exam",
+            identifier_type="name",
+            allow_fallback=True,
+        )
+        self.assertEqual(resolved["status"], "resolved")
+        self.assertEqual(resolved["searchModeUsed"], "starts-with")
+        self.assertIn("fallback", resolved["warnings"][0])
+
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_filters_permissive_equals_matches(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.side_effect = [
+            [{"dtxsid": "DTXSID0000001", "preferredName": "Bisphenol A", "rank": 1}],
+            [{"dtxsid": "DTXSID0000001", "preferredName": "Bisphenol A", "rank": 1}],
+            [{"dtxsid": "DTXSID0000001", "preferredName": "Bisphenol A", "rank": 1}],
+        ]
+        mock_client.details.return_value = {
+            "dtxsid": "DTXSID0000001",
+            "preferredName": "Bisphenol A",
+            "casrn": "80-05-7",
+        }
+
+        resource = ChemicalResource(api_key="fake")
+
+        not_found = resource.resolve_chemical_identifier(
+            identifier="bisphenol",
+            identifier_type="name",
+            allow_fallback=False,
+        )
+        self.assertEqual(not_found["status"], "not_found")
+
+        resolved = resource.resolve_chemical_identifier(
+            identifier="bisphenol",
+            identifier_type="name",
+            allow_fallback=True,
+        )
+        self.assertEqual(resolved["status"], "resolved")
+        self.assertEqual(resolved["searchModeUsed"], "starts-with")
+        self.assertIn("fallback", resolved["warnings"][0])
+
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_maps_client_search_4xx_to_not_found(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.side_effect = CtxApiError(400, "Bad Request")
+
+        resource = ChemicalResource(api_key="fake")
+        result = resource.resolve_chemical_identifier(
+            identifier="notarealchem123",
+            identifier_type="name",
+            allow_fallback=True,
+        )
+
+        self.assertEqual(result["status"], "not_found")
+        self.assertEqual(result["candidateCount"], 0)
+        self.assertEqual(result["searchModeUsed"], None)
+        self.assertIn("not found", result["warnings"][0])
+
 
 class TestExposureResource(unittest.TestCase):
     @mock.patch("epacomp_tox.resources.exposure.ctx.Exposure")

@@ -23,12 +23,14 @@ def test_build_aop_linkage_summary_validates_portable_schema(
 ) -> None:
     result = interop_resource.execute_tool(
         "build_aop_linkage_summary",
-        {"dtxsid": "DTXSID7020182", "max_assays": 5},
+        {"identifier": "80-05-7", "identifier_type": "casrn", "max_assays": 5},
     )
 
     validate_portable_schema("aopLinkageSummary.v1.json", result)
     assert result["lookupMode"] == "dtxsid"
     assert result["mappings"][0]["aopId"] == "AOP:42"
+    assert result["identityResolution"]["canonicalDtxsid"] == "DTXSID7020182"
+    assert result["generatedFromTools"]
 
 
 def test_build_pbpk_context_bundle_validates_portable_schema(
@@ -46,8 +48,11 @@ def test_build_pbpk_context_bundle_validates_portable_schema(
             "modelName": "HTTK PBPK Surrogate",
             "modelVersion": "1.0",
             "endpoint": "internal dose metrics",
+            "limitations": ["Use only for screening contexts."],
+            "warnings": ["Does not perform PBPK simulation itself."],
         }
     ]
+    assert "metadata:model_cards" not in result["knownDataGaps"]
 
 
 def test_assemble_comptox_evidence_pack_validates_portable_schema(
@@ -65,6 +70,8 @@ def test_assemble_comptox_evidence_pack_validates_portable_schema(
     validate_portable_schema("comptoxEvidencePack.v1.json", result)
     assert result["metadata"]["suiteRole"] == "evidence-federation"
     assert result["semanticCoverage"]["aopLinkage"] == "linked"
+    assert result["generatedFromTools"]
+    assert isinstance(result["limitations"], list)
 
 
 class MissingMmdbExposureResource(StubExposureResource):

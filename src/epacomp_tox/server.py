@@ -13,7 +13,7 @@ from ctxpy import CtxApiError, RateLimitInfo
 from epacomp_tox import audit
 from epacomp_tox.config import configure_ctx_env, get_api_key, get_base_url
 from epacomp_tox.contracts import SchemaValidationError, validate_payload
-from epacomp_tox.health import check_ctx_health
+from epacomp_tox.health import ProbeMode, check_ctx_health
 from epacomp_tox.settings import settings
 from epacomp_tox.tools.registry import ToolRegistry
 from epacomp_tox.validators import to_serializable
@@ -74,7 +74,9 @@ class MCPServer:
         from .resources.exposure import ExposureResource
         from .resources.hazard import HazardResource
         from .resources.interop import InteropResource
+        from .resources.manifest import ContractManifestResource
         from .resources.metadata import MetadataResource
+        from .resources.prioritization import PrioritizationResource
 
         return {
             "chemical": ChemicalResource(self.api_key),
@@ -85,6 +87,10 @@ class MCPServer:
             "cheminformatics": CheminformaticsResource(self.api_key),
             "metadata": MetadataResource(self.api_key),
             "interop": InteropResource(self.api_key),
+            "prioritization": PrioritizationResource(self.api_key),
+            "manifest": ContractManifestResource(
+                self.api_key, server_getter=lambda: self
+            ),
         }
 
     def get_resources(self) -> List[Dict[str, str]]:
@@ -103,12 +109,18 @@ class MCPServer:
             for name, resource in self.resources.items()
         ]
 
-    def check_health(self, *, timeout: float = 5.0) -> Dict[str, Any]:
-        """Run a connectivity check against the configured CTX API base."""
+    def check_health(
+        self,
+        *,
+        timeout: float = 5.0,
+        probe_mode: ProbeMode = "readiness",
+    ) -> Dict[str, Any]:
+        """Run a CTX probe against the configured API base."""
         self._last_health = check_ctx_health(
             api_key=self.api_key,
             base_url=self.base_url,
             timeout=timeout,
+            probe_mode=probe_mode,
         )
         return self._last_health
 

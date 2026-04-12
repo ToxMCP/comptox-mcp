@@ -10,6 +10,7 @@
 - [ ] Run `python scripts/mcp_ws_client.py --url ws://127.0.0.1:8000/mcp/ws --list-tools` (expect negotiated protocol `2025-06-18`).
 - [ ] Run `scripts/mcp_http_smoke.sh` (or `EPA_MCP_HTTP_ENDPOINT=<url> scripts/mcp_http_smoke.sh`) and confirm the HTTP transport returns protocol version and tool count.
 - [ ] Run `python scripts/mcp_interop_smoke.py --endpoint http://127.0.0.1:8000/mcp --json` and confirm all three interop tools return structured handoff objects.
+- [ ] Refresh `tests/golden/interop_live` only when live CTX drift is accepted, using `python scripts/mcp_interop_smoke.py --endpoint http://127.0.0.1:8000/mcp --capture-dir tests/golden/interop_live --refresh-live-fixtures --json`, then review `capture_manifest.json` and payload diffs together.
 - [ ] Execute `--call-tool search_chemical --arguments '{"query":"toluene","search_type":"equals"}'` (observe streaming events and final result).
 - [ ] Trigger cancellation with `--cancel-after-ms 200` and confirm server logs show cancellation handling.
 - [ ] Inspect `docs/architecture_overview.md` to confirm deployment settings match staging/production environment (TLS, heartbeat, session limits).

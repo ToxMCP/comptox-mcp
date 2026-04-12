@@ -2,7 +2,7 @@
 
 > Part of **ToxMCP** Suite -> https://github.com/ToxMCP/toxmcp
 >
-> **Public MCP endpoint for EPA Computational Toxicology (CompTox) evidence federation.** Expose chemical identity, hazard, exposure, bioactivity, metadata, and cross-suite handoff builders to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
+> **Public MCP endpoint for EPA Computational Toxicology (CompTox) evidence federation.** Expose chemical identity, hazard, exposure, bioactivity, metadata, screening-prioritization summaries, contract-manifest discovery, and cross-suite handoff builders to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
 
 ## Architecture
 
@@ -27,6 +27,8 @@ flowchart LR
     Exposure["Exposure + HTTK"]
     Bioactivity["Bioactivity + AOP link-outs"]
     Metadata["Model cards + applicability"]
+    Prioritization["Screening prioritization\nAED / exposure signals"]
+    Manifest["Contract manifest\nresources / tools / schemas"]
     Interop["Portable evidence packs\nAOP / PBPK handoff builders"]
   end
 
@@ -49,6 +51,8 @@ flowchart LR
   Tools --> Exposure
   Tools --> Bioactivity
   Tools --> Metadata
+  Tools --> Prioritization
+  Tools --> Manifest
   Tools --> Interop
   Chemical --> CTX
   Hazard --> CTX
@@ -65,17 +69,21 @@ The current implementation follows a layered model:
 
 - `FastAPI + JSON-RPC` expose `/mcp` and `/mcp/ws`, with `/healthz` and `/readyz` kept separate from domain logic.
 - `Retrieval resources` own CompTox-native evidence access for chemical, hazard, exposure, bioactivity, cheminformatics, and metadata.
+- `Screening prioritization` stays separate from interop builders and emits explicitly caveated AED/exposure prioritization summaries instead of final risk decisions.
+- `Contract manifest` publishes the live public catalog plus schema inventory in machine-readable form for downstream MCP consumers.
 - `Interop tools` package portable evidence objects for downstream MCP consumers without cloning AOP OECD semantics or PBPK execution semantics.
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
-## What's New In v0.2.0
+## What's New In v0.2.1
 
-- Repositioned CompTox MCP as the suite's Tier-0 evidence and federation MCP instead of a partially advertised orchestrator surface.
-- Published portable evidence objects under `schemas/` for identity, hazard, exposure, bioactivity, AOP linkage, PBPK context, and bundled evidence packs.
-- Added domain-specific MCP response namespaces for `hazard/`, `exposure/`, `bioactivity/`, and `workflow/`.
-- Added a public `interop` resource exposing `assemble_comptox_evidence_pack`, `build_aop_linkage_summary`, and `build_pbpk_context_bundle`.
-- Added deterministic release gates so README drift, catalog drift, and AOP/PBPK handoff drift fail CI before publish.
+- Hardened `resolve_chemical_identifier` so upstream permissive name matching no longer appears as a false exact resolution; partial names now surface as `ambiguous`, and invalid identifiers normalize to `not_found`.
+- Made `/readyz` prove authenticated CTX capability instead of generic reachability, while keeping `/healthz` as a pure liveness probe.
+- Added and stabilized the public `prioritization` and `manifest` resources alongside additive provenance fields in the interop payloads.
+- Added CTX-backed interop golden-payload capture plus a release-oriented live smoke runner in `scripts/release_smoke.py`.
+- Continued hardening the in-repo experimental scientific engine with structured evidence synthesis, AD sidecar evaluation, mechanistic-context derivation, and analogue provenance, without publishing those modules as default public tools.
+
+See the full release notes in [`docs/releases/v0.2.1_release_description.md`](docs/releases/v0.2.1_release_description.md).
 
 ## Published Schemas
 
@@ -107,6 +115,8 @@ Regulatory and research teams rely on the CompTox API for high-quality chemical,
 The EPA CompTox MCP server wraps those workflows in a **secure, programmable interface**:
 
 - **One MCP surface (`/mcp` HTTP + `/mcp/ws` WebSocket)** delivers discovery and execution across chemical, bioactivity, exposure, hazard, metadata, interop, and supporting utility catalogues.
+- **Screening prioritization** adds a separate, caveated signal-ranking path built from CompTox AED and exposure sources without claiming final NGRA decisions.
+- **Contract manifest discovery** exposes the live public resources, tools, and schema inventory so downstream MCPs do not need to scrape docs to integrate safely.
 - **Evidence federation role** – CompTox acts as the suite's source-grounded evidence ingress layer for downstream AOP, PBPK, O-QT, and orchestration workflows.
 - **Guardrails + provenance** – JSON Schema validation, metadata attachments, transport audit hooks, and signed release attestations improve downstream reproducibility.
 - **Agent friendly** – tested with Codex CLI, Gemini CLI, and Claude (see [integration guide](docs/integration_guides/mcp_integration.md)).
@@ -213,6 +223,9 @@ curl -s http://localhost:8000/mcp \
 
 # live interop smoke
 python scripts/mcp_interop_smoke.py --endpoint http://localhost:8000/mcp --json
+
+# release-oriented smoke
+python scripts/release_smoke.py --endpoint http://localhost:8000/mcp --json
 ```
 
 ---
@@ -250,14 +263,16 @@ See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and
 
 | Category | Highlight tools | Notes |
 | --- | --- | --- |
-| Chemical discovery | `search_chemical`, `batch_search_chemical`, `get_chemical_details` | Resolve identifiers, structures, and details with CTX retry/backoff baked in. |
+| Chemical discovery | `search_chemical`, `batch_search_chemical`, `resolve_chemical_identifier`, `get_chemical_details` | Resolve identifiers deterministically, inspect ambiguous matches, and fetch structures/details with CTX retry/backoff baked in. |
 | Bioactivity & AOP link-outs | `search_bioactivity_terms`, `get_bioactivity_summary_by_dtxsid`, `get_bioactivity_aop` | Surface ToxCast/Tox21 summaries, assay metadata, and AOP crosswalks from CompTox bioactivity APIs. |
 | Exposure & hazard | `search_cpdat`, `search_httk`, `search_hazard`, `get_hazard_toxval` | Batch-normalized access to CTX exposure datasets plus granular hazard endpoints (ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC). |
-| Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and audit metadata. |
+| Screening prioritization | `prioritize_risk_signals` | Build an explicitly caveated screening-priority summary from AED, SEEM, HTTK, MMDB, and CPDat signals without presenting it as a regulatory risk decision. |
+| Contract manifest | `get_contract_manifest` | Publish a machine-readable inventory of the live public resources, tools, MCP response schemas, portable schemas, and boundary notes. |
+| Metadata & governance | `metadata_get_model_card`, `metadata_list_applicability_domain`, `metadata_get_applicability_domain` | Fetch model cards, applicability-domain policies, and explicit guardrail metadata describing documented vs locally enforced criteria. |
 | Interop handoff builders | `assemble_comptox_evidence_pack`, `build_aop_linkage_summary`, `build_pbpk_context_bundle` | Package portable evidence objects and downstream-ready handoff summaries for AOP and PBPK MCP consumers without duplicating their semantics. |
 | Utility helpers | `opsin_convert_name`, `indigo_convert_molfile` | Provide supporting conversions for downstream automations. |
 
-The default server currently registers eight public resources: chemical, bioactivity, exposure, hazard, chemical list, cheminformatics, metadata, and interop. Full schema definitions (input and output) are returned via the MCP `tools/list` call. See [`tests/test_resources.py`](tests/test_resources.py) for examples of exercising each category.
+The default server currently registers ten public resources: chemical, bioactivity, exposure, hazard, chemical list, cheminformatics, metadata, interop, prioritization, and manifest. Full schema definitions (input and output) are returned via the MCP `tools/list` call. See [`tests/test_resources.py`](tests/test_resources.py) for examples of exercising each category.
 
 ### Experimental components
 
@@ -401,6 +416,7 @@ Every successful tool invocation returns structured payloads designed for agents
 - `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
 - `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
 - `scripts/mcp_interop_smoke.py` validates the public interop tool path end-to-end over the HTTP transport.
+- `scripts/release_smoke.py` exercises authenticated readiness, manifest discovery, deterministic identifier resolution, screening prioritization, interop builders, and WebSocket parity in one release-oriented pass.
 - `.github/workflows/live-interop-smoke.yml` runs the interop smoke path in GitHub Actions on demand or on a weekly schedule when `CTX_API_KEY` is configured.
 - Documentation builds (`scripts/build_docs.sh`) and CI workflows keep diagrams and links healthy.
 - Experimental predictive/orchestrator suites remain valuable internal regression coverage, but they should not be presented as canonical public-surface checks.
@@ -409,10 +425,11 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
-- Next target: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md)
-- Add CTX-backed golden payload capture for interop outputs so release checks cover both deterministic stubs and live upstream normalization.
-- Publish a cleaner contract manifest resource for downstream consumers that inventories portable objects, MCP response schemas, and live discovery metadata together.
-- Expand workflow contract coverage beyond the three current interop tools only where the public surface is stable enough to justify dedicated schemas.
+- Completed: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md) and the matching [`v0.2.1` release description](docs/releases/v0.2.1_release_description.md)
+- `v0.2.2` should focus on packaging and operational polish rather than reopening the public boundary.
+- Promote `scripts/release_smoke.py` and the live interop capture path into repeatable CI/release automation.
+- Tighten downstream-facing documentation around deterministic identifier usage so agents prefer DTXSID/CAS over partial-name inputs.
+- Expand screening prioritization only where additional quantitative signals can be added without overstating risk semantics.
 - Revisit predictive/orchestrator publication only after the default server, contracts, and docs all agree.
 
 ---

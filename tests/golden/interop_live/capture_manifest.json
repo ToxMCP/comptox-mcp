@@ -1,0 +1,150 @@
+{
+  "captureVersion": 1,
+  "capturedAt": "2026-04-11T17:18:25+00:00",
+  "chemical": {
+    "dtxsid": "DTXSID2020006",
+    "label": "Acetaminophen"
+  },
+  "endpoint": "http://127.0.0.1:8010/mcp",
+  "fixtures": [
+    {
+      "arguments": {
+        "dtxsid": "DTXSID2020006",
+        "hazard_datasets": [
+          "toxval",
+          "adme_ivive"
+        ],
+        "max_assays": 5
+      },
+      "file": "assemble_comptox_evidence_pack.json",
+      "portableSchemaPath": "schemas/comptoxEvidencePack.v1.json",
+      "responseSchemaPath": "docs/contracts/schemas/workflow/comptox_evidence_pack.response.schema.json",
+      "responseSchemaRef": {
+        "name": "comptox_evidence_pack.response.schema",
+        "namespace": "workflow"
+      },
+      "sha256": "fc1cbacc142f885ee1ad088669d21590a1d6e22e2e12a03435076d48f3ec9b8f",
+      "sizeBytes": 853979,
+      "tool": "assemble_comptox_evidence_pack",
+      "topLevelKeys": [
+        "aopLinkageSummary",
+        "audit",
+        "bioactivityEvidenceSummary",
+        "chemicalIdentity",
+        "data",
+        "exposureEvidenceSummary",
+        "generatedFromTools",
+        "hazardEvidenceSummary",
+        "knownDataGaps",
+        "limitations",
+        "mcpMetadata",
+        "metadata",
+        "pbpkContextBundle",
+        "provenanceSummary",
+        "semanticCoverage"
+      ]
+    },
+    {
+      "arguments": {
+        "dtxsid": "DTXSID2020006",
+        "max_assays": 5
+      },
+      "file": "build_aop_linkage_summary.json",
+      "portableSchemaPath": "schemas/aopLinkageSummary.v1.json",
+      "responseSchemaPath": "docs/contracts/schemas/workflow/aop_linkage_summary.response.schema.json",
+      "responseSchemaRef": {
+        "name": "aop_linkage_summary.response.schema",
+        "namespace": "workflow"
+      },
+      "sha256": "8c6c16908dddaefb78587bc7e136d650010a452fba8fba7b1c6ca8646cb06e27",
+      "sizeBytes": 5883,
+      "tool": "build_aop_linkage_summary",
+      "topLevelKeys": [
+        "chemicalRef",
+        "confidence",
+        "data",
+        "generatedFromTools",
+        "knownDataGaps",
+        "limitations",
+        "lookupMode",
+        "mappings",
+        "metadata",
+        "provenance",
+        "provenanceSummary",
+        "supportingAssays"
+      ]
+    },
+    {
+      "arguments": {
+        "dtxsid": "DTXSID2020006"
+      },
+      "file": "build_pbpk_context_bundle.json",
+      "portableSchemaPath": "schemas/pbpkContextBundle.v1.json",
+      "responseSchemaPath": "docs/contracts/schemas/workflow/pbpk_context_bundle.response.schema.json",
+      "responseSchemaRef": {
+        "name": "pbpk_context_bundle.response.schema",
+        "namespace": "workflow"
+      },
+      "sha256": "aef5f9fac9694d2dc02f74aeb55a5b85b22ba7aa4035f9e16d9349aeb29bfd1c",
+      "sizeBytes": 42185,
+      "tool": "build_pbpk_context_bundle",
+      "topLevelKeys": [
+        "chemicalIdentityRef",
+        "data",
+        "exposureHints",
+        "generatedFromTools",
+        "handoffTarget",
+        "hazardAdmeIviveSlice",
+        "httkSlice",
+        "knownDataGaps",
+        "limitations",
+        "metadata",
+        "modelCardRefs",
+        "provenance",
+        "provenanceSummary"
+      ]
+    }
+  ],
+  "protocolVersion": "2025-06-18",
+  "smokeSummary": {
+    "aopLinkage": {
+      "lookupMode": "dtxsid",
+      "mappingCount": 0
+    },
+    "chemical": {
+      "dtxsid": "DTXSID2020006",
+      "label": "Acetaminophen"
+    },
+    "endpoint": "http://127.0.0.1:8010/mcp",
+    "evidencePack": {
+      "hasMcpMetadata": true,
+      "mmdbRecordCount": 0,
+      "mmdbStatus": {
+        "missing": true,
+        "optional": true,
+        "status": 404
+      },
+      "semanticCoverage": {
+        "aopLinkage": "none",
+        "bioactivity": "summary",
+        "exposure": "summary",
+        "hazard": "summary",
+        "identity": "detailed",
+        "pbpkContext": "summary"
+      },
+      "suiteRole": "evidence-federation"
+    },
+    "healthz": {
+      "service": "EPA CompTox MCP Server",
+      "status": "ok"
+    },
+    "pbpkContext": {
+      "handoffTarget": "pbpk-mcp",
+      "httkRecordCount": 18,
+      "modelCardRefs": 0
+    },
+    "protocolVersion": "2025-06-18",
+    "resourceCount": 10,
+    "toolCount": 85
+  }
+}

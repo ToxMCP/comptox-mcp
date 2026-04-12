@@ -116,3 +116,18 @@ def test_live_interop_smoke_script_is_documented_and_has_help_output() -> None:
     assert "build_aop_linkage_summary" in result.stdout
     assert "assemble_comptox_evidence_pack" in result.stdout
     assert "--dtxsid" in result.stdout
+    assert "--capture-dir" in result.stdout
+    assert "--refresh-live-fixtures" in result.stdout
+
+
+def test_live_interop_fixture_refresh_path_is_documented() -> None:
+    docs = "\n".join(
+        (
+            _read_text(TESTING_MATRIX_PATH),
+            _read_text(TRANSPORT_SMOKE_CHECKLIST_PATH),
+            _read_text(DEVELOPMENT_GUIDE_PATH),
+        )
+    )
+    assert "tests/golden/interop_live" in docs
+    assert "--capture-dir" in docs
+    assert "--refresh-live-fixtures" in docs

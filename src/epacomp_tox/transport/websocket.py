@@ -466,6 +466,7 @@ class MCPWebSocketSession:
                 "exposure": "search_exposure",
                 "bioactivity": "search_bioactivity",
                 "chemical_list": "search_chemical_list",
+                "prioritization": "prioritize_risk_signals",
             }.get(resource_name)
 
             if inferred_tool:
@@ -964,7 +965,7 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
         if server_error is not None or server_instance is None:
             raise HTTPException(status_code=503, detail="MCP server not initialized")
         try:
-            health = server_instance.check_health(timeout=2.0)
+            health = server_instance.check_health(timeout=2.0, probe_mode="readiness")
         except Exception as exc:
             cached = getattr(server_instance, "_last_health", None)
             if cached:

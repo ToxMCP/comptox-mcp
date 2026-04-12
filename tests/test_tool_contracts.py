@@ -7,7 +7,9 @@ from epacomp_tox.resources.cheminformatics import CheminformaticsResource
 from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.hazard import HazardResource
 from epacomp_tox.resources.interop import InteropResource
+from epacomp_tox.resources.manifest import ContractManifestResource
 from epacomp_tox.resources.metadata import MetadataResource
+from epacomp_tox.resources.prioritization import PrioritizationResource
 
 RESOURCE_FACTORIES = {
     "chemical": lambda: ChemicalResource(api_key="fake"),
@@ -18,6 +20,10 @@ RESOURCE_FACTORIES = {
     "hazard": lambda: HazardResource(api_key="fake"),
     "metadata": lambda: MetadataResource(api_key="fake"),
     "interop": lambda: InteropResource(api_key="fake"),
+    "prioritization": lambda: PrioritizationResource(api_key="fake"),
+    "manifest": lambda: ContractManifestResource(
+        api_key="fake", server_getter=lambda: None
+    ),
 }
 
 

@@ -1,8 +1,9 @@
-import base64
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 import ctxpy as ctx
+from ctxpy import CtxApiError
 from epacomp_tox.contracts import schema_ref
 from epacomp_tox.validators import to_serializable
 
@@ -95,6 +96,43 @@ class ChemicalResource(BaseResource):
                         }
                     },
                     "required": ["identifiers"],
+                },
+            },
+            {
+                "name": "resolve_chemical_identifier",
+                "description": "Resolve a chemical identifier deterministically without silently accepting ambiguous fuzzy matches",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "identifier": {
+                            "type": "string",
+                            "description": "Chemical identifier to resolve",
+                        },
+                        "identifier_type": {
+                            "type": "string",
+                            "enum": [
+                                "dtxsid",
+                                "casrn",
+                                "name",
+                                "smiles",
+                                "inchikey",
+                            ],
+                            "description": "Optional identifier category; inferred when omitted",
+                        },
+                        "allow_fallback": {
+                            "type": "boolean",
+                            "default": False,
+                            "description": "Whether non-exact fallback searches may be used after an exact search fails",
+                        },
+                        "max_candidates": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 25,
+                            "default": 5,
+                            "description": "Maximum number of candidate records to return when ambiguous",
+                        },
+                    },
+                    "required": ["identifier"],
                 },
             },
             {
@@ -294,6 +332,10 @@ class ChemicalResource(BaseResource):
         schema_map = {
             "search_chemical": ("chemical", "search_chemical.response.schema"),
             "batch_search_chemical": ("chemical", "search_chemical.response.schema"),
+            "resolve_chemical_identifier": (
+                "chemical",
+                "resolve_chemical_identifier.response.schema",
+            ),
             "get_chemical_details": ("common", "object.response.schema"),
             "batch_get_chemical_details": ("common", "list_generic.response.schema"),
             "search_msready": ("common", "list_generic.response.schema"),
@@ -340,6 +382,13 @@ class ChemicalResource(BaseResource):
         if tool_name == "batch_search_chemical":
             return self.batch_search_chemical(
                 identifiers=parameters["identifiers"],
+            )
+        if tool_name == "resolve_chemical_identifier":
+            return self.resolve_chemical_identifier(
+                identifier=parameters["identifier"],
+                identifier_type=parameters.get("identifier_type"),
+                allow_fallback=parameters.get("allow_fallback", False),
+                max_candidates=parameters.get("max_candidates", 5),
             )
         if tool_name == "get_chemical_details":
             return self.get_chemical_details(
@@ -397,6 +446,105 @@ class ChemicalResource(BaseResource):
             lambda: self.client.search(by="batch", word=identifiers)
         )
         return self._ensure_list(result)
+
+    def resolve_chemical_identifier(
+        self,
+        *,
+        identifier: str,
+        identifier_type: Optional[str] = None,
+        allow_fallback: bool = False,
+        max_candidates: int = 5,
+    ) -> Dict[str, Any]:
+        """Resolve an identifier without silently accepting ambiguous results."""
+        normalized_identifier = (identifier or "").strip()
+        if not normalized_identifier:
+            raise ValueError("identifier is required")
+
+        normalized_type = self._normalize_identifier_type(
+            identifier_type, normalized_identifier
+        )
+        search_modes = self._resolution_search_modes(
+            normalized_type, allow_fallback=allow_fallback
+        )
+        candidate_limit = max(1, min(int(max_candidates), 25))
+        warnings: List[str] = []
+
+        for mode in search_modes:
+            try:
+                raw_candidates = self.search_chemical(
+                    query=normalized_identifier,
+                    search_type=mode,
+                )
+            except CtxApiError as exc:
+                if exc.status and 400 <= exc.status < 500:
+                    warnings.append(
+                        "Upstream search rejected the identifier; treating it as not found."
+                    )
+                    return self._resolution_not_found_payload(
+                        identifier=normalized_identifier,
+                        identifier_type=normalized_type,
+                        warnings=warnings,
+                    )
+                raise
+            candidate_count, candidates = self._normalize_resolution_candidates(
+                raw_candidates,
+                max_candidates=candidate_limit,
+            )
+            if mode == "equals":
+                candidate_count, candidates = self._filter_exact_resolution_candidates(
+                    identifier=normalized_identifier,
+                    identifier_type=normalized_type,
+                    candidates=candidates,
+                    max_candidates=candidate_limit,
+                )
+            if candidate_count == 0:
+                continue
+            if candidate_count > candidate_limit:
+                warnings.append(
+                    f"Candidate list truncated to the first {candidate_limit} record(s)."
+                )
+            if candidate_count > 1:
+                if mode != "equals":
+                    warnings.append(
+                        f"Fallback search mode '{mode}' returned multiple candidates."
+                    )
+                return {
+                    "status": "ambiguous",
+                    "inputIdentifier": normalized_identifier,
+                    "inputType": normalized_type,
+                    "canonicalDtxsid": None,
+                    "preferredName": None,
+                    "casrn": None,
+                    "searchModeUsed": mode,
+                    "candidateCount": candidate_count,
+                    "candidates": candidates,
+                    "warnings": warnings,
+                }
+
+            candidate = dict(candidates[0])
+            if mode != "equals":
+                warnings.append(
+                    f"Identifier resolved using fallback search mode '{mode}'."
+                )
+            candidate = self._enrich_resolution_candidate(candidate)
+            return {
+                "status": "resolved",
+                "inputIdentifier": normalized_identifier,
+                "inputType": normalized_type,
+                "canonicalDtxsid": candidate.get("dtxsid"),
+                "preferredName": candidate.get("preferredName"),
+                "casrn": candidate.get("casrn"),
+                "searchModeUsed": mode,
+                "candidateCount": candidate_count,
+                "candidates": [candidate],
+                "warnings": warnings,
+            }
+
+        return self._resolution_not_found_payload(
+            identifier=normalized_identifier,
+            identifier_type=normalized_type,
+            warnings=warnings,
+        )
 
     def get_chemical_details(
         self, identifier: str, id_type: str, subset: str = "default"
@@ -542,6 +690,173 @@ class ChemicalResource(BaseResource):
             "value": converted,
         }
 
+    def _normalize_identifier_type(
+        self, identifier_type: Optional[str], identifier: str
+    ) -> str:
+        if identifier_type:
+            normalized = identifier_type.strip().lower()
+            if normalized not in self._IDENTIFIER_TYPE_ALIASES:
+                raise ValueError(f"Unsupported identifier_type '{identifier_type}'.")
+            return self._IDENTIFIER_TYPE_ALIASES[normalized]
+        if self._DTXSID_RE.match(identifier):
+            return "dtxsid"
+        if identifier.count("-") == 2 and len(identifier.replace("-", "")) in (
+            5,
+            6,
+            7,
+            8,
+            9,
+        ):
+            return "casrn"
+        return "name"
+
+    def _resolution_search_modes(
+        self, identifier_type: str, *, allow_fallback: bool
+    ) -> List[str]:
+        search_modes = ["equals"]
+        if allow_fallback:
+            search_modes.extend(self._RESOLUTION_FALLBACKS.get(identifier_type, ()))
+        return search_modes
+
+    def _normalize_resolution_candidates(
+        self,
+        candidates: List[Dict[str, Any]],
+        *,
+        max_candidates: int,
+    ) -> tuple[int, List[Dict[str, Any]]]:
+        normalized: List[Dict[str, Any]] = []
+        seen = set()
+        for item in candidates:
+            if not isinstance(item, dict):
+                continue
+            candidate = self._resolution_candidate(item)
+            key = (
+                candidate.get("dtxsid")
+                or candidate.get("preferredName")
+                or candidate.get("casrn")
+                or candidate.get("searchValue")
+            )
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            normalized.append(candidate)
+        return len(normalized), normalized[:max_candidates]
+
+    def _filter_exact_resolution_candidates(
+        self,
+        *,
+        identifier: str,
+        identifier_type: str,
+        candidates: List[Dict[str, Any]],
+        max_candidates: int,
+    ) -> tuple[int, List[Dict[str, Any]]]:
+        exact_matches = [
+            candidate
+            for candidate in candidates
+            if self._candidate_matches_exact_identifier(
+                candidate=candidate,
+                identifier=identifier,
+                identifier_type=identifier_type,
+            )
+        ]
+        return len(exact_matches), exact_matches[:max_candidates]
+
+    def _resolution_candidate(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "dtxsid": payload.get("dtxsid"),
+            "dtxcid": payload.get("dtxcid"),
+            "casrn": payload.get("casrn"),
+            "preferredName": payload.get("preferredName"),
+            "smiles": payload.get("smiles"),
+            "searchName": payload.get("searchName"),
+            "searchValue": payload.get("searchValue"),
+            "rank": payload.get("rank"),
+        }
+
+    def _candidate_matches_exact_identifier(
+        self,
+        *,
+        candidate: Dict[str, Any],
+        identifier: str,
+        identifier_type: str,
+    ) -> bool:
+        normalized_identifier = identifier.strip()
+        if not normalized_identifier:
+            return False
+
+        candidate_value = self._candidate_exact_value(candidate, identifier_type)
+        if candidate_value is None:
+            return False
+
+        if identifier_type in {"dtxsid", "casrn", "inchikey"}:
+            return candidate_value.upper() == normalized_identifier.upper()
+        if identifier_type == "smiles":
+            return candidate_value == normalized_identifier
+        return candidate_value.casefold() == normalized_identifier.casefold()
+
+    def _candidate_exact_value(
+        self, candidate: Dict[str, Any], identifier_type: str
+    ) -> Optional[str]:
+        if identifier_type == "dtxsid":
+            value = candidate.get("dtxsid")
+        elif identifier_type == "casrn":
+            value = candidate.get("casrn")
+        elif identifier_type == "name":
+            value = candidate.get("preferredName")
+        elif identifier_type == "smiles":
+            value = candidate.get("smiles")
+        elif identifier_type == "inchikey":
+            value = candidate.get("searchValue")
+        else:
+            value = None
+        if not isinstance(value, str):
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+    def _resolution_not_found_payload(
+        self,
+        *,
+        identifier: str,
+        identifier_type: str,
+        warnings: List[str],
+    ) -> Dict[str, Any]:
+        return {
+            "status": "not_found",
+            "inputIdentifier": identifier,
+            "inputType": identifier_type,
+            "canonicalDtxsid": None,
+            "preferredName": None,
+            "casrn": None,
+            "searchModeUsed": None,
+            "candidateCount": 0,
+            "candidates": [],
+            "warnings": list(warnings),
+        }
+
+    def _enrich_resolution_candidate(self, candidate: Dict[str, Any]) -> Dict[str, Any]:
+        dtxsid = candidate.get("dtxsid")
+        if not dtxsid:
+            return candidate
+        try:
+            detail = self.get_chemical_details(
+                identifier=dtxsid,
+                id_type="dtxsid",
+                subset="identifiers",
+            )
+        except Exception:
+            return candidate
+        enriched = dict(candidate)
+        enriched["preferredName"] = detail.get("preferredName") or candidate.get(
+            "preferredName"
+        )
+        enriched["casrn"] = detail.get("casrn") or candidate.get("casrn")
+        enriched["smiles"] = detail.get("smiles") or candidate.get("smiles")
+        synonyms = detail.get("synonyms")
+        if isinstance(synonyms, list):
+            enriched["synonyms"] = [item for item in synonyms if isinstance(item, str)]
+        return enriched
+
     def get_chemical_structure_file(
         self,
         identifier_type: str,
@@ -585,3 +900,21 @@ class ChemicalResource(BaseResource):
         if file_format.lower() == "image":
             response["imageFormat"] = (image_format or "PNG").upper()
         return response
+    _DTXSID_RE = re.compile(r"^DTXSID\d{7,}$", re.IGNORECASE)
+    _IDENTIFIER_TYPE_ALIASES = {
+        "dtxsid": "dtxsid",
+        "sid": "dtxsid",
+        "dsstox": "dtxsid",
+        "cas": "casrn",
+        "casrn": "casrn",
+        "name": "name",
+        "preferred_name": "name",
+        "smiles": "smiles",
+        "inchikey": "inchikey",
+        "inchi": "inchikey",
+    }
+    _RESOLUTION_FALLBACKS = {
+        "name": ("starts-with", "contains"),
+        "smiles": ("contains",),
+        "inchikey": ("contains",),
+    }

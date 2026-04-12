@@ -2,7 +2,7 @@
 
 This document describes the current public architecture of the EPA CompTox MCP server.
 
-The key boundary for `v0.2.0` is simple:
+The key boundary for `v0.2.1` is simple:
 
 - the default public server is an evidence and federation MCP
 - it exposes CompTox retrieval resources over MCP
@@ -31,6 +31,8 @@ The key boundary for `v0.2.0` is simple:
 │  • exposure            • hazard                           │
 │  • chemical_list       • cheminformatics                  │
 │  • metadata            • interop                          │
+│  • prioritization                                        │
+│  • manifest                                              │
 └──────────────┬────────────────────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────────────────────┐
@@ -59,6 +61,8 @@ This is the public contract the README and release notes should describe.
 - `exposure`: CPDat, HTTK, SEEM, MMDB, CCD
 - `hazard`: ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC
 - `metadata`: model cards and applicability definitions
+- `prioritization`: screening-style AED/exposure prioritization summaries with explicit caveats
+- `manifest`: machine-readable discovery inventory for resources, tools, schemas, and boundary notes
 - `interop`: portable evidence-pack assembly plus AOP and PBPK handoff builders
 - `cheminformatics` and `chemical_list`: supporting utility/catalog helpers
 
@@ -83,7 +87,7 @@ Until that changes, documentation must treat them as:
 ## 5. Validation and release discipline
 
 - Public response contracts live under `docs/contracts/schemas/`.
-- Current public schema coverage includes `common/`, `chemical/`, `cheminformatics/`, `hazard/`, `exposure/`, `bioactivity/`, `workflow/`, `metadata/`, and `predictive/`.
+- Current public schema coverage includes `common/`, `chemical/`, `cheminformatics/`, `hazard/`, `exposure/`, `bioactivity/`, `workflow/`, `metadata/`, `risk/`, `manifest/`, and `predictive/`.
 - Root portable evidence objects under `schemas/` provide the cross-suite handoff layer, while `docs/contracts/schemas/` remains the MCP response-wrapper layer.
 - `tests/test_mcp_conformance_suite.py` and `tests/test_tool_contracts.py` are the current baseline gates for the registered public surface.
 
@@ -92,6 +96,7 @@ Until that changes, documentation must treat them as:
 CompTox MCP should be documented as:
 
 - a source-grounded evidence and federation MCP
+- a source-grounded screening-prioritization MCP for early triage only
 - not the suite orchestrator
 - not the owner of OECD AOP semantics
 - not the owner of PBPK qualification or internal exposure objects

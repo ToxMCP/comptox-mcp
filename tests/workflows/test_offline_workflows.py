@@ -53,6 +53,13 @@ def _sanitize_bundle(bundle: Dict[str, any]) -> Dict[str, any]:
         "evidence": {
             "confidenceBand": bundle["evidence"].get("confidenceBand"),
             "scores": bundle["evidence"].get("scores"),
+            "assessment": {
+                key: {
+                    "status": value.get("status"),
+                    "summary": value.get("summary"),
+                }
+                for key, value in (bundle["evidence"].get("assessment") or {}).items()
+            },
             "recommendedActions": bundle["evidence"].get("recommendedActions"),
         },
     }
@@ -116,9 +123,30 @@ def _expected_snapshot(scenario: str) -> Dict[str, any]:
                 "evidence_quality": 0.74,
                 "predictive_agreement": 0.85,
             },
+            "assessment": {
+                "identityIntegrity": {
+                    "status": "robust",
+                    "summary": "Target identity resolved uniquely through an exact match.",
+                },
+                "domainClearance": {
+                    "status": "robust",
+                    "summary": "All predictive steps that ran were inside domain.",
+                },
+                "dataCompleteness": {
+                    "status": "robust",
+                    "summary": "Required CTX context slices were present.",
+                },
+                "predictiveSupport": {
+                    "status": "limited",
+                    "summary": "Predictive support was present but sparse or only moderately consistent.",
+                },
+                "observedConcordance": {
+                    "status": "limited",
+                    "summary": "No comparable observed hazard records were available for concordance checks.",
+                },
+            },
             "recommendedActions": [
-                "Seek SME review",
-                "Augment analogue set or supporting evidence",
+                "Seek SME review before downstream use.",
             ],
         },
     }
@@ -159,6 +187,13 @@ def test_offline_orchestrator_scenarios(tmp_path: Path, scenario: str) -> None:
     assert {"ctx_data.json", "predictive_results.json", "evidence.json"}.issubset(
         attachment_names
     )
+    interop_dir = attachments_dir / "interop"
+    assert interop_dir.exists()
+    assert {
+        "comptox_evidence_pack.json",
+        "aop_linkage_summary.json",
+        "pbpk_context_bundle.json",
+    }.issubset({path.name for path in interop_dir.iterdir()})
 
     storage_meta = bundle.get("storage") or {}
     assert storage_meta.get("bundlePath") == str(bundle_path.relative_to(tmp_path))

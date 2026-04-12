@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List
 
 from fastapi.testclient import TestClient
@@ -105,6 +106,48 @@ class DomainMetadataMCPServer(MCPServer):
         return {"echo": DomainMetadataEchoResource()}
 
 
+class PrioritizationEchoResource(BaseResource):
+    @property
+    def name(self) -> str:
+        return "prioritization"
+
+    @property
+    def description(self) -> str:
+        return "Prioritization test resource"
+
+    def __init__(self, api_key: str = "dummy"):
+        super().__init__(api_key)
+
+    def get_tools(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "name": "prioritize_risk_signals",
+                "description": "Return a deterministic prioritization payload",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "dtxsid": {"type": "string"},
+                    },
+                    "required": ["dtxsid"],
+                },
+            }
+        ]
+
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+        if tool_name != "prioritize_risk_signals":
+            raise ValueError("Unknown tool")
+        self._last_metadata = {"resource": self.name}
+        return {
+            "chemicalRef": {"dtxsid": parameters["dtxsid"]},
+            "prioritization": {"priorityBand": "higher", "marginOfExposure": 50.0},
+        }
+
+
+class PrioritizationReadMCPServer(MCPServer):
+    def _initialize_resources(self) -> Dict[str, BaseResource]:
+        return {"prioritization": PrioritizationEchoResource()}
+
+
 def _create_app():
     server = DummyMCPServer(api_key="dummy-key", validate_health=False)
     return create_app(server=server)
@@ -117,6 +160,11 @@ def _create_nested_metadata_app():
 
 def _create_domain_metadata_app():
     server = DomainMetadataMCPServer(api_key="dummy-key", validate_health=False)
+    return create_app(server=server)
+
+
+def _create_prioritization_read_app():
+    server = PrioritizationReadMCPServer(api_key="dummy-key", validate_health=False)
     return create_app(server=server)
 
 
@@ -263,3 +311,25 @@ def test_http_transport_preserves_domain_metadata_when_attaching_runtime_metadat
             "remaining": None,
             "reset": None,
         }
+
+
+def test_http_resources_read_infers_prioritization_tool_from_resource_uri() -> None:
+    app = _create_prioritization_read_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 14,
+                "method": "resources/read",
+                "params": {
+                    "uri": "resource://prioritization?dtxsid=DTXSID7020182",
+                },
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()["result"]["contents"][0]
+        text = json.loads(payload["text"])
+        assert text["chemicalRef"]["dtxsid"] == "DTXSID7020182"
+        assert text["prioritization"]["priorityBand"] == "higher"

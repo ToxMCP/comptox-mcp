@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from epacomp_tox.predictive import ADCheckResult, PredictiveRequest, PredictiveResponse
+
+IdentifierResolutionStatus = Literal["exact", "fallback", "ambiguous", "not_found"]
 
 
 class MetadataTrace(BaseModel):
@@ -20,6 +22,9 @@ class IdentifierResolution(BaseModel):
     input_identifier: str
     input_type: str
     dtxsid: str
+    resolution_status: IdentifierResolutionStatus = "exact"
+    search_mode_used: str = "equals"
+    candidate_count: int = 1
     matched_record: Dict[str, Any] = Field(default_factory=dict)
     detail_record: Dict[str, Any] = Field(default_factory=dict)
     preferred_name: Optional[str] = None
@@ -38,6 +43,7 @@ class CtxDataBundle(BaseModel):
     hazard: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
     exposure: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
     cheminformatics: Dict[str, Any] = Field(default_factory=dict)
+    mechanistic_context: Dict[str, Any] = Field(default_factory=dict)
     data_gaps: List[str] = Field(default_factory=list)
     trace: List[MetadataTrace] = Field(default_factory=list)
     cache_hit: bool = False
@@ -99,6 +105,8 @@ class EvidenceSynthesis(BaseModel):
     """Structured result returned by the evidence grading engine."""
 
     confidence_band: str
-    scores: EvidenceScore
+    scores: Optional[EvidenceScore] = None
+    assessment: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     narrative: str
     recommended_actions: List[str] = Field(default_factory=list)
+    guardrail_events: List["GuardrailEvent"] = Field(default_factory=list)

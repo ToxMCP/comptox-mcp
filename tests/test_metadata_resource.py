@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from epacomp_tox.metadata import ModelCardStore
+from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.resources.metadata import MetadataResource
 
 SAMPLE_CARD = {
@@ -73,6 +74,11 @@ def test_metadata_resource_lists_cards(sample_store: ModelCardStore) -> None:
     result = resource.execute_tool("metadata_get_model_card", {})
     assert result["modelCards"]
     assert result["modelCards"][0]["card"]["modelDetails"]["name"] == "Sample Model"
+    assert result["modelCards"][0]["enforcementLocation"] == "delegated-service"
+    assert result["modelCards"][0]["locallyEnforcedCriteria"] == [
+        "policy",
+        "errorCode",
+    ]
 
 
 def test_metadata_resource_filters_by_name(sample_store: ModelCardStore) -> None:
@@ -93,3 +99,33 @@ def test_metadata_resource_filters_by_compliance(sample_store: ModelCardStore) -
     assert len(approved["modelCards"]) == 1
     draft = resource.execute_tool("metadata_get_model_card", {"compliance": "draft"})
     assert draft["modelCards"] == []
+
+
+def test_metadata_resource_annotations_apply_to_applicability_definitions(
+    sample_store: ModelCardStore, tmp_path: Path
+) -> None:
+    ad_dir = tmp_path / "ad"
+    ad_dir.mkdir()
+    (ad_dir / "sample.json").write_text(
+        json.dumps(
+            {
+                "model": "Sample Model",
+                "version": "1.0.0",
+                "criteria": [{"type": "descriptor_range"}],
+                "policy": "block",
+                "errorCode": "SAMPLE_AD_FAIL",
+            }
+        ),
+        encoding="utf-8",
+    )
+    resource = MetadataResource(
+        store=sample_store,
+        ad_store=ApplicabilityDomainStore(directory=ad_dir),
+    )
+    result = resource.execute_tool(
+        "metadata_get_applicability_domain", {"model_name": "Sample Model"}
+    )
+    assert result["documentedCriteria"] == [{"type": "descriptor_range"}]
+    assert result["delegatedCriteria"] == [{"type": "descriptor_range"}]
+    assert result["locallyEnforcedCriteria"] == ["policy", "errorCode"]
+    assert result["enforcementLocation"] == "delegated-service"

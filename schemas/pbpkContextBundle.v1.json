@@ -57,6 +57,26 @@
         ]
       }
     },
+    "identityResolution": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "provenance": {
       "$ref": "#/$defs/provenance"
     },
@@ -147,6 +167,14 @@
         "cardUri": {
           "type": "string",
           "format": "uri"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "warnings": {
+          "type": "array",
+          "items": {"type": "string"}
         }
       }
     },

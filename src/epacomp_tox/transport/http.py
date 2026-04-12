@@ -373,24 +373,11 @@ def _handle_tools_list(server: MCPServer, params: Dict[str, Any]) -> Dict[str, A
 
     cursor = params.get("cursor")
     limit = params.get("limit")
-
-    # --- START MODIFICATION: Enforce pagination for HTTP transport ---
-    DEFAULT_HTTP_LIMIT = 50  # Set a reasonable maximum page size
-
     limit_value: Optional[int] = None
     if isinstance(limit, (int, float)):
         limit_value = int(limit)
         if limit_value <= 0:
-            # If client requests 0 or negative, use the default limit.
-            limit_value = DEFAULT_HTTP_LIMIT
-        else:
-            # Respect the client's limit up to the server maximum
-            limit_value = min(limit_value, DEFAULT_HTTP_LIMIT)
-
-    if limit_value is None:
-        # If the limit is missing or invalid type, apply the default.
-        limit_value = DEFAULT_HTTP_LIMIT
-    # --- END MODIFICATION ---
+            limit_value = None
 
     tools, next_cursor = server.list_tools(cursor=cursor, limit=limit_value)
     return {"tools": tools, "nextCursor": next_cursor}
@@ -981,6 +968,7 @@ async def _handle_resources_read(
                 "exposure": "search_exposures",
                 "bioactivity": "search_bioactivity",
                 "chemical_list": "search_chemical_list",
+                "prioritization": "prioritize_risk_signals",
             }
             tool_to_use = inferred_tool_map.get(resource_name)
             args_to_use = inferred_args

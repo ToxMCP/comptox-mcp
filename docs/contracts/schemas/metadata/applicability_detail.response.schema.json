@@ -12,6 +12,26 @@
     },
     "policy": {"type": "string"},
     "errorCode": {"type": ["string", "null"]},
+    "documentedCriteria": {
+      "type": "array",
+      "items": {"type": "object", "additionalProperties": true}
+    },
+    "delegatedCriteria": {
+      "type": "array",
+      "items": {"type": "object", "additionalProperties": true}
+    },
+    "locallyEnforcedCriteria": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "enforcementLocation": {
+      "type": "string",
+      "enum": ["delegated-service", "local-engine"]
+    },
+    "guardrailStatus": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "references": {
       "type": "array",
       "items": {"type": "object", "additionalProperties": true}
