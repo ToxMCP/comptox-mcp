@@ -27,6 +27,7 @@
 | Pipeline | Trigger | Suites | Reporting |
 | --- | --- | --- | --- |
 | PR Gate | Every pull request | Unit + contract + fast orchestrator smoke scenarios | Pytest JUnit + summary comment |
+| Scientific validation automation | Weekly on Tuesday plus manual dispatch | Offline scenario scorecards and live concordance drift checks | JSON/Markdown artifacts uploaded by `.github/workflows/scientific-validation.yml` |
 | Nightly Sandbox | 01:00 UTC daily | Full orchestrator scenarios, predictive regression, metadata validation | HTML bundle reports, JSON provenance summaries, Slack/email alerts |
 | Weekly Load | Off-peak (e.g., Sunday) | Locust/k6 runs at 10× expected load | Aggregated latency/throughput dashboards, CSV export |
 
@@ -54,8 +55,8 @@
    - Author Locust file targeting websocket endpoints; parameterize chemical lists and concurrency.
    - Provide k6 script for REST-based predictive services.
 5. **Automation**
-   - Create GitHub Actions workflows (`ci-workflows.yml`, `nightly-workflows.yml`) wiring environment secrets, persistence directories, and artifact uploads.
-   - Ensure nightly job stores bundle metadata + reports in `artifacts/workflows/<date>/`.
+   - `.github/workflows/scientific-validation.yml` now runs the offline report on every scheduled/manual execution and runs the live concordance panel when `CTX_API_KEY` is available, uploading JSON/Markdown artifacts for both.
+   - Extend this into a broader nightly workflow once orchestrator scenarios beyond the offline suite are stable enough for routine CI execution.
 
 ## Risks & Mitigations
 - **External API instability:** add sandbox fallback configuration and skip markers when endpoints are offline; ensure nightly job reports skips.
