@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from ctxpy import RateLimitInfo
+from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
 from epacomp_tox.orchestrator.identifiers import (
     IdentifierResolutionError,
@@ -20,7 +21,6 @@ from epacomp_tox.predictive import (
     PredictiveRequest,
     PredictiveServiceBase,
 )
-from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.predictive.clients import PredictiveClient
 from epacomp_tox.resources.bioactivity import BioactivityResource
 from epacomp_tox.resources.cheminformatics import CheminformaticsResource
@@ -78,7 +78,9 @@ class _StubPredictiveService(PredictiveServiceBase):
 class _AnaloguePreparingStubPredictiveService(_StubPredictiveService):
     def __init__(self, *, analogue_ids, **kwargs):
         super().__init__(**kwargs)
-        self.analogue_ids = [str(value).strip().upper() for value in analogue_ids if value]
+        self.analogue_ids = [
+            str(value).strip().upper() for value in analogue_ids if value
+        ]
 
     def prepare_request(self, request: PredictiveRequest) -> PredictiveRequest:
         ad_inputs = dict(request.ad_inputs)
@@ -226,8 +228,14 @@ def test_ctx_data_assembler_fetches_datasets_and_uses_cache():
     assert bundle.exposure["cpdat:fc"][0]["fc"] == "industrial"
     assert "exposure:qsurs" in bundle.data_gaps  # qsurs returned empty
     assert bundle.cheminformatics["toxprints"]["fingerprints"] == ["FP1"]
-    assert bundle.mechanistic_context["target"]["bioactivity_summary"][0]["geneSymbol"] == "PPARG"
-    assert bundle.mechanistic_context["target"]["aop_mappings"][0]["eventLabel"] == "PPARG activation"
+    assert (
+        bundle.mechanistic_context["target"]["bioactivity_summary"][0]["geneSymbol"]
+        == "PPARG"
+    )
+    assert (
+        bundle.mechanistic_context["target"]["aop_mappings"][0]["eventLabel"]
+        == "PPARG activation"
+    )
     assert bundle.trace[0].metadata["rate_limit"]["limit"] == 100
 
     # Cached execution should avoid additional upstream calls
@@ -436,7 +444,12 @@ def test_genra_orchestrator_successful_bundle(tmp_path):
     assert bundle["status"] == "success"
     assert bundle["target"]["dtxsid"] == "DTXSID0000001"
     assert bundle["ctxData"]["hazard"]["all"][0]["hazard"] == 1
-    assert bundle["ctxData"]["mechanisticContext"]["target"]["bioactivity_summary"][0]["geneSymbol"] == "PPARG"
+    assert (
+        bundle["ctxData"]["mechanisticContext"]["target"]["bioactivity_summary"][0][
+            "geneSymbol"
+        ]
+        == "PPARG"
+    )
     assert bundle["predictive"]["results"][0]["prediction"] == {"prediction": "ok"}
     assert bundle["evidence"]["confidenceBand"] in {"Robust", "Limited", "Unavailable"}
     assert "assessment" in bundle["evidence"]
@@ -571,9 +584,14 @@ def test_genra_orchestrator_enriches_predictive_request_with_auto_analogue_conte
     mechanistic_context = bundle["predictive"]["results"][0]["request"]["ad_inputs"][
         "expert_rule"
     ]["mechanistic_context"]
-    assert mechanistic_context["target"]["bioactivity_summary"][0]["geneSymbol"] == "PPARG"
+    assert (
+        mechanistic_context["target"]["bioactivity_summary"][0]["geneSymbol"] == "PPARG"
+    )
     assert mechanistic_context["analogues"][0]["dtxsid"] == "DTXSID0000999"
-    assert mechanistic_context["analogues"][0]["aop_mappings"][0]["eventLabel"] == "PPARG activation"
+    assert (
+        mechanistic_context["analogues"][0]["aop_mappings"][0]["eventLabel"]
+        == "PPARG activation"
+    )
 
 
 def test_genra_orchestrator_backfills_output_derived_analogue_context(tmp_path):
@@ -624,9 +642,19 @@ def test_genra_orchestrator_backfills_output_derived_analogue_context(tmp_path):
 
     def _aop_by_aeid(_lookup_type: str, aeid: str):
         if aeid == "123":
-            return [{"eventLabel": "PPARG activation", "eventType": "molecular_initiating_event"}]
+            return [
+                {
+                    "eventLabel": "PPARG activation",
+                    "eventType": "molecular_initiating_event",
+                }
+            ]
         if aeid == "456":
-            return [{"eventLabel": "PPARG activation", "eventType": "molecular_initiating_event"}]
+            return [
+                {
+                    "eventLabel": "PPARG activation",
+                    "eventType": "molecular_initiating_event",
+                }
+            ]
         return []
 
     bioactivity_resource.get_bioactivity_summary_by_dtxsid.side_effect = _summary_by_sid
@@ -679,11 +707,17 @@ def test_genra_orchestrator_backfills_output_derived_analogue_context(tmp_path):
 
     request_payload = bundle["predictive"]["results"][0]["request"]["ad_inputs"]
     assert request_payload["expert_rule"]["analogueIds"] == ["DTXSID0000999"]
-    assert request_payload["expert_rule"]["mechanistic_context"]["analogues"][0]["dtxsid"] == "DTXSID0000999"
+    assert (
+        request_payload["expert_rule"]["mechanistic_context"]["analogues"][0]["dtxsid"]
+        == "DTXSID0000999"
+    )
     assert bundle["predictive"]["results"][0]["metadata"]["resolvedAnalogueIds"] == [
         "DTXSID0000999"
     ]
-    assert bundle["predictive"]["results"][0]["metadata"]["analogueIdSource"] == "genra-prediction-payload"
+    assert (
+        bundle["predictive"]["results"][0]["metadata"]["analogueIdSource"]
+        == "genra-prediction-payload"
+    )
     assert bundle["analogueProvenance"] == {
         "resolvedAnalogueIds": ["DTXSID0000999"],
         "resolvedAnalogueCount": 1,
@@ -725,7 +759,10 @@ def test_predictive_coordinator_backfills_denied_request_from_ad_details():
     assert result.results[0].request.ad_inputs["expert_rule"]["analogueIds"] == [
         "DTXSID0000777"
     ]
-    assert result.results[0].request.ad_inputs["expert_rule"]["analogueIdSource"] == "genra-ad-details"
+    assert (
+        result.results[0].request.ad_inputs["expert_rule"]["analogueIdSource"]
+        == "genra-ad-details"
+    )
 
 
 def test_offline_orchestrator_emits_empty_analogue_provenance_by_default(tmp_path):

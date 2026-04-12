@@ -8,8 +8,8 @@ import pytest
 
 from epacomp_tox.metadata.applicability import ApplicabilityDomainStore
 from epacomp_tox.predictive import (
-    ADEvaluatorError,
     ADCheckResult,
+    ADEvaluatorError,
     DelegatedServiceADEvaluator,
     ExternalChemistryServiceADEvaluator,
     GenRAService,
@@ -172,7 +172,9 @@ def test_genra_service_prepares_request_with_auto_analogue_ids() -> None:
         "DTXSID0000999",
         "DTXSID0000888",
     ]
-    assert prepared.ad_inputs["expert_rule"]["analogueIdSource"] == "genra-analogue-search"
+    assert (
+        prepared.ad_inputs["expert_rule"]["analogueIdSource"] == "genra-analogue-search"
+    )
 
 
 def test_genra_service_surfaces_output_derived_analogue_ids_in_metadata() -> None:
@@ -296,7 +298,11 @@ def test_external_chemistry_sidecar_posts_request_and_sets_metadata(
         urlopen=_fake_urlopen,
     )
     service = DummyService(
-        config={"name": "Dummy Service", "version": "0.1", "ad_model_name": "Dummy Service"},
+        config={
+            "name": "Dummy Service",
+            "version": "0.1",
+            "ad_model_name": "Dummy Service",
+        },
         ad_store=ad_store,
         ad_evaluator=evaluator,
     )
@@ -315,7 +321,9 @@ def test_external_chemistry_sidecar_posts_request_and_sets_metadata(
     assert result.metadata["adEnforcementLocation"] == "local-engine"
 
 
-def test_external_chemistry_sidecar_falls_back_to_delegated_on_transport_error() -> None:
+def test_external_chemistry_sidecar_falls_back_to_delegated_on_transport_error() -> (
+    None
+):
     def _failing_urlopen(request, timeout):
         raise urllib.error.URLError("sidecar unavailable")
 
@@ -332,10 +340,14 @@ def test_external_chemistry_sidecar_falls_back_to_delegated_on_transport_error()
     assert result.metadata["adEvaluator"] == "external-chemistry-service"
     assert result.metadata["adEnforcementLocation"] == "delegated-service"
     assert result.metadata["adFallbackUsed"] is True
-    assert result.metadata["adFallbackReason"] == "external-chemistry-service-unavailable"
+    assert (
+        result.metadata["adFallbackReason"] == "external-chemistry-service-unavailable"
+    )
 
 
-def test_external_chemistry_sidecar_raises_without_fallback_on_transport_error() -> None:
+def test_external_chemistry_sidecar_raises_without_fallback_on_transport_error() -> (
+    None
+):
     def _failing_urlopen(request, timeout):
         raise urllib.error.URLError("sidecar unavailable")
 
@@ -345,7 +357,9 @@ def test_external_chemistry_sidecar_raises_without_fallback_on_transport_error()
     )
     service = DummyService(ad_evaluator=evaluator)
 
-    with pytest.raises(ADEvaluatorError, match="external chemistry AD evaluator failed"):
+    with pytest.raises(
+        ADEvaluatorError, match="external chemistry AD evaluator failed"
+    ):
         service.check_applicability_domain(
             PredictiveRequest(chemical_identifier="DTXSID000001")
         )

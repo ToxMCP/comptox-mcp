@@ -43,8 +43,14 @@ def test_contract_manifest_tracks_schema_files_and_examples() -> None:
         for path in (ROOT_DIR / "docs" / "contracts" / "schemas").glob("*/*.json")
     )
 
-    assert sorted(item["file"] for item in result["portableObjectSchemas"]) == portable_files
-    assert sorted(item["path"] for item in result["responseSchemas"]) == response_schema_paths
+    assert (
+        sorted(item["file"] for item in result["portableObjectSchemas"])
+        == portable_files
+    )
+    assert (
+        sorted(item["path"] for item in result["responseSchemas"])
+        == response_schema_paths
+    )
 
     interop_refs = result["publicContractReferences"]["interop"]
     assert {item["toolName"] for item in interop_refs} == {
@@ -52,9 +58,7 @@ def test_contract_manifest_tracks_schema_files_and_examples() -> None:
         "build_aop_linkage_summary",
         "build_pbpk_context_bundle",
     }
-    prioritization_refs = result["publicContractReferences"][
-        "screeningPrioritization"
-    ]
+    prioritization_refs = result["publicContractReferences"]["screeningPrioritization"]
     assert prioritization_refs == [
         {
             "toolName": "prioritize_risk_signals",

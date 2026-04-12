@@ -97,9 +97,7 @@ class EvidenceSynthesizer:
             },
         }
 
-    def _domain_clearance(
-        self, steps: List[PredictiveStepResult]
-    ) -> dict[str, Any]:
+    def _domain_clearance(self, steps: List[PredictiveStepResult]) -> dict[str, Any]:
         if not steps:
             return {
                 "status": "unavailable",
@@ -142,9 +140,7 @@ class EvidenceSynthesizer:
             },
         }
 
-    def _data_completeness(
-        self, ctx_bundle: Optional[CtxDataBundle]
-    ) -> dict[str, Any]:
+    def _data_completeness(self, ctx_bundle: Optional[CtxDataBundle]) -> dict[str, Any]:
         if ctx_bundle is None:
             return {
                 "status": "unavailable",
@@ -194,7 +190,9 @@ class EvidenceSynthesizer:
         )
         if len(successful_steps) >= 2 and mean_agreement >= 0.8:
             status = "robust"
-            summary = "Multiple successful predictive results provided consistent support."
+            summary = (
+                "Multiple successful predictive results provided consistent support."
+            )
         else:
             status = "limited"
             summary = "Predictive support was present but sparse or only moderately consistent."
@@ -442,11 +440,15 @@ class EvidenceSynthesizer:
         if assessment["identityIntegrity"]["status"] != "robust":
             actions.append("Review and confirm the resolved chemical identity.")
         if assessment["domainClearance"]["status"] != "robust":
-            actions.append("Revisit applicability-domain constraints before relying on predictions.")
+            actions.append(
+                "Revisit applicability-domain constraints before relying on predictions."
+            )
         if assessment["dataCompleteness"]["status"] != "robust":
             actions.append("Acquire or recover the missing CTX evidence slices.")
         if concordance_events:
-            actions.append("Investigate the prediction-vs-observation mismatch before downstream use.")
+            actions.append(
+                "Investigate the prediction-vs-observation mismatch before downstream use."
+            )
         if not actions:
             actions.append("Seek SME review before downstream use.")
         return actions

@@ -183,9 +183,7 @@ class MetadataResource(BaseResource):
     def _annotate_model_card_entry(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         payload = deepcopy(entry)
         card = payload.get("card", {})
-        documented_criteria = (
-            card.get("applicabilityDomain", {}).get("criteria") or []
-        )
+        documented_criteria = card.get("applicabilityDomain", {}).get("criteria") or []
         payload["documentedCriteria"] = documented_criteria
         payload["delegatedCriteria"] = documented_criteria
         payload["locallyEnforcedCriteria"] = ["policy", "errorCode"]

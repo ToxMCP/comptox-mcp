@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import json
+from copy import deepcopy
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
@@ -323,9 +323,9 @@ class GenRAOrchestrator:
             analogue_context = mechanistic_context.get("analogues")
             source = step.metadata.get("analogueIdSource")
             if source is None:
-                expert_rule = step.request.ad_inputs.get("expert_rule") or step.request.ad_inputs.get(
-                    "expertRule"
-                )
+                expert_rule = step.request.ad_inputs.get(
+                    "expert_rule"
+                ) or step.request.ad_inputs.get("expertRule")
                 if isinstance(expert_rule, dict):
                     source = expert_rule.get("analogueIdSource")
 
@@ -436,7 +436,9 @@ class GenRAOrchestrator:
                 resolution=resolution,
                 ctx_bundle=ctx_bundle,
             )
-            enriched_results.append(step.model_copy(update={"request": enriched_request}))
+            enriched_results.append(
+                step.model_copy(update={"request": enriched_request})
+            )
         return predictive_result.model_copy(update={"results": enriched_results})
 
     def _prepare_predictive_plan(
@@ -470,7 +472,9 @@ class GenRAOrchestrator:
             return request
 
         ad_inputs = deepcopy(request.ad_inputs)
-        expert_rule = dict(ad_inputs.get("expert_rule") or ad_inputs.get("expertRule") or {})
+        expert_rule = dict(
+            ad_inputs.get("expert_rule") or ad_inputs.get("expertRule") or {}
+        )
         mechanistic_context = dict(
             expert_rule.get("mechanistic_context")
             or expert_rule.get("mechanisticContext")
@@ -484,10 +488,12 @@ class GenRAOrchestrator:
 
         if analogue_ids:
             existing_analogues = mechanistic_context.get("analogues") or []
-            mechanistic_context["analogues"] = self._merge_analogue_mechanistic_contexts(
-                existing_analogues,
-                analogue_ids,
-                target_dtxsid=resolution.dtxsid,
+            mechanistic_context["analogues"] = (
+                self._merge_analogue_mechanistic_contexts(
+                    existing_analogues,
+                    analogue_ids,
+                    target_dtxsid=resolution.dtxsid,
+                )
             )
 
         if not mechanistic_context:
@@ -518,9 +524,15 @@ class GenRAOrchestrator:
             if not normalized_id or normalized_id == target_dtxsid:
                 continue
             existing = existing_by_id.pop(normalized_id, None)
-            fetched = self.ctx_data_assembler.get_mechanistic_context_slice(normalized_id)
+            fetched = self.ctx_data_assembler.get_mechanistic_context_slice(
+                normalized_id
+            )
             if existing:
-                merged.append(self._merge_mechanistic_mapping(existing, fetched, analogue_id=normalized_id))
+                merged.append(
+                    self._merge_mechanistic_mapping(
+                        existing, fetched, analogue_id=normalized_id
+                    )
+                )
             elif fetched:
                 merged.append(dict(fetched))
 
@@ -576,7 +588,9 @@ class GenRAOrchestrator:
                 value = candidate.get(key)
                 if key == "analogues" and isinstance(value, list):
                     for index, item in enumerate(value):
-                        analogue_id = self._extract_analogue_id(item, fallback_index=index)
+                        analogue_id = self._extract_analogue_id(
+                            item, fallback_index=index
+                        )
                         if analogue_id and analogue_id not in seen:
                             seen.add(analogue_id)
                             analogue_ids.append(analogue_id)
@@ -586,12 +600,16 @@ class GenRAOrchestrator:
                         if analogue_id and analogue_id not in seen:
                             seen.add(analogue_id)
                             analogue_ids.append(analogue_id)
-            mechanistic = candidate.get("mechanistic_context") or candidate.get("mechanisticContext")
+            mechanistic = candidate.get("mechanistic_context") or candidate.get(
+                "mechanisticContext"
+            )
             if isinstance(mechanistic, dict):
                 analogue_values = mechanistic.get("analogues")
                 if isinstance(analogue_values, list):
                     for index, item in enumerate(analogue_values):
-                        analogue_id = self._extract_analogue_id(item, fallback_index=index)
+                        analogue_id = self._extract_analogue_id(
+                            item, fallback_index=index
+                        )
                         if analogue_id and analogue_id not in seen:
                             seen.add(analogue_id)
                             analogue_ids.append(analogue_id)

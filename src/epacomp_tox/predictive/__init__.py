@@ -12,20 +12,6 @@ from .ad_sidecar import (
     build_reference_ad_sidecar_app,
     evaluate_reference_ad,
 )
-from .descriptor_providers import (
-    DescriptorContext,
-    DescriptorProvider,
-    DescriptorProviderError,
-    ExternalChemistryDescriptorProvider,
-    build_descriptor_provider_from_env,
-)
-from .rule_providers import (
-    ExpertRuleContext,
-    ExpertRuleProvider,
-    ExpertRuleProviderError,
-    ExternalExpertRuleProvider,
-    build_rule_provider_from_env,
-)
 from .base import (
     ADCheckResult,
     PredictiveRequest,
@@ -33,9 +19,23 @@ from .base import (
     PredictiveServiceBase,
 )
 from .clients import PredictiveClient
+from .descriptor_providers import (
+    DescriptorContext,
+    DescriptorProvider,
+    DescriptorProviderError,
+    ExternalChemistryDescriptorProvider,
+    build_descriptor_provider_from_env,
+)
 from .genra_service import GenRAService
 from .opera_service import OperaPropertyService
 from .router import build_predictive_router
+from .rule_providers import (
+    ExpertRuleContext,
+    ExpertRuleProvider,
+    ExpertRuleProviderError,
+    ExternalExpertRuleProvider,
+    build_rule_provider_from_env,
+)
 from .test_service import TestConsensusPredictiveService
 
 __all__ = [

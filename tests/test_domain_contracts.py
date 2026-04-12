@@ -14,7 +14,9 @@ from epacomp_tox.resources.manifest import ContractManifestResource
 from epacomp_tox.resources.prioritization import PrioritizationResource
 
 SCHEMA_PATHS = [
-    Path("docs/contracts/schemas/chemical/resolve_chemical_identifier.response.schema.json"),
+    Path(
+        "docs/contracts/schemas/chemical/resolve_chemical_identifier.response.schema.json"
+    ),
     Path("docs/contracts/schemas/hazard/search_hazard.response.schema.json"),
     Path("docs/contracts/schemas/hazard/batch_search_hazard.response.schema.json"),
     Path("docs/contracts/schemas/exposure/search_cpdat.response.schema.json"),
@@ -133,7 +135,9 @@ def test_risk_tools_use_domain_specific_response_schemas() -> None:
 
 
 def test_manifest_tools_use_domain_specific_response_schemas() -> None:
-    tools = _tool_map(ContractManifestResource(api_key="fake", server_getter=lambda: None))
+    tools = _tool_map(
+        ContractManifestResource(api_key="fake", server_getter=lambda: None)
+    )
     assert tools["get_contract_manifest"]["responseSchemaRef"] == {
         "namespace": "manifest",
         "name": "get_contract_manifest.response.schema",

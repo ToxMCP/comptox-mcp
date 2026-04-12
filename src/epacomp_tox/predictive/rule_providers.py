@@ -116,7 +116,9 @@ class ExternalExpertRuleProvider(ExpertRuleProvider):
             raise ExpertRuleProviderError(
                 "expert-rule backend response omitted rule context"
             )
-        metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+        metadata = (
+            payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+        )
         source = str(payload.get("source") or self.name)
         return ExpertRuleContext(payload=context, source=source, metadata=metadata)
 

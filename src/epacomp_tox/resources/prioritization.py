@@ -81,7 +81,9 @@ class PrioritizationResource(BaseResource):
             }
         ]
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_tool(
+        self, tool_name: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         if tool_name != "prioritize_risk_signals":
             raise ValueError(f"Unknown tool: {tool_name}")
         return self.prioritize_risk_signals(
@@ -433,7 +435,9 @@ class PrioritizationResource(BaseResource):
         )
 
         if aed_value is None:
-            caveats.append("No usable AED value was available from the bioactivity resource.")
+            caveats.append(
+                "No usable AED value was available from the bioactivity resource."
+            )
         if exposure_value is None:
             caveats.append("No usable general exposure value was available from SEEM.")
 
@@ -469,7 +473,9 @@ class PrioritizationResource(BaseResource):
         if cpdat_records:
             supporting_signals.append("CPDat product-use records were present.")
         if mmdb_records:
-            supporting_signals.append("MMDB aggregate biomonitoring records were present.")
+            supporting_signals.append(
+                "MMDB aggregate biomonitoring records were present."
+            )
         if not supporting_signals:
             supporting_signals.append(
                 "No additional CPDat or MMDB signals were available to contextualize the screening margin."

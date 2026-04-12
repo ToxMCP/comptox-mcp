@@ -124,12 +124,14 @@ def evaluate_reference_ad(
             "criterionResults": criterion_results,
             "supportedCriteria": supported_count,
             "unsupportedCriteria": unsupported,
-            "criteriaCoverage": round(
-                supported_count / max(len(criteria), 1),
-                4,
-            )
-            if criteria
-            else 0.0,
+            "criteriaCoverage": (
+                round(
+                    supported_count / max(len(criteria), 1),
+                    4,
+                )
+                if criteria
+                else 0.0
+            ),
             "definitionModel": definition.get("model"),
             "definitionVersion": definition.get("version"),
         }
@@ -142,7 +144,9 @@ def build_reference_ad_sidecar_app(
     descriptor_provider: Optional[DescriptorProvider] = None,
     rule_provider: Optional[ExpertRuleProvider] = None,
 ) -> FastAPI:
-    active_descriptor_provider = descriptor_provider or build_descriptor_provider_from_env()
+    active_descriptor_provider = (
+        descriptor_provider or build_descriptor_provider_from_env()
+    )
     active_rule_provider = rule_provider or build_rule_provider_from_env()
     app = FastAPI(
         title="CompTox Reference AD Sidecar",
@@ -220,7 +224,9 @@ def _evaluate_similarity_criterion(
     ratio = float(score) / float(threshold) if float(threshold) > 0 else 1.0
     confidence = max(0.0, min(ratio, 1.0))
     if neighbors_required is not None and neighbors_available is not None:
-        neighbor_ratio = min(float(neighbors_available) / float(neighbors_required), 1.0)
+        neighbor_ratio = min(
+            float(neighbors_available) / float(neighbors_required), 1.0
+        )
         confidence = round((confidence + neighbor_ratio) / 2.0, 4)
     else:
         confidence = round(confidence, 4)
@@ -242,7 +248,9 @@ def _evaluate_coverage_criterion(
     request: PredictiveRequest, criterion: Dict[str, Any]
 ) -> Dict[str, Any]:
     coverage_inputs = request.ad_inputs.get("coverage") or {}
-    domains = coverage_inputs.get("domains") or coverage_inputs.get("availableDomains") or []
+    domains = (
+        coverage_inputs.get("domains") or coverage_inputs.get("availableDomains") or []
+    )
     if not isinstance(domains, list):
         domains = []
     normalized_domains = {str(domain).strip().lower() for domain in domains}
@@ -460,11 +468,15 @@ def _evaluate_expert_rule_criterion(
         or moa_context.get("targetTags")
         or moa_context.get("target")
     )
-    analogues_raw = moa_context.get("analogues") or moa_context.get("analoguesRaw") or []
+    analogues_raw = (
+        moa_context.get("analogues") or moa_context.get("analoguesRaw") or []
+    )
     analogue_contexts = _normalize_analogue_contexts(analogues_raw)
     derivation_source: Optional[str] = None
     if not target_tags or not analogue_contexts:
-        derived_context, derivation_source = _derive_mode_of_action_context(inline_context)
+        derived_context, derivation_source = _derive_mode_of_action_context(
+            inline_context
+        )
         if not target_tags:
             target_tags = _normalize_tags(
                 derived_context.get("target_tags") or derived_context.get("targetTags")
@@ -558,7 +570,9 @@ def _coerce_bounds_mapping(payload: Any) -> Dict[str, Dict[str, float]]:
     return result
 
 
-def _range_confidence(value: float, lower: float, upper: float, *, passed: bool) -> float:
+def _range_confidence(
+    value: float, lower: float, upper: float, *, passed: bool
+) -> float:
     if upper <= lower:
         return 1.0 if passed else 0.0
     if not passed:
@@ -598,8 +612,10 @@ def _normalize_analogue_contexts(value: Any) -> List[Dict[str, Any]]:
         tags_value: Any = item
         if isinstance(item, dict):
             analogue_id = str(item.get("id") or item.get("name") or analogue_id)
-            tags_value = item.get("tags") or item.get("mode_of_action_tags") or item.get(
-                "modeOfActionTags"
+            tags_value = (
+                item.get("tags")
+                or item.get("mode_of_action_tags")
+                or item.get("modeOfActionTags")
             )
         tags = _normalize_tags(tags_value)
         if tags:
@@ -640,7 +656,9 @@ def _derive_mode_of_action_context(value: Any) -> tuple[Dict[str, Any], Optional
     for index, analogue in enumerate(analogues_raw):
         if not isinstance(analogue, dict):
             continue
-        analogue_id = str(analogue.get("id") or analogue.get("name") or f"analogue-{index + 1}")
+        analogue_id = str(
+            analogue.get("id") or analogue.get("name") or f"analogue-{index + 1}"
+        )
         analogue_tags = _derive_tags_from_mechanistic_evidence(analogue)
         if not analogue_tags:
             continue

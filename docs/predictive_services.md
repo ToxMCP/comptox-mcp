@@ -117,7 +117,7 @@ When the sidecar is used successfully, predictive metadata reports `adEvaluator=
 
 ### Reference sidecar
 
-The repo now includes a small runnable reference sidecar in [src/epacomp_tox/predictive/ad_sidecar.py](/Volumes/Storage/topotox_space_relief_20260220/mcp_epacomp_tox/src/epacomp_tox/predictive/ad_sidecar.py):
+The repo now includes a small runnable reference sidecar in [`src/epacomp_tox/predictive/ad_sidecar.py`](../src/epacomp_tox/predictive/ad_sidecar.py):
 
 ```bash
 uvicorn epacomp_tox.predictive.ad_sidecar:app --host 127.0.0.1 --port 8090

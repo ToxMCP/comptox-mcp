@@ -216,7 +216,9 @@ class GenRAService(PredictiveServiceBase):
         similarity.setdefault("neighbors", len(analogue_ids))
         ad_inputs["similarity"] = similarity
 
-        expert_rule = dict(ad_inputs.get("expert_rule") or ad_inputs.get("expertRule") or {})
+        expert_rule = dict(
+            ad_inputs.get("expert_rule") or ad_inputs.get("expertRule") or {}
+        )
         expert_rule.setdefault("analogueIds", analogue_ids)
         expert_rule.setdefault("analogueIdSource", source)
         ad_inputs["expert_rule"] = expert_rule

@@ -79,7 +79,9 @@ class CtxDataAssembler:
             ],
             Tuple[float, CtxDataBundle],
         ] = {}
-        self._mechanistic_cache: Dict[Tuple[str, int], Tuple[float, Dict[str, Any]]] = {}
+        self._mechanistic_cache: Dict[Tuple[str, int], Tuple[float, Dict[str, Any]]] = (
+            {}
+        )
 
     def assemble(
         self,
@@ -328,7 +330,9 @@ class CtxDataAssembler:
             return []
         records = self.bioactivity_resource.get_bioactivity_summary_by_dtxsid(dtxsid)
         if trace is not None:
-            trace.append(self._metadata_trace(self.bioactivity_resource, "bioactivity:summary"))
+            trace.append(
+                self._metadata_trace(self.bioactivity_resource, "bioactivity:summary")
+            )
         normalized = self._normalize_bioactivity_summary(records)
         if not normalized and data_gaps is not None:
             self._append_data_gap(data_gaps, "bioactivity:summary")
@@ -353,7 +357,9 @@ class CtxDataAssembler:
             rows = self.bioactivity_resource.get_bioactivity_aop("toxcast-aeid", aeid)
             if trace is not None:
                 trace.append(
-                    self._metadata_trace(self.bioactivity_resource, f"bioactivity:aop:{aeid}")
+                    self._metadata_trace(
+                        self.bioactivity_resource, f"bioactivity:aop:{aeid}"
+                    )
                 )
             for row in rows:
                 mapping = self._drop_nones(

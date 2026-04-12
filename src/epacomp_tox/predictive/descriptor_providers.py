@@ -112,8 +112,12 @@ class ExternalChemistryDescriptorProvider(DescriptorProvider):
                 "descriptor backend returned a non-object payload"
             )
 
-        values = payload.get("descriptorValues") or payload.get("descriptor_values") or {}
-        bounds = payload.get("descriptorBounds") or payload.get("descriptor_bounds") or {}
+        values = (
+            payload.get("descriptorValues") or payload.get("descriptor_values") or {}
+        )
+        bounds = (
+            payload.get("descriptorBounds") or payload.get("descriptor_bounds") or {}
+        )
         if not isinstance(values, dict) or not isinstance(bounds, dict):
             raise DescriptorProviderError(
                 "descriptor backend response omitted descriptor values or bounds"
@@ -132,7 +136,9 @@ class ExternalChemistryDescriptorProvider(DescriptorProvider):
             if normalized is not None:
                 normalized_bounds[str(descriptor)] = normalized
 
-        metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+        metadata = (
+            payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+        )
         source = str(payload.get("source") or self.name)
         return DescriptorContext(
             values=normalized_values,

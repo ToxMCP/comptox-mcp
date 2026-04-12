@@ -53,11 +53,7 @@ def _iter_probe_urls(base_url: str, probe_mode: ProbeMode) -> Tuple[str, ...]:
             os.environ.get("CTX_HAZARD_HEALTH_URL"),
             os.environ.get("CTX_BIOACTIVITY_HEALTH_URL"),
         ]
-        urls = tuple(
-            url
-            for url in absolute
-            if url
-        )
+        urls = tuple(url for url in absolute if url)
         if urls:
             return urls
         return tuple(f"{base_url}/{path}" for path in _READINESS_PROBE_PATHS)

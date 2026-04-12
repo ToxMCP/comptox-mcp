@@ -21,12 +21,6 @@ from .orchestrator import (
     PredictiveTask,
     build_offline_orchestrator,
 )
-from .predictive.base import (
-    ADCheckResult,
-    PredictiveRequest,
-    PredictiveResponse,
-    PredictiveServiceBase,
-)
 from .predictive.ad_evaluators import (
     ADEvaluatorError,
     ApplicabilityDomainEvaluator,
@@ -38,6 +32,12 @@ from .predictive.ad_sidecar import (
     ADEvaluationRequest,
     build_reference_ad_sidecar_app,
     evaluate_reference_ad,
+)
+from .predictive.base import (
+    ADCheckResult,
+    PredictiveRequest,
+    PredictiveResponse,
+    PredictiveServiceBase,
 )
 from .predictive.descriptor_providers import (
     DescriptorContext,

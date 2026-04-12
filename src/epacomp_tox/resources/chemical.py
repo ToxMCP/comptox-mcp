@@ -900,6 +900,7 @@ class ChemicalResource(BaseResource):
         if file_format.lower() == "image":
             response["imageFormat"] = (image_format or "PNG").upper()
         return response
+
     _DTXSID_RE = re.compile(r"^DTXSID\d{7,}$", re.IGNORECASE)
     _IDENTIFIER_TYPE_ALIASES = {
         "dtxsid": "dtxsid",

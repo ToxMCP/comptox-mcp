@@ -1375,17 +1375,16 @@ class InteropResource(BaseResource):
             for key in ("cpdat", "seem", "httk", "mmdb", "qsurs"):
                 if exposure_summary.get(key, {}).get("recordCount", 0) == 0:
                     gaps.append(f"exposure:{key}")
-        if bioactivity_summary and bioactivity_summary.get("summary", {}).get(
-            "assayCount", 0
-        ) == 0:
+        if (
+            bioactivity_summary
+            and bioactivity_summary.get("summary", {}).get("assayCount", 0) == 0
+        ):
             gaps.append("bioactivity:summary")
         gaps.extend(self._known_data_gaps_for_aop(aop_summary))
         gaps.extend(self._known_data_gaps_for_pbpk(pbpk_bundle))
         return sorted(dict.fromkeys(gaps))
 
-    def _known_data_gaps_for_aop(
-        self, payload: Optional[Dict[str, Any]]
-    ) -> List[str]:
+    def _known_data_gaps_for_aop(self, payload: Optional[Dict[str, Any]]) -> List[str]:
         if not payload:
             return []
         gaps: List[str] = []
@@ -1395,9 +1394,7 @@ class InteropResource(BaseResource):
             gaps.append("bioactivity:aop")
         return gaps
 
-    def _known_data_gaps_for_pbpk(
-        self, payload: Optional[Dict[str, Any]]
-    ) -> List[str]:
+    def _known_data_gaps_for_pbpk(self, payload: Optional[Dict[str, Any]]) -> List[str]:
         if not payload:
             return []
         gaps: List[str] = []
@@ -1458,9 +1455,11 @@ class InteropResource(BaseResource):
             or payload.get("audit", {}).get("generatedAt"),
             "sourceCount": len(sources) if isinstance(sources, list) else 0,
             "sourceTools": list(source_tools),
-            "noteCount": len(provenance.get("notes", []))
-            if isinstance(provenance.get("notes"), list)
-            else 0,
+            "noteCount": (
+                len(provenance.get("notes", []))
+                if isinstance(provenance.get("notes"), list)
+                else 0
+            ),
         }
 
     def _record_step(

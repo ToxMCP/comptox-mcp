@@ -177,7 +177,9 @@ class _OfflineExposureResource:
         self._metadata = {"status": 200}
         return [{"probability": 0.42}]
 
-    def get_exposure_mmdb_aggregate_by_dtxsid(self, dtxsid: str) -> list[dict[str, Any]]:
+    def get_exposure_mmdb_aggregate_by_dtxsid(
+        self, dtxsid: str
+    ) -> list[dict[str, Any]]:
         self._metadata = {"status": 200}
         return [{"studyCount": 2, "endpoint": "plasma_concentration"}]
 
@@ -248,7 +250,9 @@ class _OfflineMetadataResource:
     def __init__(self) -> None:
         self._metadata: Dict[str, Any] = {}
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_tool(
+        self, tool_name: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         self._metadata = {"status": 200}
         if tool_name != "metadata_get_model_card":
             raise ValueError(f"Unsupported tool: {tool_name}")

@@ -49,7 +49,9 @@ class ContractManifestResource(BaseResource):
             }
         ]
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_tool(
+        self, tool_name: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         if tool_name != "get_contract_manifest":
             raise ValueError(f"Unknown tool: {tool_name}")
         return self.get_contract_manifest()
@@ -58,7 +60,9 @@ class ContractManifestResource(BaseResource):
         server = self._require_server()
         resources = server.get_resources()
         tool_defs = server.get_tools()
-        registration_map = {registration.name: registration for registration in server.tool_registry}
+        registration_map = {
+            registration.name: registration for registration in server.tool_registry
+        }
 
         manifest = {
             "server": {

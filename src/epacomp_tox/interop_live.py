@@ -14,7 +14,6 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 
 from epacomp_tox.contracts import SchemaValidationError, validate_payload
 
-
 DEFAULT_ENDPOINT = os.environ.get("EPA_MCP_HTTP_ENDPOINT", "http://127.0.0.1:8000/mcp")
 DEFAULT_PROTOCOL_VERSION = "2025-06-18"
 DEFAULT_DTXSID = "DTXSID2020006"
@@ -437,9 +436,7 @@ def write_capture_bundle(
     manifest_path = capture_dir / "capture_manifest.json"
     if not refresh:
         existing = [
-            path.name
-            for path in (*target_paths, manifest_path)
-            if path.exists()
+            path.name for path in (*target_paths, manifest_path) if path.exists()
         ]
         if existing:
             raise SmokeError(

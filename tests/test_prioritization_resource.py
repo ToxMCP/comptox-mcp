@@ -68,7 +68,9 @@ def test_prioritize_risk_signals_computes_screening_margin() -> None:
     )
 
 
-def test_prioritize_risk_signals_carries_identity_resolution_for_non_dtxsid_input() -> None:
+def test_prioritize_risk_signals_carries_identity_resolution_for_non_dtxsid_input() -> (
+    None
+):
     resource = build_prioritization_resource()
 
     result = resource.execute_tool(

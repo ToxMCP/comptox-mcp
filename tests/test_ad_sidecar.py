@@ -117,7 +117,9 @@ def test_reference_ad_evaluator_supports_descriptor_range_from_inline_inputs() -
 
     assert result.in_domain is True
     assert result.details["unsupportedCriteria"] == []
-    assert result.details["criterionResults"][0]["descriptorSource"] == "request.ad_inputs"
+    assert (
+        result.details["criterionResults"][0]["descriptorSource"] == "request.ad_inputs"
+    )
 
 
 def test_reference_ad_evaluator_supports_descriptor_range_from_provider() -> None:
@@ -183,7 +185,9 @@ def test_reference_ad_evaluator_supports_descriptor_range_from_provider() -> Non
     assert result.details["criterionResults"][0]["descriptorSource"] == "chem-backend"
 
 
-def test_reference_ad_evaluator_fails_descriptor_range_when_provider_missing_bounds() -> None:
+def test_reference_ad_evaluator_fails_descriptor_range_when_provider_missing_bounds() -> (
+    None
+):
     class _Provider:
         name = "mock-provider"
 
@@ -217,7 +221,9 @@ def test_reference_ad_evaluator_fails_descriptor_range_when_provider_missing_bou
     )
 
     assert result.in_domain is False
-    assert result.details["criterionResults"][0]["reason"] == "missing_descriptor_context"
+    assert (
+        result.details["criterionResults"][0]["reason"] == "missing_descriptor_context"
+    )
 
 
 def test_reference_ad_evaluator_supports_expert_rule_from_inline_inputs() -> None:
@@ -250,11 +256,15 @@ def test_reference_ad_evaluator_supports_expert_rule_from_inline_inputs() -> Non
     result = evaluate_reference_ad(request, definition)
 
     assert result.in_domain is True
-    assert result.details["criterionResults"][0]["ruleKey"] == "mode_of_action_tags_align"
+    assert (
+        result.details["criterionResults"][0]["ruleKey"] == "mode_of_action_tags_align"
+    )
     assert result.details["criterionResults"][0]["ruleSource"] == "request.ad_inputs"
 
 
-def test_reference_ad_evaluator_derives_expert_rule_tags_from_bioactivity_and_aop_inputs() -> None:
+def test_reference_ad_evaluator_derives_expert_rule_tags_from_bioactivity_and_aop_inputs() -> (
+    None
+):
     request = PredictiveRequest(
         chemical_identifier="DTXSID000001",
         ad_inputs={
@@ -324,10 +334,15 @@ def test_reference_ad_evaluator_derives_expert_rule_tags_from_bioactivity_and_ao
 
     assert result.in_domain is True
     assert result.details["criterionResults"][0]["mechanisticDerivationUsed"] is True
-    assert result.details["criterionResults"][0]["ruleSource"] == "derived:mechanistic_context"
+    assert (
+        result.details["criterionResults"][0]["ruleSource"]
+        == "derived:mechanistic_context"
+    )
 
 
-def test_reference_ad_evaluator_fails_derived_expert_rule_when_mechanistic_tags_diverge() -> None:
+def test_reference_ad_evaluator_fails_derived_expert_rule_when_mechanistic_tags_diverge() -> (
+    None
+):
     request = PredictiveRequest(
         chemical_identifier="DTXSID000001",
         ad_inputs={
@@ -375,10 +390,14 @@ def test_reference_ad_evaluator_fails_derived_expert_rule_when_mechanistic_tags_
     result = evaluate_reference_ad(request, definition)
 
     assert result.in_domain is False
-    assert result.details["criterionResults"][0]["analogueResults"][0]["passed"] is False
+    assert (
+        result.details["criterionResults"][0]["analogueResults"][0]["passed"] is False
+    )
 
 
-def test_reference_ad_evaluator_fails_expert_rule_when_mismatch_exceeds_threshold() -> None:
+def test_reference_ad_evaluator_fails_expert_rule_when_mismatch_exceeds_threshold() -> (
+    None
+):
     request = PredictiveRequest(
         chemical_identifier="DTXSID000001",
         ad_inputs={
@@ -407,7 +426,9 @@ def test_reference_ad_evaluator_fails_expert_rule_when_mismatch_exceeds_threshol
     result = evaluate_reference_ad(request, definition)
 
     assert result.in_domain is False
-    assert result.details["criterionResults"][0]["analogueResults"][0]["passed"] is False
+    assert (
+        result.details["criterionResults"][0]["analogueResults"][0]["passed"] is False
+    )
 
 
 def test_reference_ad_evaluator_supports_expert_rule_from_provider() -> None:
@@ -490,7 +511,9 @@ def test_reference_ad_evaluator_fails_when_required_inputs_are_missing() -> None
     result = evaluate_reference_ad(request, definition)
 
     assert result.in_domain is False
-    assert result.details["criterionResults"][0]["reason"] == "missing_similarity_inputs"
+    assert (
+        result.details["criterionResults"][0]["reason"] == "missing_similarity_inputs"
+    )
 
 
 def test_reference_ad_sidecar_http_contract() -> None:
