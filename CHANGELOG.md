@@ -10,6 +10,12 @@
 - added a release/workflow-dispatch pipeline that builds distributions, emits a CycloneDX SBOM artifact, and publishes signed provenance/SBOM attestations
 - documented online and offline verification of signed release provenance and SBOM attestations for downstream consumers
 
+## [0.2.2] - 2026-04-12
+
+- cleaned the release-facing metadata for a neutral `v0.2.2` patch release without changing the public MCP boundary
+- aligned README, architecture notes, release notes, and release metadata tests with the new patch version
+- kept the protected-branch release path CI-clean by fixing docs-link hygiene and normalizing formatting/import ordering across touched files
+
 ## [0.2.1] - 2026-04-12
 
 - hardened `resolve_chemical_identifier` so partial-name upstream matches no longer masquerade as exact identity

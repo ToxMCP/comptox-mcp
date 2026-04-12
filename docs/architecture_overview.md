@@ -2,7 +2,7 @@
 
 This document describes the current public architecture of the EPA CompTox MCP server.
 
-The key boundary for `v0.2.1` is simple:
+The key boundary for `v0.2.2` is simple:
 
 - the default public server is an evidence and federation MCP
 - it exposes CompTox retrieval resources over MCP
