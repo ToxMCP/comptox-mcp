@@ -447,7 +447,7 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
-- Completed: [`v0.2.3` audit remediation](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.
+- Completed: [`v0.2.3` release cleanup](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.
 - Completed: [`v0.2.2` release cleanup](docs/releases/v0.2.2_release_description.md)
 - Completed: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md) and the matching [`v0.2.1` release description](docs/releases/v0.2.1_release_description.md)
 - `v0.2.4` should focus on CI/release automation (promote `scripts/release_smoke.py` and live interop capture into repeatable GitHub Actions), documentation polish around deterministic identifier usage, and expanding screening prioritization signals without overstating risk semantics.
