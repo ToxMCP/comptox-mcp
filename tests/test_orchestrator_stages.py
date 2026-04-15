@@ -827,8 +827,8 @@ def test_genra_orchestrator_includes_review_checkpoints(tmp_path):
     }
     chemical_resource.get_last_metadata.return_value = {}
 
-    from epacomp_tox.orchestrator.identifiers import IdentifierResolver
     from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
+    from epacomp_tox.orchestrator.identifiers import IdentifierResolver
     from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
     from epacomp_tox.predictive.base import PredictiveServiceBase
 

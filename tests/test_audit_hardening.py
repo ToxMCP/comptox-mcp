@@ -102,7 +102,9 @@ def test_bundle_store_includes_chain_hashes(tmp_path: Path):
     assert meta2["previousBundleHash"] == meta1["bundleChecksum"]
 
     # Chain manifest should reflect latest
-    manifest = json.loads((tmp_path / "chain_manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (tmp_path / "chain_manifest.json").read_text(encoding="utf-8")
+    )
     assert manifest["lastBundleHash"] == meta2["bundleChecksum"]
 
 
@@ -117,7 +119,9 @@ def test_bundle_store_verify_chain_detects_tampering(tmp_path: Path):
 
     # Tamper with a bundle file
     bundle_path = tmp_path / "run-1" / "bundle.json"
-    bundle_path.write_text(json.dumps({"workflowRunId": "run-1", "data": "tampered"}), encoding="utf-8")
+    bundle_path.write_text(
+        json.dumps({"workflowRunId": "run-1", "data": "tampered"}), encoding="utf-8"
+    )
 
     valid, errors = store.verify_chain()
     assert valid is False

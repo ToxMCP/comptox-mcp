@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from unittest import mock
 
+from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
+from epacomp_tox.orchestrator.identifiers import IdentifierResolver
+from epacomp_tox.orchestrator.models import PredictiveTask
+from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
 from epacomp_tox.orchestrator.workflow import GenRAOrchestrator
 from epacomp_tox.predictive import ADCheckResult, PredictiveRequest
-from epacomp_tox.orchestrator.models import PredictiveTask
-from epacomp_tox.orchestrator.identifiers import IdentifierResolver
-from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
-from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
 from epacomp_tox.predictive.base import PredictiveServiceBase
-from epacomp_tox.resources.hazard import HazardResource
-from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.cheminformatics import CheminformaticsResource
+from epacomp_tox.resources.exposure import ExposureResource
+from epacomp_tox.resources.hazard import HazardResource
 
 
 def _mock_resource(resource_cls):

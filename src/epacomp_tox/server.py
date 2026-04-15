@@ -597,7 +597,9 @@ class MCPServer:
             session["status"] = "closed"
 
     @staticmethod
-    def _scrub_params_for_audit(params: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _scrub_params_for_audit(
+        params: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Hash sensitive chemical identifiers before audit logging."""
         import hashlib
 

@@ -356,8 +356,7 @@ class GenRAOrchestrator:
             )
         if predictive_result:
             has_ad_warning = any(
-                step.ad and not step.ad.in_domain
-                for step in predictive_result.results
+                step.ad and not step.ad.in_domain for step in predictive_result.results
             )
             ad_status = "required" if has_ad_warning else "passed"
             checkpoints.append(

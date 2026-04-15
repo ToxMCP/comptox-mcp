@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from unittest import mock
 
-from epacomp_tox.orchestrator.workflow import GenRAOrchestrator
-from epacomp_tox.orchestrator.identifiers import IdentifierResolver
 from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
-from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
+from epacomp_tox.orchestrator.identifiers import IdentifierResolver
 from epacomp_tox.orchestrator.models import PredictiveTask
+from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
+from epacomp_tox.orchestrator.workflow import GenRAOrchestrator
 from epacomp_tox.predictive import ADCheckResult, PredictiveRequest
 from epacomp_tox.predictive.base import PredictiveServiceBase
-from epacomp_tox.resources.hazard import HazardResource
-from epacomp_tox.resources.exposure import ExposureResource
 from epacomp_tox.resources.cheminformatics import CheminformaticsResource
+from epacomp_tox.resources.exposure import ExposureResource
+from epacomp_tox.resources.hazard import HazardResource
 
 
 def _mock_resource(resource_cls):
@@ -98,9 +98,13 @@ def _build_orchestrator_with_service(tmp_path, service, service_name: str = "svc
     )
 
 
-def test_workflow_defaults_to_require_ad_clearance_when_predictive_tasks_exist(tmp_path):
+def test_workflow_defaults_to_require_ad_clearance_when_predictive_tasks_exist(
+    tmp_path,
+):
     service = _BlockingService()
-    orchestrator = _build_orchestrator_with_service(tmp_path, service, service_name="block")
+    orchestrator = _build_orchestrator_with_service(
+        tmp_path, service, service_name="block"
+    )
 
     bundle = orchestrator.run_workflow(
         target_identifier="50-00-0",
@@ -123,7 +127,9 @@ def test_workflow_defaults_to_require_ad_clearance_when_predictive_tasks_exist(t
 
 def test_workflow_respects_explicit_require_ad_clearance_false(tmp_path):
     service = _WarningService()
-    orchestrator = _build_orchestrator_with_service(tmp_path, service, service_name="warn")
+    orchestrator = _build_orchestrator_with_service(
+        tmp_path, service, service_name="warn"
+    )
 
     bundle = orchestrator.run_workflow(
         target_identifier="50-00-0",

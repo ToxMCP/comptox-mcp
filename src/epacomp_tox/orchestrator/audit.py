@@ -119,9 +119,7 @@ class AuditBundleStore:
             run_id = meta.get("workflowRunId")
             expected_previous = meta.get("previousBundleHash")
             if expected_previous != previous_hash:
-                errors.append(
-                    f"Run {run_id}: previous hash mismatch"
-                )
+                errors.append(f"Run {run_id}: previous hash mismatch")
 
             # Recompute bundle hash from file
             bundle_path = self.base_dir / meta.get("bundlePath", "")

@@ -85,9 +85,7 @@ class BaseResource(ABC):
         serialized = to_serializable(value)
         return ensure_object(serialized, allow_list=allow_list)
 
-    def _capture_last_metadata(
-        self, *, result: Any = None, attempt: int = 0
-    ) -> None:
+    def _capture_last_metadata(self, *, result: Any = None, attempt: int = 0) -> None:
         client = getattr(self, "client", None)
         metadata: Dict[str, Any] = {}
         if client is not None and hasattr(client, "last_metadata"):
