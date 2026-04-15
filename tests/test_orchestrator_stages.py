@@ -813,3 +813,75 @@ def test_predictive_coordinator_records_prediction_errors():
     assert result.results[0].status == "error"
     assert result.guardrails[0].status == "error"
     assert "No payload" in result.results[0].error
+
+
+def test_genra_orchestrator_includes_review_checkpoints(tmp_path):
+    chemical_resource = mock.Mock()
+    chemical_resource.search_chemical.return_value = [
+        {"dtxsid": "DTXSID0000001", "preferredName": "Example"}
+    ]
+    chemical_resource.get_chemical_details.return_value = {
+        "dtxsid": "DTXSID0000001",
+        "preferredName": "Example",
+        "casrn": "50-00-0",
+    }
+    chemical_resource.get_last_metadata.return_value = {}
+
+    from epacomp_tox.orchestrator.identifiers import IdentifierResolver
+    from epacomp_tox.orchestrator.ctx_data import CtxDataAssembler
+    from epacomp_tox.orchestrator.predictive import PredictiveCoordinator
+    from epacomp_tox.predictive.base import PredictiveServiceBase
+
+    class _StubService(PredictiveServiceBase):
+        def __init__(self):
+            super().__init__(config={"name": "Stub", "version": "1.0"})
+
+        def _predict_impl(self, request):
+            return {"prediction": "ok"}
+
+        def _check_ad_impl(self, request):
+            return ADCheckResult(in_domain=True, confidence=0.9, details={})
+
+    resolver = IdentifierResolver(chemical_resource=chemical_resource, cache_ttl=0)
+    assembler = CtxDataAssembler(
+        hazard_resource=None,
+        exposure_resource=None,
+        cheminformatics_resource=None,
+        hazard_data_types=(),
+        exposure_datasets=(),
+        cpdat_vocabularies=(),
+        include_toxprints=False,
+        cache_ttl=0,
+    )
+    coordinator = PredictiveCoordinator({"stub": _StubService()})
+    orchestrator = GenRAOrchestrator(
+        identifier_resolver=resolver,
+        ctx_data_assembler=assembler,
+        predictive_coordinator=coordinator,
+        persistence_dir=tmp_path,
+        clock=lambda: "2025-03-26T00:00:00Z",
+    )
+
+    bundle = orchestrator.run_workflow(
+        target_identifier="50-00-0",
+        identifier_type="casrn",
+        scenarios=[],
+        predictive_plan=[
+            PredictiveTask(
+                service="stub",
+                request=PredictiveRequest(chemical_identifier="DTXSID0000001"),
+            )
+        ],
+    )
+
+    assert "reviewCheckpoints" in bundle
+    steps = [c["step"] for c in bundle["reviewCheckpoints"]]
+    assert "chemical_id_confirmation" in steps
+    assert "ad_assessment" in steps
+    assert "final_report" in steps
+
+    # When AD passes, ad_assessment should be "passed"
+    ad_checkpoint = next(
+        c for c in bundle["reviewCheckpoints"] if c["step"] == "ad_assessment"
+    )
+    assert ad_checkpoint["status"] == "passed"

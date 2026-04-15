@@ -19,7 +19,7 @@
 - **Core test runner:** `pytest` (unit, integration, orchestrator scenarios). Leverage parametrization for scenario coverage.
 - **Transport conformance:** existing JSON fixtures + MCP conformance suite wired into harness.
 - **Scenario execution:** `scripts/scientific_validation_report.py` runs the offline orchestrator suite and emits JSON/Markdown scorecards alongside persisted audit bundles.
-- **Live concordance drift checks:** `scripts/live_concordance_panel.py` runs curated CTX ToxVal cases through the real evidence synthesizer so endpoint/value matching drift is visible immediately.
+- **Live concordance drift checks:** `scripts/live_concordance_panel.py` runs curated CTX ToxVal cases through the real evidence synthesizer so endpoint/value matching drift and reference-value drift are visible immediately.
 - **Load testing:** Locust (Python) for websocket / REST endpoints and k6 for HTTP micro-services. Reusable configuration files with environment overrides for sandbox vs. staging.
 - **Data fixtures:** curated sandbox identifiers (DTXSID, CASRN) per scenario with expected AD outcomes. Store under `tests/fixtures/workflows/`.
 
@@ -34,7 +34,7 @@
 ## Reporting & Diagnostics
 - **Audit bundles:** persisted via `AuditBundleStore` with SHA256 checksums and attachments; CLI (`scripts/genra_bundle_cli.py`) supports retrieval for failure analysis.
 - **Scenario reports:** `scripts/scientific_validation_report.py` generates reproducible JSON/Markdown scorecards summarizing scenario status, AD clearance, evidence-band outcomes, and interop attachment coverage.
-- **Concordance panel reports:** `scripts/live_concordance_panel.py` generates pass/fail scorecards for curated live ToxVal cases, including matched effect, observed value, predicted value, and expectation drift.
+- **Concordance panel reports:** `scripts/live_concordance_panel.py` generates pass/fail scorecards for curated live ToxVal cases, including matched effect, observed value, observed delta vs. the pinned reference value, predicted value, and expectation drift.
 - **Telemetry hooks:** ensure orchestrator logging includes workflowRunId to correlate with transport/predictive logs.
 
 ## Action Plan

@@ -56,20 +56,85 @@ class AuditBundleStore:
                     }
                 )
 
+        # Chain-aware provenance: link to previous bundle hash
+        chain_manifest_path = self.base_dir / "chain_manifest.json"
+        previous_hash = self._load_previous_hash(chain_manifest_path)
+
         metadata = {
             "workflowRunId": run_id,
             "createdAt": created_at,
             "bundlePath": str(bundle_path.relative_to(self.base_dir)),
             "bundleChecksum": bundle_checksum,
+            "previousBundleHash": previous_hash,
             "attachments": attachments_meta,
             "retentionDays": self.retention_days,
         }
 
-        (run_dir / "metadata.json").write_text(
+        metadata_path = run_dir / "metadata.json"
+        metadata_path.write_text(
             json.dumps(metadata, indent=2, sort_keys=True),
             encoding="utf-8",
         )
+
+        # Update chain manifest with latest hash
+        self._update_chain_manifest(chain_manifest_path, bundle_checksum, created_at)
+
         return metadata
+
+    def _load_previous_hash(self, chain_manifest_path: Path) -> str:
+        """Read the last bundle hash from the chain manifest."""
+        if not chain_manifest_path.exists():
+            return "0" * 64
+        try:
+            manifest = json.loads(chain_manifest_path.read_text(encoding="utf-8"))
+            return manifest.get("lastBundleHash", "0" * 64)
+        except (json.JSONDecodeError, KeyError, OSError):
+            return "0" * 64
+
+    def _update_chain_manifest(
+        self, chain_manifest_path: Path, bundle_checksum: str, created_at: str
+    ) -> None:
+        """Persist the latest bundle hash for the next link in the chain."""
+        manifest = {
+            "lastBundleHash": bundle_checksum,
+            "updatedAt": created_at,
+        }
+        try:
+            chain_manifest_path.write_text(
+                json.dumps(manifest, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+        except OSError:  # pragma: no cover - defensive
+            pass
+
+    def verify_chain(self) -> Tuple[bool, List[str]]:
+        """Verify integrity of the stored bundle chain.
+
+        Returns:
+            (is_valid, list of error messages for any broken links)
+        """
+        errors: List[str] = []
+        previous_hash = "0" * 64
+        for meta in self.list_runs():
+            run_id = meta.get("workflowRunId")
+            expected_previous = meta.get("previousBundleHash")
+            if expected_previous != previous_hash:
+                errors.append(
+                    f"Run {run_id}: previous hash mismatch"
+                )
+
+            # Recompute bundle hash from file
+            bundle_path = self.base_dir / meta.get("bundlePath", "")
+            if bundle_path.exists():
+                computed = hashlib.sha256(bundle_path.read_bytes()).hexdigest()
+                if computed != meta.get("bundleChecksum"):
+                    errors.append(f"Run {run_id}: bundle checksum mismatch")
+                previous_hash = computed
+            else:
+                errors.append(f"Run {run_id}: bundle file missing")
+                previous_hash = meta.get("bundleChecksum", "0" * 64)
+
+        return (not errors, errors)
 
     def load_bundle(self, run_id: str) -> Dict[str, any]:
         bundle_path = self.base_dir / run_id / "bundle.json"
