@@ -1,6 +1,6 @@
 # Model Cards & Guardrail Policies
 
-> This guide primarily covers in-repo predictive and orchestrator assets. These components remain experimental and are not part of the default public MCP tool catalog in `v0.2.2`.
+> This guide primarily covers in-repo predictive and orchestrator assets. These components remain experimental and are not part of the default public MCP tool catalog in `v0.2.3`.
 
 This guide explains how to publish human-readable summaries for machine-readable model cards and applicability-domain (AD) policies, interpret guardrail outcomes, and follow the governance workflow required for release sign-off.
 

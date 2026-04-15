@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 
@@ -94,9 +95,14 @@ class MCPClient:
             ValueError: If the tool is not found or parameters are invalid.
         """
         # In a real implementation, this would make a request to the MCP server
-        # For now, return a placeholder message
+        # For now, return a placeholder message with provenance metadata
         return {
             "status": "success",
             "message": f"Tool '{tool_name}' executed with parameters: {parameters}",
             "result": "This is a placeholder result. In a real implementation, this would contain data from the EPA CompTox APIs.",
+            "_provenance": {
+                "client": "epa-comp-tox-mcp",
+                "executed_at": datetime.now(timezone.utc).isoformat(),
+                "source": "placeholder",
+            },
         }

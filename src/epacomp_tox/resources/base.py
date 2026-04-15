@@ -1,6 +1,9 @@
+import hashlib
+import json
 import random
 import time
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from ctxpy import CtxApiError
@@ -25,6 +28,7 @@ class BaseResource(ABC):
         """
         self.api_key = api_key
         self._last_metadata: Dict[str, Any] = {}
+        self._last_provenance: Dict[str, Any] = {}
 
     def _with_retry(
         self,
@@ -46,7 +50,7 @@ class BaseResource(ABC):
         while True:
             try:
                 result = fn()
-                self._capture_last_metadata()
+                self._capture_last_metadata(result=result, attempt=attempt)
                 return result
             except CtxApiError as exc:
                 self._last_metadata = {
@@ -55,6 +59,7 @@ class BaseResource(ABC):
                     "rate_limit": exc.rate_limit,
                     "retry_after": exc.retry_after,
                 }
+                self._last_provenance = {}
                 attempt += 1
                 if attempt > retries or not exc.retryable:
                     raise
@@ -80,14 +85,42 @@ class BaseResource(ABC):
         serialized = to_serializable(value)
         return ensure_object(serialized, allow_list=allow_list)
 
-    def _capture_last_metadata(self) -> None:
+    def _capture_last_metadata(self, *, result: Any = None, attempt: int = 0) -> None:
         client = getattr(self, "client", None)
+        metadata: Dict[str, Any] = {}
         if client is not None and hasattr(client, "last_metadata"):
-            self._last_metadata = client.last_metadata
+            metadata = dict(client.last_metadata)
+
+        self._last_metadata = metadata
+
+        # Provenance enrichment stored separately for backward compatibility
+        provenance: Dict[str, Any] = {
+            "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            "retry_count": attempt,
+        }
+        if result is not None:
+            try:
+                payload = json.dumps(
+                    to_serializable(result),
+                    ensure_ascii=True,
+                    sort_keys=True,
+                    default=str,
+                )
+                provenance["response_hash"] = hashlib.sha256(
+                    payload.encode("utf-8")
+                ).hexdigest()
+            except (TypeError, ValueError):
+                provenance["response_hash"] = None
+
+        self._last_provenance = provenance
 
     def get_last_metadata(self) -> Dict[str, Any]:
         """Return metadata captured from the most recent CTX API call."""
         return self._last_metadata
+
+    def get_last_provenance(self) -> Dict[str, Any]:
+        """Return provenance metadata (retrieved_at, response_hash, retry_count)."""
+        return dict(self._last_provenance)
 
     @property
     @abstractmethod

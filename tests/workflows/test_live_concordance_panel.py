@@ -121,6 +121,7 @@ def test_generate_live_concordance_panel_report_with_stub_resource() -> None:
             toxval_type="MRL",
             toxval_subtype="acute",
             effect_contains="immunological",
+            expected_observed_value=0.028753800317645073,
         ),
         LiveConcordancePanelCase(
             case_id="formaldehyde_offset",
@@ -132,6 +133,7 @@ def test_generate_live_concordance_panel_report_with_stub_resource() -> None:
             toxval_type="MRL",
             toxval_subtype="acute",
             effect_contains="respiratory",
+            expected_observed_value=0.04912250116467476,
         ),
     ]
 
@@ -148,8 +150,51 @@ def test_generate_live_concordance_panel_report_with_stub_resource() -> None:
     assert report.summary.all_cases_passed is True
     assert report.summary.actual_status_counts == {"robust": 1, "limited": 1}
     assert report.cases[0].actual_observed_concordance == "robust"
+    assert report.cases[0].observed_value_delta == 0.0
     assert report.cases[1].actual_observed_concordance == "limited"
     assert report.cases[1].guardrail_codes == ["PREDICTION_OBSERVATION_MISMATCH"]
     assert "# Live Concordance Panel" in markdown
     assert "benzene_match" in markdown
     assert "formaldehyde_offset" in markdown
+
+
+def test_live_concordance_panel_fails_when_observed_value_drifts() -> None:
+    hazard_resource = StubHazardResource(
+        {
+            "DTXSID1": [
+                {
+                    "source": "ATSDR MRLs",
+                    "toxicologicalEffect": "immunological in male mice",
+                    "toxvalNumeric": 0.03,
+                    "toxvalType": "MRL",
+                    "toxvalSubtype": "acute",
+                }
+            ]
+        }
+    )
+    panel = [
+        LiveConcordancePanelCase(
+            case_id="benzene_value_drift",
+            dtxsid="DTXSID1",
+            expected_status="robust",
+            source_contains="ATSDR",
+            toxval_type="MRL",
+            toxval_subtype="acute",
+            effect_contains="immunological",
+            expected_observed_value=0.028753800317645073,
+            observed_value_tolerance=0.000001,
+        )
+    ]
+
+    report = generate_live_concordance_panel_report(
+        panel=panel,
+        hazard_resource=hazard_resource,
+    )
+
+    assert report.summary.failed_cases == 1
+    assert report.summary.all_cases_passed is False
+    assert report.cases[0].result == "fail"
+    assert report.cases[0].actual_observed_concordance == "robust"
+    assert report.cases[0].observed_value_delta is not None
+    assert report.cases[0].message is not None
+    assert "curated tolerance" in report.cases[0].message
