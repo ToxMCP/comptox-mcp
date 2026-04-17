@@ -75,6 +75,29 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
+## What's New In v0.2.3
+
+This release focuses on **audit hardening, privacy controls, provenance capture, and workflow governance** in response to the ToxMCP internal audit review. No public MCP boundary changes were made.
+
+### Security & Privacy
+- **Deterministic audit hashing**: every audit event emitted to a registered sink now carries tamper-evident metadata (`contentHash`, `previousHash`, `sequence`, `timestamp`) and can be verified with `audit.verify_event_hash()`.
+- **Sensitive identifier scrubbing**: audit logs no longer record raw DTXSID, CASRN, SMILES, InChI, or InChIKey values in plaintext. Identifiers are hashed with a deterministic salt so the same value maps to the same hash across events.
+- **Privacy-aware parameter logging**: `MCPServer._scrub_params_for_audit()` inspects tool parameters before audit emission and automatically hashes chemical identifiers and identifier-like query strings.
+
+### Provenance & Traceability
+- **Response hash capture**: `BaseResource` now records a SHA-256 hash of every serialized upstream response alongside `retrieved_at` and `retry_count` via `get_last_provenance()`.
+- **Bundle chain integrity**: `AuditBundleStore.save()` links each persisted bundle to the previous bundle hash. `verify_chain()` detects tampering, checksum mismatches, or missing files.
+- **Distributed trace propagation**: HTTP transport extracts or generates a W3C-style `traceId` from the `traceparent` header and passes it through tool execution audit events.
+- **Runtime provenance envelope**: every orchestrator bundle now includes a `provenance` section with `serverVersion`, `runtimeEnvironment`, `traceId`, `createdAt`, and `upstreamProvenance`.
+
+### Workflow Governance
+- **AD hard-gating by default**: `GenRAOrchestrator.run_workflow()` now defaults `require_ad_clearance` to `True` when predictive tasks are present. Callers who explicitly pass `requireAdClearance=False` remain unaffected.
+- **Clearer denied vs error semantics**: hard applicability-domain failures now set bundle `status` to `"denied"`, while generic predictive errors continue to map to `"error"`.
+- **Advisory review checkpoints**: every bundle now includes `reviewCheckpoints` metadata (`chemical_id_confirmation`, `ad_assessment`, `final_report`) to seed future pause/approve UX without breaking synchronous callers.
+
+### Testing
+- Added `test_audit_hardening.py`, `test_audit_privacy.py`, `test_provenance_capture.py`, `test_trace_propagation.py`, `test_bundle_provenance.py`, and `test_orchestrator_ad_gating.py` to cover the new controls end-to-end.
+
 ## What's New In v0.2.2
 
 - Published a clean `v0.2.2` patch-release layer over the already-shipped `0.2.1` public-surface hardening work, without changing the default MCP boundary.
@@ -424,12 +447,10 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
+- Completed: [`v0.2.3` release cleanup](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.
 - Completed: [`v0.2.2` release cleanup](docs/releases/v0.2.2_release_description.md)
 - Completed: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md) and the matching [`v0.2.1` release description](docs/releases/v0.2.1_release_description.md)
-- `v0.2.3` should focus on packaging and operational polish rather than reopening the public boundary.
-- Promote `scripts/release_smoke.py` and the live interop capture path into repeatable CI/release automation.
-- Tighten downstream-facing documentation around deterministic identifier usage so agents prefer DTXSID/CAS over partial-name inputs.
-- Expand screening prioritization only where additional quantitative signals can be added without overstating risk semantics.
+- `v0.2.4` should focus on CI/release automation (promote `scripts/release_smoke.py` and live interop capture into repeatable GitHub Actions), documentation polish around deterministic identifier usage, and expanding screening prioritization signals without overstating risk semantics.
 - Revisit predictive/orchestrator publication only after the default server, contracts, and docs all agree.
 
 ---

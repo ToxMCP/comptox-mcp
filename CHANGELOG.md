@@ -2,13 +2,16 @@
 
 ## [Unreleased]
 
-- tightened repository governance with support, intake, review-ownership, and dependency-automation hygiene
-- expanded release discipline around public-surface validation and metadata consistency checks
-- standardized GitHub workflow job names in preparation for required branch-protection status checks
-- upgraded GitHub Actions workflow dependencies toward Node 24-compatible versions and opted dependency review into the Node 24 runtime
-- pinned GitHub workflow actions to immutable SHAs, added CodeQL scanning, and added workflow-hardening regression coverage
-- added a release/workflow-dispatch pipeline that builds distributions, emits a CycloneDX SBOM artifact, and publishes signed provenance/SBOM attestations
-- documented online and offline verification of signed release provenance and SBOM attestations for downstream consumers
+## [0.2.3] - 2026-04-15
+
+- hardened audit subsystem with SHA-256 content hashing, sequential chain linkage, and tamper-evident event verification
+- added privacy-aware audit parameter scrubbing for sensitive identifiers (DTXSID, CASRN, SMILES, InChI, InChIKey)
+- captured upstream response provenance in `BaseResource` with `response_hash`, `retrieved_at`, and `retry_count`
+- added W3C `traceparent` propagation in HTTP transport and injected runtime provenance into orchestrator bundles
+- hardened `AuditBundleStore` with bundle checksums, previous-bundle hash linkage, and chain integrity verification
+- defaulted AD clearance to `True` in orchestrator when predictive tasks exist, with explicit opt-out still supported
+- added advisory `reviewCheckpoints` metadata to orchestrator bundle outputs
+- kept the public MCP boundary unchanged; all changes are internal governance, privacy, and traceability improvements
 
 ## [0.2.2] - 2026-04-12
 

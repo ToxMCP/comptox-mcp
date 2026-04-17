@@ -47,7 +47,7 @@ This writes Markdown and HTML summaries under `docs/generated/`. See `docs/model
 - **Task 2.3** will populate cards for TEST, OPERA, and GenRA using the schema, ensuring AD definitions and provenance are complete.
 - **Task 2.4–2.5** will publish the AD reference data and wire schema validation into CI so regressions are blocked automatically.
 
-Questions or suggestions can be captured in `docs/mcp_ctx_audit.md` for review during the metadata governance workshops.
+Questions or suggestions should be captured in GitHub issues or focused documentation PRs during the metadata governance workshops.
 
 ## Implementation Notes
 

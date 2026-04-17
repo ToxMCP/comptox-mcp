@@ -134,11 +134,23 @@ def _normalize_tool_parameters(params: Dict[str, Any]) -> Dict[str, Any]:
     return tool_params or {}
 
 
+def _extract_trace_id(request: Request) -> str:
+    """Extract trace ID from W3C traceparent header or generate a new one."""
+    traceparent = request.headers.get("traceparent")
+    if traceparent:
+        parts = traceparent.split("-")
+        if len(parts) == 4:
+            return parts[1]
+    return str(uuid4())
+
+
 def _build_request_context(request: Request) -> Dict[str, Any]:
     session_id = request.headers.get("x-mcp-session-id") or str(uuid4())
     user_agent = request.headers.get("user-agent")
+    trace_id = _extract_trace_id(request)
     context: Dict[str, Any] = {
         "sessionId": session_id,
+        "traceId": trace_id,
         "clientInfo": {
             "name": "http-client",
             **({"userAgent": user_agent} if user_agent else {}),

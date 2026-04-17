@@ -30,6 +30,8 @@ class LiveConcordancePanelCase(BaseModel):
     toxval_type: Optional[str] = None
     toxval_subtype: Optional[str] = None
     effect_contains: Optional[str] = None
+    expected_observed_value: Optional[float] = None
+    observed_value_tolerance: float = 1e-9
 
 
 class LiveConcordanceCaseResult(BaseModel):
@@ -46,6 +48,8 @@ class LiveConcordanceCaseResult(BaseModel):
     toxval_type: Optional[str] = None
     toxval_subtype: Optional[str] = None
     observed_value: Optional[float] = None
+    expected_observed_value: Optional[float] = None
+    observed_value_delta: Optional[float] = None
     predicted_value: Optional[float] = None
     guardrail_codes: List[str] = Field(default_factory=list)
     message: Optional[str] = None
@@ -83,6 +87,7 @@ DEFAULT_LIVE_CONCORDANCE_PANEL: tuple[LiveConcordancePanelCase, ...] = (
         toxval_type="MRL",
         toxval_subtype="acute",
         effect_contains="immunological",
+        expected_observed_value=0.028753800317645073,
     ),
     LiveConcordancePanelCase(
         case_id="formaldehyde_acute_mrl_offset",
@@ -94,6 +99,7 @@ DEFAULT_LIVE_CONCORDANCE_PANEL: tuple[LiveConcordancePanelCase, ...] = (
         toxval_type="MRL",
         toxval_subtype="acute",
         effect_contains="respiratory",
+        expected_observed_value=0.04912250116467476,
     ),
     LiveConcordancePanelCase(
         case_id="toluene_acute_mrl_match",
@@ -104,6 +110,7 @@ DEFAULT_LIVE_CONCORDANCE_PANEL: tuple[LiveConcordancePanelCase, ...] = (
         toxval_type="MRL",
         toxval_subtype="acute",
         effect_contains="neurological",
+        expected_observed_value=7.537129878997803,
     ),
 )
 
@@ -150,8 +157,8 @@ def render_live_concordance_panel_markdown(
         f"- All cases passed: `{report.summary.all_cases_passed}`",
         f"- Passed / Failed / Error: `{report.summary.passed_cases}/{report.summary.failed_cases}/{report.summary.error_cases}`",
         "",
-        "| Case | Result | Expected | Actual | Effect | Observed | Predicted |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Case | Result | Expected | Actual | Effect | Observed | Delta | Predicted |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for item in report.cases:
         lines.append(
@@ -162,6 +169,7 @@ def render_live_concordance_panel_markdown(
             f"{item.actual_observed_concordance or 'n/a'} | "
             f"{item.matched_effect or 'n/a'} | "
             f"{item.observed_value if item.observed_value is not None else 'n/a'} | "
+            f"{item.observed_value_delta if item.observed_value_delta is not None else 'n/a'} | "
             f"{item.predicted_value if item.predicted_value is not None else 'n/a'} |"
         )
         if item.message:
@@ -249,12 +257,23 @@ def _run_panel_case(
             concordance_threshold=threshold,
         )
         actual_status = evidence.assessment["observedConcordance"]["status"]
+        observed_value_delta = _observed_value_delta(observed_value, case)
         result = "pass" if actual_status == case.expected_status else "fail"
         message = None
         if result != "pass":
             message = (
                 "Observed concordance drifted from the curated expectation. "
                 f"Expected `{case.expected_status}` but got `{actual_status}`."
+            )
+        elif (
+            observed_value_delta is not None
+            and observed_value_delta > case.observed_value_tolerance
+        ):
+            result = "fail"
+            message = (
+                "Observed reference value drifted beyond the curated tolerance. "
+                f"Expected `{case.expected_observed_value}` +/- "
+                f"`{case.observed_value_tolerance}`, got `{observed_value}`."
             )
         elif evidence.guardrail_events:
             message = evidence.guardrail_events[0].message
@@ -273,6 +292,8 @@ def _run_panel_case(
             toxval_type=_string_or_none(matched_record.get("toxvalType")),
             toxval_subtype=_string_or_none(matched_record.get("toxvalSubtype")),
             observed_value=observed_value,
+            expected_observed_value=case.expected_observed_value,
+            observed_value_delta=observed_value_delta,
             predicted_value=predicted_value,
             guardrail_codes=[
                 event.code for event in evidence.guardrail_events if event.code
@@ -341,6 +362,14 @@ def _predicted_value(observed_value: float, case: LiveConcordancePanelCase) -> f
     if case.prediction_mode == "offset":
         return observed_value + case.offset
     return observed_value
+
+
+def _observed_value_delta(
+    observed_value: float, case: LiveConcordancePanelCase
+) -> Optional[float]:
+    if case.expected_observed_value is None:
+        return None
+    return abs(observed_value - case.expected_observed_value)
 
 
 def _resolution_for_case(

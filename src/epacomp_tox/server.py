@@ -248,10 +248,12 @@ class MCPServer:
         correlation_id = None
         session_id = None
         client_info: Optional[Dict[str, Any]] = None
+        trace_id = None
         if context:
             correlation_id = context.get("correlationId") or context.get("sessionId")
             session_id = context.get("sessionId")
             client_info = context.get("clientInfo")
+            trace_id = context.get("traceId")
 
         try:
             registration = self.tool_registry.get_registration(tool_name)
@@ -263,6 +265,7 @@ class MCPServer:
                 correlation_id=correlation_id,
                 session_id=session_id,
                 client_info=client_info,
+                trace_id=trace_id,
                 params=parameters,
             )
             raise ValueError(f"Unknown tool: {tool_name}")
@@ -328,6 +331,7 @@ class MCPServer:
                 correlation_id=correlation_id,
                 session_id=session_id,
                 client_info=client_info,
+                trace_id=trace_id,
                 resource_name=registration.annotations.get("resource"),
                 params=validated_params.model_dump(exclude_none=True),
             )
@@ -340,6 +344,7 @@ class MCPServer:
                 correlation_id=correlation_id,
                 session_id=session_id,
                 client_info=client_info,
+                trace_id=trace_id,
                 resource_name=registration.annotations.get("resource"),
                 params=parameters,
                 error=str(exc),
@@ -372,6 +377,7 @@ class MCPServer:
                 correlation_id=correlation_id,
                 session_id=session_id,
                 client_info=client_info,
+                trace_id=trace_id,
                 resource_name=registration.annotations.get("resource"),
                 params=validated_params.model_dump(exclude_none=True),
                 error=str(exc),
@@ -396,6 +402,7 @@ class MCPServer:
                 correlation_id=correlation_id,
                 session_id=session_id,
                 client_info=client_info,
+                trace_id=trace_id,
                 resource_name=registration.annotations.get("resource"),
                 params=parameters,
                 error=str(exc),
@@ -411,6 +418,7 @@ class MCPServer:
         correlation_id: Optional[str],
         session_id: Optional[str],
         client_info: Optional[Dict[str, Any]],
+        trace_id: Optional[str] = None,
         resource_name: Optional[str] = None,
         params: Optional[Dict[str, Any]] = None,
         error: Optional[str] = None,
@@ -424,6 +432,8 @@ class MCPServer:
         }
         if correlation_id:
             event["correlation_id"] = correlation_id
+        if trace_id:
+            event["trace_id"] = trace_id
         if session_id:
             event["session_id"] = session_id
         if client_info:
@@ -432,7 +442,8 @@ class MCPServer:
             event["resource"] = resource_name
         if params is not None:
             try:
-                event["params"] = json.loads(json.dumps(params, default=str))
+                scrubbed = self._scrub_params_for_audit(params)
+                event["params"] = json.loads(json.dumps(scrubbed, default=str))
             except Exception:
                 event["params"] = str(params)
         if error:
@@ -584,6 +595,65 @@ class MCPServer:
             if reason:
                 session["closeReason"] = reason
             session["status"] = "closed"
+
+    @staticmethod
+    def _scrub_params_for_audit(
+        params: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
+        """Hash sensitive chemical identifiers before audit logging."""
+        import hashlib
+
+        if params is None:
+            return None
+
+        SALT = "toxmcp_audit_salt_v1"
+        SENSITIVE_KEYS = {
+            "dtxsid",
+            "dtxcid",
+            "casrn",
+            "smiles",
+            "inchikey",
+            "inchi",
+            "identifier",
+            "identifiers",
+            "dtxsids",
+            "dtxcids",
+            "casrns",
+        }
+        SMILES_PATTERN = re.compile(r"^[A-Za-z0-9@+\-\[\]\\\(\)=#$:.]+$")
+        CASRN_PATTERN = re.compile(r"^\d{1,7}\-\d{2}\-\d$")
+
+        def _hash_value(value: str) -> str:
+            h = hashlib.sha256(f"{SALT}:{value}".encode()).hexdigest()[:16]
+            return f"[HASH:{h}]"
+
+        def _looks_like_smiles(value: str) -> bool:
+            if len(value) < 3 or not SMILES_PATTERN.match(value):
+                return False
+            # All-lowercase words are unlikely to be SMILES
+            if value.islower():
+                return False
+            return True
+
+        def _looks_like_casrn(value: str) -> bool:
+            return bool(CASRN_PATTERN.match(value))
+
+        def _scrub_value(key: str, value: Any) -> Any:
+            if isinstance(value, dict):
+                return {k: _scrub_value(k, v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_scrub_value(key, item) for item in value]
+            if not isinstance(value, str):
+                return value
+            key_lower = key.lower()
+            if key_lower in SENSITIVE_KEYS:
+                return _hash_value(value)
+            if key_lower in {"query", "search", "name", "preferred_name"}:
+                if _looks_like_smiles(value) or _looks_like_casrn(value):
+                    return _hash_value(value)
+            return value
+
+        return _scrub_value("", params)
 
     @staticmethod
     def _resolve_transport_options(

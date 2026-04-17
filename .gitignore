@@ -49,3 +49,10 @@ htmlcov/
 artifacts/
 dist/
 build/
+
+# Internal review and generated research artifacts
+/AUDIT_MCP_*.md
+/ToxMCP_Audit_Reviewed_*/
+/scientific_engine_bundle.txt
+/triclosan_*.png
+/epa_comptox_api_structure.json

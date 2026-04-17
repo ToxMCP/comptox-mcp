@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 from copy import deepcopy
 from dataclasses import asdict, is_dataclass
+from datetime import datetime, timezone
+from importlib import metadata
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 from uuid import uuid4
@@ -39,6 +43,16 @@ def _serialize(obj: Any) -> Any:
     if isinstance(obj, dict):
         return {key: _serialize(val) for key, val in obj.items()}
     return obj
+
+
+def _resolve_runtime_version() -> str:
+    """Resolve the installed package version for provenance."""
+    for distribution_name in ("epacomp-tox-mcp", "epacomp_tox"):
+        try:
+            return metadata.version(distribution_name)
+        except metadata.PackageNotFoundError:
+            continue
+    return os.environ.get("EPACOMP_TOX_VERSION", "0.0.0-dev")
 
 
 class GenRAOrchestrator:
@@ -150,9 +164,13 @@ class GenRAOrchestrator:
             resolution=resolution,
             ctx_bundle=ctx_bundle,
         )
+        has_predictive_tasks = bool(list(prepared_plan))
+        require_ad_clearance = options.get("requireAdClearance")
+        if require_ad_clearance is None:
+            require_ad_clearance = has_predictive_tasks
         predictive_result: PredictiveRunResult = self.predictive_coordinator.run(
             prepared_plan,
-            require_ad_clearance=options.get("requireAdClearance"),
+            require_ad_clearance=require_ad_clearance,
         )
         predictive_result = self._enrich_predictive_result_requests(
             predictive_result,
@@ -169,7 +187,13 @@ class GenRAOrchestrator:
             }
         )
 
-        status = "success" if predictive_result.succeeded else "error"
+        has_denied_guardrail = any(g.status == "denied" for g in guardrails)
+        if predictive_result.succeeded:
+            status = "success"
+        elif has_denied_guardrail:
+            status = "denied"
+        else:
+            status = "error"
         evidence = self.evidence_synthesizer.synthesize(
             predictive_result.results,
             resolution=resolution,
@@ -303,7 +327,90 @@ class GenRAOrchestrator:
                 "recommendedActions": evidence.recommended_actions,
             }
 
+        bundle["reviewCheckpoints"] = self._build_review_checkpoints(
+            resolution=resolution,
+            predictive_result=predictive_result,
+        )
+        bundle["provenance"] = self._build_provenance(
+            run_id=run_id,
+            options=options,
+            ctx_bundle=ctx_bundle,
+            predictive_result=predictive_result,
+        )
         return bundle
+
+    def _build_review_checkpoints(
+        self,
+        resolution: Optional[IdentifierResolution],
+        predictive_result: Optional[PredictiveRunResult],
+    ) -> List[Dict[str, Any]]:
+        """Advisory review checkpoint metadata for workflow governance."""
+        checkpoints: List[Dict[str, Any]] = []
+        if resolution:
+            checkpoints.append(
+                {
+                    "step": "chemical_id_confirmation",
+                    "status": "passed",
+                    "required": True,
+                }
+            )
+        if predictive_result:
+            has_ad_warning = any(
+                step.ad and not step.ad.in_domain for step in predictive_result.results
+            )
+            ad_status = "required" if has_ad_warning else "passed"
+            checkpoints.append(
+                {
+                    "step": "ad_assessment",
+                    "status": ad_status,
+                    "required": True,
+                }
+            )
+            checkpoints.append(
+                {
+                    "step": "final_report",
+                    "status": "required",
+                    "required": True,
+                }
+            )
+        return checkpoints
+
+    def _build_provenance(
+        self,
+        *,
+        run_id: str,
+        options: Dict[str, Any],
+        ctx_bundle: Optional[CtxDataBundle],
+        predictive_result: Optional[PredictiveRunResult],
+    ) -> Dict[str, Any]:
+        provenance: Dict[str, Any] = {
+            "serverVersion": _resolve_runtime_version(),
+            "runtimeEnvironment": {
+                "pythonVersion": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+                "environment": os.environ.get("TOXMCP_ENVIRONMENT", "unknown"),
+            },
+            "traceId": options.get("traceId"),
+            "createdAt": self._clock() or datetime.now(timezone.utc).isoformat(),
+            "upstreamProvenance": {},
+        }
+
+        if ctx_bundle:
+            provenance["upstreamProvenance"]["ctxData"] = {
+                "cacheHit": ctx_bundle.cache_hit,
+                "trace": [_serialize(t) for t in ctx_bundle.trace],
+            }
+
+        if predictive_result:
+            provenance["upstreamProvenance"]["predictive"] = [
+                {
+                    "service": step.service,
+                    "status": step.status,
+                    "metadata": sanitize_metadata(step.metadata),
+                }
+                for step in predictive_result.results
+            ]
+
+        return provenance
 
     def _build_analogue_provenance(
         self, results: Sequence[PredictiveStepResult]
