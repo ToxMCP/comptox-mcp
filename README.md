@@ -194,7 +194,7 @@ pip install -e .
 
 # 2) configure
 cp .env.example .env
-# set CTX_API_KEY in .env
+# request a free CTX API key from ccte_api@epa.gov, then set CTX_API_KEY in .env
 
 # 3) run
 uvicorn epacomp_tox.transport.websocket:app --host 0.0.0.0 --port 8000 --reload
@@ -217,6 +217,37 @@ uvicorn epacomp_tox.transport.websocket:app --reload
 ```
 
 > **Important:** The server needs a valid EPA CompTox API key. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` in `.env` before starting the transport.
+
+### Get an EPA CompTox API key
+
+EPA's current CTX API documentation says API keys are free and must be requested from the API support team at `ccte_api@epa.gov`.
+
+- CTX APIs overview: [epa.gov/comptox-tools/computational-toxicology-and-exposure-apis](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis)
+- CTX API authentication/about page: [epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about)
+
+Suggested request email:
+
+```text
+To: ccte_api@epa.gov
+Subject: Request for EPA CompTox CTX API key
+
+Hello,
+
+I would like to request an API key for the EPA Computational Toxicology and Exposure APIs (CTX APIs).
+
+Name:
+Organization:
+Intended use:
+
+Thank you.
+```
+
+Once EPA sends your key:
+
+```bash
+cp .env.example .env
+# then paste the key into CTX_API_KEY in .env
+```
 
 With the server running, MCP clients can connect to `http://localhost:8000/mcp` (HTTP) or `ws://localhost:8000/mcp/ws` (WebSocket).
 
@@ -264,7 +295,7 @@ Settings are resolved via [`pydantic-settings`](https://docs.pydantic.dev/latest
 
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `CTX_API_KEY` | ✅ | – | CompTox API key used for all downstream requests. Fallbacks: `EPA_COMPTOX_API_KEY`, `ctx_x_api_key`. |
+| `CTX_API_KEY` | ✅ | – | CompTox API key used for all downstream requests. EPA currently issues keys via `ccte_api@epa.gov`. Fallbacks: `EPA_COMPTOX_API_KEY`, `ctx_x_api_key`. |
 | `CTX_API_BASE_URL` | Optional | `https://comptox.epa.gov/ctx-api` | Base URL for CompTox API. |
 | `CTX_USE_LEGACY` | Optional | `0` | Set to `1` to use the legacy `https://api-ccte.epa.gov` endpoint. |
 | `CTX_RETRY_ATTEMPTS` | Optional | `3` | Number of retry attempts for transient errors. |

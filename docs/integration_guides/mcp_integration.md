@@ -5,7 +5,7 @@ The EPA CompTox MCP server exposes JSON-RPC over HTTP (`/mcp`) and WebSocket (`/
 > **Prerequisites**
 >
 > 1. Deploy the MCP server (local or remote) and expose the `/mcp` endpoint.
-> 2. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` so the server can reach the EPA CompTox API.
+> 2. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` so the server can reach the EPA CompTox API. EPA currently distributes free CTX API keys via `ccte_api@epa.gov`; see the [CTX APIs overview](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis).
 > 3. If you front the MCP server with an auth layer, obtain the access token required by your MCP client.
 >
 > Replace `http://localhost:8000/mcp` with your deployment URL when following the snippets.
@@ -105,4 +105,3 @@ For additional automation examples, consult:
 - [`tests/test_http_transport.py`](../../tests/test_http_transport.py) for pure HTTP flows.
 - [`tests/test_websocket_transport.py`](../../tests/test_websocket_transport.py) for WebSocket streaming and cancellation cases.
 - [`scripts/mcp_ws_client.py`](../../scripts/mcp_ws_client.py) for a minimal WebSocket client you can adapt.
-
