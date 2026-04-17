@@ -59,8 +59,9 @@ api_structure['Cheminformatics'] = {
     'search_toxprints': str(inspect.signature(ctx.search_toxprints))
 }
 
-# Save to an ignored local artifact path so ad hoc snapshots do not clutter the repo root.
-output_path = Path(__file__).resolve().parent / "artifacts" / "epa_comptox_api_structure.json"
+# Save to the repo-level ignored artifacts/ path so ad hoc snapshots stay out of the public tree.
+repo_root = Path(__file__).resolve().parents[2]
+output_path = repo_root / "artifacts" / "epa_comptox_api_structure.json"
 output_path.parent.mkdir(parents=True, exist_ok=True)
 
 with output_path.open("w") as f:
