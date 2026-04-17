@@ -187,7 +187,7 @@ sequenceDiagram
 }
 ```
 
-- Bundles align with `docs/mcp_ctx_audit.md` by including request IDs, rate-limit headers, and reproducible payload copies when `includeRawResponses=true`.
+- Bundles include request IDs, rate-limit headers, and reproducible payload copies when `includeRawResponses=true` so downstream review remains traceable.
 - Storage layout enables downstream systems to fetch artefacts by `workflowRunId`. Each bundle carries a SHA256 checksum for integrity.
 
 ## Failure Modes & Recovery Paths

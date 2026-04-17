@@ -1,7 +1,9 @@
-import os
-import ctxpy as ctx
 import inspect
 import json
+import os
+from pathlib import Path
+
+import ctxpy as ctx
 
 # Initialize with API key from environment
 api_key = os.environ.get('CTX_API_KEY') or os.environ.get('EPA_COMPTOX_API_KEY')
@@ -57,8 +59,11 @@ api_structure['Cheminformatics'] = {
     'search_toxprints': str(inspect.signature(ctx.search_toxprints))
 }
 
-# Save to file
-with open('epa_comptox_api_structure.json', 'w') as f:
+# Save to an ignored local artifact path so ad hoc snapshots do not clutter the repo root.
+output_path = Path(__file__).resolve().parent / "artifacts" / "epa_comptox_api_structure.json"
+output_path.parent.mkdir(parents=True, exist_ok=True)
+
+with output_path.open("w") as f:
     json.dump(api_structure, f, indent=2)
 
-print('API structure extracted and saved to epa_comptox_api_structure.json')
+print(f"API structure extracted and saved to {output_path}")
