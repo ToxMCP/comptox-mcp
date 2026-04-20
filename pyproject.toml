@@ -27,7 +27,7 @@ requires-python = ">=3.9,<4.0"
 dependencies = [
     "fastapi>=0.111,<0.113",
     "uvicorn[standard]>=0.29,<0.31",
-    "websockets>=11,<13",
+    "websockets>=11,<16",
     "prometheus-client>=0.17,<0.21",
     "pydantic>=2.7,<3.0",
     "pydantic-settings>=2.3,<3.0",
