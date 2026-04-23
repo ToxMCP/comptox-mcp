@@ -1,0 +1,25 @@
+{
+  "model": "TEST Consensus Acute Toxicity",
+  "version": "5.2.0",
+  "criteria": [
+    {
+      "type": "descriptor_range",
+      "descriptors": ["logS", "logP", "LUMO", "polarSurfaceArea"],
+      "range": {"lowerPercentile": 0.05, "upperPercentile": 0.95}
+    },
+    {
+      "type": "similarity",
+      "metric": "tanimoto",
+      "threshold": 0.65,
+      "fingerprint": "pubchem"
+    }
+  ],
+  "policy": "block",
+  "errorCode": "TEST_AD_FAIL",
+  "references": [
+    {
+      "citation": "Mansouri et al. 2018",
+      "doi": "10.1021/acs.jcim.7b00524"
+    }
+  ]
+}

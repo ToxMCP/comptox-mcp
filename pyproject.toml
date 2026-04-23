@@ -32,6 +32,7 @@ dependencies = [
     "pydantic>=2.7,<3.0",
     "pydantic-settings>=2.3,<3.0",
     "jsonschema>=4.21,<5.0",
+    "PyJWT[crypto]>=2.8,<3.0",
 ]
 
 [project.optional-dependencies]

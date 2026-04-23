@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bioactivity.get_bioactivity_assay.response",
+  "description": "Assay annotation payload returned for all-assay, single AEID, single-concentration, or gene-scoped bioactivity assay queries.",
+  "anyOf": [
+    {
+      "type": "object",
+      "description": "Structured assay payload returned by the upstream API.",
+      "additionalProperties": true,
+      "properties": {
+        "aeid": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "assayName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "geneSymbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "An assay annotation record.",
+        "additionalProperties": true,
+        "properties": {
+          "aeid": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "assayName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geneSymbol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

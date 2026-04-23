@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bioactivity.get_bioactivity_summary_by_dtxsid.response",
+  "description": "Bioactivity summary records for a chemical queried by DTXSID.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A bioactivity summary record associated with the requested chemical.",
+    "additionalProperties": true,
+    "properties": {
+      "dtxsid": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "aeid": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "assayName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "geneSymbol": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "hitcall": {
+        "type": [
+          "boolean",
+          "number",
+          "null"
+        ]
+      },
+      "ac50": {
+        "type": [
+          "number",
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

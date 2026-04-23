@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/aopLinkageSummary.v1.json",
+  "title": "CompTox AOP Linkage Summary v1",
+  "description": "Portable CompTox-side AOP linkage object for downstream mechanistic consumers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalRef",
+    "lookupMode",
+    "mappings",
+    "supportingAssays",
+    "confidence",
+    "provenance"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "$ref": "#/$defs/chemicalRef"
+    },
+    "lookupMode": {
+      "type": "string",
+      "enum": [
+        "chemical",
+        "dtxsid",
+        "assay",
+        "target"
+      ]
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mapping"
+      }
+    },
+    "supportingAssays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assayReference"
+      }
+    },
+    "confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "identityResolution": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dtxsid",
+        "preferredName"
+      ],
+      "properties": {
+        "dtxsid": {
+          "type": "string",
+          "pattern": "^DTXSID[0-9A-Z]+$"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "casrn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aopId",
+        "eventType",
+        "eventLabel"
+      ],
+      "properties": {
+        "aopId": {
+          "type": "string"
+        },
+        "aopTitle": {
+          "type": "string"
+        },
+        "keyEventId": {
+          "type": "string"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "eventLabel": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        },
+        "evidenceDirection": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "assayReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aeid",
+        "assayName"
+      ],
+      "properties": {
+        "aeid": {
+          "type": "string"
+        },
+        "assayName": {
+          "type": "string"
+        },
+        "targetName": {
+          "type": "string"
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score"
+      ],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "band": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        }
+      }
+    },
+    "sourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceRecord"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,30 +2,30 @@ from __future__ import annotations
 
 import json
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Dict, Tuple
 
 from jsonschema import Draft202012Validator
 
-SCHEMA_ROOT = Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+from epacomp_tox.assets import data_file
 
 
 class SchemaValidationError(RuntimeError):
     """Raised when a payload fails JSON Schema validation."""
 
 
-def _schema_path(namespace: str, name: str) -> Path:
-    return SCHEMA_ROOT / namespace / f"{name}.json"
+def _schema_resource(namespace: str, name: str) -> Any:
+    return data_file("contracts", "schemas", namespace, f"{name}.json")
 
 
 @lru_cache(maxsize=128)
 def load_schema(namespace: str, name: str) -> Dict[str, Any]:
     """Load and cache a JSON Schema by namespace/name."""
-    path = _schema_path(namespace, name)
-    if not path.exists():
-        raise FileNotFoundError(f"Schema '{namespace}/{name}' not found at {path}")
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+    resource = _schema_resource(namespace, name)
+    if not resource.is_file():
+        raise FileNotFoundError(
+            f"Schema '{namespace}/{name}' not found in package data"
+        )
+    return json.loads(resource.read_text(encoding="utf-8"))
 
 
 def validate_payload(payload: Any, *, namespace: str, name: str) -> None:

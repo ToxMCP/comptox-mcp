@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workflow.comptox_evidence_pack.response",
+  "description": "Portable CompTox evidence pack assembled from identity, hazard, exposure, bioactivity, AOP, and PBPK-context slices.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalIdentity",
+    "metadata",
+    "audit",
+    "semanticCoverage"
+  ],
+  "properties": {
+    "chemicalIdentity": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "dtxsid",
+        "preferredName",
+        "provenance"
+      ]
+    },
+    "hazardEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "exposureEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "bioactivityEvidenceSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "aopLinkageSummary": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "pbpkContextBundle": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "identityResolution": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "packId",
+        "sourceMcp",
+        "createdAt",
+        "suiteRole"
+      ]
+    },
+    "mcpMetadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "generatedAt",
+        "generatedBy",
+        "sourceTools"
+      ]
+    },
+    "semanticCoverage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "identity",
+        "hazard",
+        "exposure",
+        "bioactivity",
+        "aopLinkage",
+        "pbpkContext"
+      ]
+    }
+  }
+}

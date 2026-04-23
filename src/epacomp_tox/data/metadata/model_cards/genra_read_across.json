@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "1.0",
+  "modelDetails": {
+    "name": "GenRA Read-Across Workflow",
+    "version": "2.1.0",
+    "modelType": "Read-Across",
+    "description": "Generalized read-across workflow combining analogue search, evidence weighting, and prediction synthesis.",
+    "developers": [
+      {
+        "name": "EPA Computational Toxicology"
+      }
+    ],
+    "organizations": [
+      "US EPA"
+    ],
+    "releaseDate": "2025-03-05",
+    "license": "EPA Terms of Use"
+  },
+  "intendedUse": {
+    "summary": "Supports regulatory read-across decisions for data gap filling and hazard assessment.",
+    "inScope": [
+      "Organic chemicals with available ToxCast/ToxVal analogues"
+    ],
+    "outOfScope": [
+      "Chemicals lacking sufficient analogue coverage",
+      "Mixtures"
+    ],
+    "limitations": [
+      "Requires SME review when analogue similarity < 0.7."
+    ],
+    "warnings": [
+      "Document evidence narrative before external submission."
+    ],
+    "regulatoryPrograms": [
+      "TSCA New Chemicals",
+      "OECD Cooperative Chemicals Assessment"
+    ]
+  },
+  "oecdValidationPrinciples": {
+    "definedEndpoint": {
+      "description": "Endpoints inherited from analogue dataset (e.g., repeat-dose toxicity LOAEL)",
+      "unit": "varies by endpoint"
+    },
+    "unambiguousAlgorithm": {
+      "summary": "Analogue search using structural fingerprints, evidence scoring across data streams, Bayesian-weighted prediction aggregation.",
+      "methodClass": "Read-Across",
+      "implementation": "GenRA Service 2.1",
+      "references": [
+        {
+          "citation": "Patlewicz et al. 2015",
+          "doi": "10.1093/toxsci/kfv169"
+        }
+      ]
+    },
+    "definedApplicabilityDomain": {
+      "summary": "Assess analogue availability, structural similarity, and metadata completeness before generating predictions.",
+      "relatedTools": [
+        "genra.check_applicability_domain"
+      ],
+      "references": [
+        {
+          "citation": "GenRA Technical Manual 2025"
+        }
+      ]
+    },
+    "goodnessOfFitMetrics": {
+      "internalValidation": [
+        {
+          "name": "Coverage",
+          "value": 0.78,
+          "dataset": "historical read-across cases"
+        }
+      ],
+      "externalValidation": [
+        {
+          "name": "Accuracy",
+          "value": 0.72,
+          "dataset": "case studies"
+        },
+        {
+          "name": "Precision",
+          "value": 0.69,
+          "dataset": "case studies"
+        }
+      ]
+    },
+    "mechanisticInterpretation": {
+      "summary": "Evidence weighting prioritizes analogues sharing mode-of-action descriptors and toxicity pathways.",
+      "confidence": "moderate"
+    }
+  },
+  "trainingData": {
+    "dataset": {
+      "name": "GenRA Analogue Library 2025",
+      "source": "EPA CompTox",
+      "description": "Curated analogue relationships with experimental endpoints"
+    },
+    "records": 1200,
+    "chemicalCount": 850,
+    "descriptorCount": 60,
+    "preprocessing": "Harmonized identifiers, removal of conflicting analogue evidence, assignment of mode-of-action tags."
+  },
+  "evaluationData": {
+    "datasets": [
+      {
+        "name": "GenRA Case Studies",
+        "source": "EPA Internal",
+        "description": "Historical regulatory read-across decisions"
+      }
+    ],
+    "validationApproach": "Leave-one-target-out analogue removal",
+    "metrics": [
+      {
+        "name": "Balanced Accuracy",
+        "value": 0.71,
+        "dataset": "case studies"
+      },
+      {
+        "name": "Coverage",
+        "value": 0.76,
+        "dataset": "case studies"
+      }
+    ],
+    "applicabilityDomainCoverage": 0.82
+  },
+  "applicabilityDomain": {
+    "summary": "Composite checks for analogue similarity, data completeness, and evidence diversity.",
+    "criteria": [
+      {
+        "type": "similarity",
+        "description": "At least three structural analogues with Tanimoto similarity >= 0.7.",
+        "parameters": {
+          "threshold": 0.7,
+          "minAnalogues": 3
+        }
+      },
+      {
+        "type": "coverage",
+        "description": "Analogues must span at least two evidence domains (in vivo, in vitro, in silico).",
+        "parameters": {
+          "minDomains": 2
+        }
+      },
+      {
+        "type": "expert_rule",
+        "description": "Mode-of-action tags must align across selected analogues.",
+        "parameters": {
+          "allowableMismatch": 1
+        }
+      }
+    ],
+    "enforcement": {
+      "mcpTools": [
+        "genra.check_applicability_domain"
+      ],
+      "policy": "block",
+      "errorCodes": [
+        "GENRA_AD_FAIL"
+      ]
+    },
+    "confidenceBands": [
+      {
+        "label": "Robust",
+        "minConfidence": 0.8,
+        "actions": [
+          "Eligible for automated dossier generation"
+        ]
+      },
+      {
+        "label": "Limited",
+        "minConfidence": 0.5,
+        "actions": [
+          "Requires SME justification and documentation"
+        ]
+      }
+    ]
+  },
+  "ethicalConsiderations": {
+    "risks": [
+      "Analogues may introduce hidden biases when evidence base is uneven."
+    ],
+    "mitigations": [
+      "Require documentation of analogue selection rationale and SME oversight."
+    ],
+    "humanOversight": "SME approval mandated for final predictions and evidence narratives."
+  },
+  "provenance": {
+    "sourceRepositories": [
+      "https://github.com/epa/genra"
+    ],
+    "build": {
+      "id": "genra-build-2025-03-05",
+      "timestamp": "2025-03-05T09:15:00Z",
+      "environment": "EPA CICD"
+    },
+    "checksum": {
+      "algorithm": "SHA256",
+      "value": "3ce4ec4983d3e7c6b2089b967679f5fc293096750293eb98d2b211f780a1f95e"
+    },
+    "reviewStatus": {
+      "approvedBy": [
+        {
+          "name": "Regulatory Affairs Read-Across Committee"
+        }
+      ],
+      "approvalDate": "2025-03-10"
+    }
+  }
+}

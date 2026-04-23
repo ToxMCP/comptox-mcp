@@ -1,0 +1,366 @@
+{
+  "chemicalIdentity": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7",
+    "inchikey": "IHQYDGMOQILFNV-UHFFFAOYSA-N",
+    "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+    "synonyms": [
+      "BPA"
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "ctx-example-pack-chemical-001",
+      "sources": [
+        {
+          "name": "CompTox Chemicals Dashboard API",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:58:00Z",
+          "citation": "EPA CompTox Chemicals Dashboard"
+        }
+      ],
+      "notes": [
+        "Embedded identity record."
+      ]
+    }
+  },
+  "hazardEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "datasets": [
+      {
+        "dataset": "toxval",
+        "summaryLevel": "summary",
+        "recordCount": 1,
+        "records": [
+          {
+            "effect": "NOEL",
+            "value": 40,
+            "unit": "mg/kg-day"
+          }
+        ],
+        "sourceTool": "search_hazard",
+        "retrievedAt": "2026-03-21T09:58:00Z"
+      }
+    ],
+    "keyFindings": [
+      {
+        "statement": "A repeated-dose oral NOEL is available in ToxValDB.",
+        "sourceDataset": "toxval",
+        "endpoint": "NOEL",
+        "value": 40,
+        "unit": "mg/kg-day"
+      }
+    ],
+    "references": [
+      {
+        "citation": "EPA CompTox hazard datasets for Bisphenol A.",
+        "url": "https://comptox.epa.gov/dashboard"
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "ctx-example-pack-hazard-001",
+      "sources": [
+        {
+          "name": "CompTox Hazard APIs",
+          "toolName": "search_hazard",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:58:00Z",
+          "citation": "EPA CompTox hazard endpoints"
+        }
+      ]
+    },
+    "requestMetadata": {
+      "sourceTools": [
+        "search_hazard"
+      ],
+      "requestedAt": "2026-03-21T09:58:00Z",
+      "summaryOnly": true
+    }
+  },
+  "exposureEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "cpdat": {
+      "recordCount": 1,
+      "records": [
+        {
+          "productUseCategory": "Food contact material"
+        }
+      ],
+      "sourceTool": "search_cpdat",
+      "retrievedAt": "2026-03-21T09:58:30Z"
+    },
+    "seem": null,
+    "httk": {
+      "recordCount": 1,
+      "records": [
+        {
+          "fractionUnboundPlasma": 0.06
+        }
+      ],
+      "sourceTool": "search_httk",
+      "retrievedAt": "2026-03-21T09:59:00Z"
+    },
+    "mmdb": null,
+    "qsurs": {
+      "recordCount": 1,
+      "records": [
+        {
+          "useDescriptor": "plasticizer",
+          "probability": 0.62
+        }
+      ],
+      "sourceTool": "search_qsurs",
+      "retrievedAt": "2026-03-21T09:59:30Z"
+    },
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "ctx-example-pack-exposure-001",
+      "sources": [
+        {
+          "name": "CompTox Exposure APIs",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:58:30Z",
+          "citation": "EPA CompTox exposure endpoints"
+        }
+      ]
+    }
+  },
+  "bioactivityEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "summary": {
+      "assayCount": 2,
+      "activeAssayCount": 1,
+      "targetCount": 1
+    },
+    "assays": [
+      {
+        "aeid": "AEID:1856",
+        "assayName": "ATG_ERa_TRANS_up",
+        "activityDirection": "up",
+        "activityValue": 0.48,
+        "unit": "uM",
+        "hitCall": true
+      }
+    ],
+    "targets": [
+      {
+        "targetName": "Estrogen receptor alpha",
+        "geneSymbol": "ESR1",
+        "targetFamily": "nuclear receptor",
+        "assayCount": 1
+      }
+    ],
+    "aopMappings": [
+      {
+        "aopId": "AOP:42",
+        "eventType": "molecular_initiating_event",
+        "eventLabel": "Activation of estrogen receptor",
+        "confidence": 0.81
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "ctx-example-pack-bioactivity-001",
+      "sources": [
+        {
+          "name": "CompTox Bioactivity APIs",
+          "toolName": "get_bioactivity_summary_by_dtxsid",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:59:00Z",
+          "citation": "EPA CompTox bioactivity endpoints"
+        }
+      ]
+    }
+  },
+  "aopLinkageSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "lookupMode": "dtxsid",
+    "mappings": [
+      {
+        "aopId": "AOP:42",
+        "eventType": "molecular_initiating_event",
+        "eventLabel": "Activation of estrogen receptor",
+        "confidence": 0.81
+      }
+    ],
+    "supportingAssays": [
+      {
+        "aeid": "AEID:1856",
+        "assayName": "ATG_ERa_TRANS_up"
+      }
+    ],
+    "confidence": {
+      "score": 0.79,
+      "basis": "Example CompTox linkage confidence."
+    },
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "build_aop_linkage_summary",
+      "traceId": "ctx-example-pack-aop-001",
+      "sources": [
+        {
+          "name": "CompTox AOP mapping",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:59:10Z",
+          "citation": "EPA CompTox AOP crosswalk endpoint"
+        }
+      ]
+    }
+  },
+  "pbpkContextBundle": {
+    "chemicalIdentityRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7",
+      "inchikey": "IHQYDGMOQILFNV-UHFFFAOYSA-N",
+      "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+      "synonyms": [
+        "BPA"
+      ],
+      "provenance": {
+        "sourceMcp": "epacomp-tox-mcp",
+        "generatedAt": "2026-03-21T10:00:00Z",
+        "generatedBy": "build_pbpk_context_bundle",
+        "traceId": "ctx-example-pack-pbpk-chemical-001",
+        "sources": [
+          {
+            "name": "CompTox Chemicals Dashboard API",
+            "toolName": "search_chemical",
+            "url": "https://comptox.epa.gov/dashboard",
+            "retrievedAt": "2026-03-21T09:58:00Z",
+            "citation": "EPA CompTox Chemicals Dashboard"
+          }
+        ]
+      }
+    },
+    "httkSlice": {
+      "recordCount": 1,
+      "records": [
+        {
+          "fractionUnboundPlasma": 0.06
+        }
+      ],
+      "sourceTool": "get_exposure_httk",
+      "retrievedAt": "2026-03-21T09:59:00Z",
+      "selectedMetrics": {
+        "fractionUnboundPlasma": 0.06
+      }
+    },
+    "hazardAdmeIviveSlice": {
+      "recordCount": 1,
+      "records": [
+        {
+          "intrinsicClearance": 12.4
+        }
+      ],
+      "sourceTool": "get_hazard_adme_ivive",
+      "retrievedAt": "2026-03-21T09:59:20Z",
+      "selectedMetrics": {
+        "intrinsicClearance": 12.4
+      }
+    },
+    "exposureHints": [
+      {
+        "hintType": "population_exposure",
+        "value": 0.02,
+        "unit": "mg/kg-day",
+        "source": "SEEM"
+      }
+    ],
+    "modelCardRefs": [
+      {
+        "modelName": "CompTox HTTK 3-Compartment Model",
+        "modelVersion": "1.0.0",
+        "endpoint": "screening-level internal concentration",
+        "cardUri": "https://github.com/ToxMCP/comptox-mcp/blob/main/schemas/comptox_model_card.schema.json"
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "build_pbpk_context_bundle",
+      "traceId": "ctx-example-pack-pbpk-001",
+      "sources": [
+        {
+          "name": "CompTox Exposure and Hazard APIs",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:59:00Z",
+          "citation": "EPA CompTox HTTK and ADME endpoints"
+        }
+      ]
+    },
+    "handoffTarget": "pbpk-mcp"
+  },
+  "metadata": {
+    "packId": "comptox-pack-bpa-001",
+    "sourceMcp": "epacomp-tox-mcp",
+    "createdAt": "2026-03-21T10:00:00Z",
+    "suiteRole": "evidence-federation",
+    "downstreamConsumers": [
+      "aop-mcp",
+      "pbpk-mcp"
+    ],
+    "modelCardRefs": [
+      {
+        "modelName": "CompTox HTTK 3-Compartment Model",
+        "modelVersion": "1.0.0",
+        "endpoint": "screening-level internal concentration",
+        "cardUri": "https://github.com/ToxMCP/comptox-mcp/blob/main/schemas/comptox_model_card.schema.json"
+      }
+    ]
+  },
+  "audit": {
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "requestId": "comptox-pack-request-001",
+    "sourceTools": [
+      "search_chemical",
+      "search_hazard",
+      "search_cpdat",
+      "get_bioactivity_summary_by_dtxsid",
+      "get_bioactivity_aop",
+      "get_exposure_httk"
+    ],
+    "notes": [
+      "Illustrative pack showing the intended portable handoff shape."
+    ]
+  },
+  "semanticCoverage": {
+    "identity": "detailed",
+    "hazard": "summary",
+    "exposure": "summary",
+    "bioactivity": "summary",
+    "aopLinkage": "linked",
+    "pbpkContext": "summary"
+  }
+}

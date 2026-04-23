@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bioactivity.search_bioactivity_terms.response",
+  "description": "Bioactivity search-term results returned for exact, prefix, or substring lookups.",
+  "type": "array",
+  "items": {
+    "anyOf": [
+      {
+        "type": "string",
+        "description": "A matched bioactivity term."
+      },
+      {
+        "type": "object",
+        "description": "A matched bioactivity term record when the upstream API returns structured results.",
+        "additionalProperties": true,
+        "properties": {
+          "term": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

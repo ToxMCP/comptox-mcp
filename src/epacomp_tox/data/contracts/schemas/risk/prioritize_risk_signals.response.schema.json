@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toxmcp.org/schemas/contracts/risk/prioritize_risk_signals.response.schema.json",
+  "title": "prioritize_risk_signals response",
+  "type": "object",
+  "properties": {
+    "chemicalRef": {
+      "type": "object",
+      "properties": {
+        "dtxsid": { "type": "string" },
+        "preferredName": { "type": "string" },
+        "casrn": { "type": "string" }
+      },
+      "required": ["dtxsid", "preferredName"],
+      "additionalProperties": true
+    },
+    "identityResolution": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "hazardSignal": {
+      "type": "object",
+      "properties": {
+        "recordCount": { "type": "integer", "minimum": 0 },
+        "sourceTool": { "type": "string" },
+        "selectedMetric": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["recordCount", "sourceTool"],
+      "additionalProperties": true
+    },
+    "exposureSignal": {
+      "type": "object",
+      "properties": {
+        "seem": { "$ref": "#/$defs/evidenceSlice" },
+        "httk": { "$ref": "#/$defs/evidenceSlice" },
+        "mmdb": { "$ref": "#/$defs/evidenceSlice" },
+        "cpdat": { "$ref": "#/$defs/evidenceSlice" }
+      },
+      "required": ["seem", "httk", "mmdb", "cpdat"],
+      "additionalProperties": false
+    },
+    "prioritization": {
+      "type": "object",
+      "properties": {
+        "priorityBand": {
+          "type": "string",
+          "enum": ["higher", "moderate", "lower", "inconclusive"]
+        },
+        "marginOfExposure": { "type": ["number", "null"] },
+        "hazardPointOfDeparture": { "type": ["number", "null"] },
+        "hazardUnit": { "type": ["string", "null"] },
+        "exposureEstimate": { "type": ["number", "null"] },
+        "exposureUnit": { "type": ["string", "null"] },
+        "signalDirection": { "type": "string" },
+        "priorityHeuristic": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "basis": { "type": "string" },
+        "supportingSignals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "caveats": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": [
+        "priorityBand",
+        "marginOfExposure",
+        "signalDirection",
+        "basis",
+        "caveats"
+      ],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "properties": {
+        "generatedBy": { "type": "string" },
+        "generatedAt": { "type": "string" },
+        "sourceCount": { "type": "integer", "minimum": 0 },
+        "sourceTools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "identityMode": { "type": "string" }
+      },
+      "required": ["generatedBy", "generatedAt", "sourceCount", "sourceTools", "identityMode"],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "chemicalRef",
+    "hazardSignal",
+    "exposureSignal",
+    "prioritization",
+    "knownDataGaps",
+    "limitations",
+    "generatedFromTools",
+    "provenanceSummary"
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "evidenceSlice": {
+      "type": "object",
+      "properties": {
+        "recordCount": { "type": "integer", "minimum": 0 },
+        "sourceTool": { "type": "string" },
+        "selectedMetrics": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["recordCount", "sourceTool"],
+      "additionalProperties": true
+    }
+  }
+}

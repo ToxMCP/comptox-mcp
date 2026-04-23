@@ -1,0 +1,215 @@
+{
+  "schemaVersion": "1.0",
+  "modelDetails": {
+    "name": "OPERA Property Predictions",
+    "version": "3.6.1",
+    "modelType": "QSAR",
+    "description": "Predicts physicochemical properties (LogP, water solubility, vapor pressure) using OPERA ensemble models.",
+    "developers": [
+      {
+        "name": "NIEHS NICEATM"
+      },
+      {
+        "name": "EPA Computational Toxicology"
+      }
+    ],
+    "organizations": [
+      "US EPA",
+      "NIEHS"
+    ],
+    "releaseDate": "2025-02-20",
+    "license": "OPERA EULA"
+  },
+  "intendedUse": {
+    "summary": "Supports exposure assessment workflows requiring physicochemical property estimates for organic chemicals.",
+    "inScope": [
+      "Neutral organic chemicals",
+      "Screening-level exposure modelling"
+    ],
+    "outOfScope": [
+      "Inorganic substances",
+      "Highly ionized species"
+    ],
+    "limitations": [
+      "Predictions outside training descriptor ranges may be unreliable."
+    ],
+    "warnings": [
+      "Verify units when integrating with downstream PBPK models."
+    ],
+    "regulatoryPrograms": [
+      "TSCA Existing Chemicals",
+      "REACH dossier support"
+    ]
+  },
+  "oecdValidationPrinciples": {
+    "definedEndpoint": {
+      "description": "LogP, water solubility (log mol/L), vapor pressure (log Pa)",
+      "unit": "log scale"
+    },
+    "unambiguousAlgorithm": {
+      "summary": "Random forest and support vector regression ensembles with descriptor selection.",
+      "methodClass": "Ensemble",
+      "implementation": "OPERA CLI 3.6",
+      "references": [
+        {
+          "citation": "Mansouri et al. 2018",
+          "doi": "10.1021/acs.jcim.7b00524"
+        }
+      ]
+    },
+    "definedApplicabilityDomain": {
+      "summary": "Combines leverage statistics with similarity to nearest neighbors in descriptor space.",
+      "relatedTools": [
+        "opera.check_applicability_domain"
+      ],
+      "references": [
+        {
+          "citation": "OPERA Technical Documentation 2024"
+        }
+      ]
+    },
+    "goodnessOfFitMetrics": {
+      "internalValidation": [
+        {
+          "name": "R2",
+          "value": 0.92,
+          "dataset": "training",
+          "description": "LogP"
+        }
+      ],
+      "externalValidation": [
+        {
+          "name": "RMSE",
+          "value": 0.31,
+          "dataset": "external",
+          "description": "LogP",
+          "units": "log"
+        },
+        {
+          "name": "RMSE",
+          "value": 0.45,
+          "dataset": "external",
+          "description": "Water Solubility",
+          "units": "log mol/L"
+        }
+      ]
+    },
+    "mechanisticInterpretation": {
+      "summary": "Descriptors capture polar surface area, hydrogen bonding, and fragment counts aligned with property trends.",
+      "confidence": "moderate"
+    }
+  },
+  "trainingData": {
+    "dataset": {
+      "name": "OPERA Training Library 2024",
+      "source": "EPA CompTox",
+      "description": "Consolidated experimental property measurements"
+    },
+    "records": 2500,
+    "chemicalCount": 2200,
+    "descriptorCount": 45,
+    "preprocessing": "Standardized structures (neutralized), removal of salts, descriptor scaling.",
+    "classBalance": "Continuous endpoints"
+  },
+  "evaluationData": {
+    "datasets": [
+      {
+        "name": "OPERA External Validation",
+        "source": "EPA CompTox",
+        "description": "Hold-out dataset of curated property measurements"
+      }
+    ],
+    "validationApproach": "80/20 train-test split with 5-fold cross-validation",
+    "metrics": [
+      {
+        "name": "MAE",
+        "value": 0.28,
+        "dataset": "external",
+        "description": "LogP"
+      },
+      {
+        "name": "R2",
+        "value": 0.85,
+        "dataset": "external",
+        "description": "Vapor Pressure"
+      }
+    ],
+    "applicabilityDomainCoverage": 0.9
+  },
+  "applicabilityDomain": {
+    "summary": "Descriptor range checks plus nearest-neighbor similarity enforced before prediction delivery.",
+    "criteria": [
+      {
+        "type": "descriptor_range",
+        "description": "Each descriptor must fall within training min/max after scaling.",
+        "parameters": {
+          "mode": "min_max"
+        }
+      },
+      {
+        "type": "similarity",
+        "description": "Average Tanimoto similarity to top 5 training neighbors >= 0.6.",
+        "parameters": {
+          "threshold": 0.6,
+          "neighbors": 5
+        }
+      }
+    ],
+    "enforcement": {
+      "mcpTools": [
+        "opera.check_applicability_domain"
+      ],
+      "policy": "warn",
+      "errorCodes": [
+        "OPERA_AD_WARN"
+      ]
+    },
+    "confidenceBands": [
+      {
+        "label": "High",
+        "minConfidence": 0.75,
+        "actions": [
+          "Auto-approve"
+        ]
+      },
+      {
+        "label": "Low",
+        "minConfidence": 0.5,
+        "actions": [
+          "Escalate to SME"
+        ]
+      }
+    ],
+    "references": [
+      {
+        "citation": "OPERA Manual 2025"
+      }
+    ]
+  },
+  "ethicalConsiderations": {
+    "risks": [
+      "Limited coverage for highly polar or reactive chemicals."
+    ],
+    "mitigations": [
+      "Flag low-confidence predictions for manual review."
+    ]
+  },
+  "provenance": {
+    "sourceRepositories": [
+      "https://github.com/kmansouri/OPERA"
+    ],
+    "build": {
+      "id": "opera-build-2025-02-20",
+      "timestamp": "2025-02-20T14:30:00Z",
+      "environment": "GitHub Actions"
+    },
+    "checksum": {
+      "algorithm": "SHA256",
+      "value": "79af18b3515e9a1d69037e2a154c7c6088cf3fae8c388ff901abdadf5a304a52"
+    },
+    "reviewStatus": {
+      "approvedBy": [],
+      "notes": "Pending SME review"
+    }
+  }
+}

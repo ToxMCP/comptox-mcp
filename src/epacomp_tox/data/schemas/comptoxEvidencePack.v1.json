@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/comptoxEvidencePack.v1.json",
+  "title": "CompTox Evidence Pack v1",
+  "description": "Portable cross-domain evidence package assembled from CompTox retrieval outputs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalIdentity",
+    "metadata",
+    "audit",
+    "semanticCoverage"
+  ],
+  "properties": {
+    "chemicalIdentity": {
+      "$ref": "https://epa.gov/comptox/schemas/chemicalIdentityRecord.v1.json"
+    },
+    "hazardEvidenceSummary": {
+      "oneOf": [
+        {
+          "$ref": "https://epa.gov/comptox/schemas/hazardEvidenceSummary.v1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "exposureEvidenceSummary": {
+      "oneOf": [
+        {
+          "$ref": "https://epa.gov/comptox/schemas/exposureEvidenceSummary.v1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "bioactivityEvidenceSummary": {
+      "oneOf": [
+        {
+          "$ref": "https://epa.gov/comptox/schemas/bioactivityEvidenceSummary.v1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "aopLinkageSummary": {
+      "oneOf": [
+        {
+          "$ref": "https://epa.gov/comptox/schemas/aopLinkageSummary.v1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pbpkContextBundle": {
+      "oneOf": [
+        {
+          "$ref": "https://epa.gov/comptox/schemas/pbpkContextBundle.v1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "identityResolution": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "audit": {
+      "$ref": "#/$defs/audit"
+    },
+    "semanticCoverage": {
+      "$ref": "#/$defs/semanticCoverage"
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packId",
+        "sourceMcp",
+        "createdAt",
+        "suiteRole"
+      ],
+      "properties": {
+        "packId": {
+          "type": "string"
+        },
+        "sourceMcp": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "suiteRole": {
+          "type": "string",
+          "const": "evidence-federation"
+        },
+        "downstreamConsumers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modelCardRefs": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "https://epa.gov/comptox/schemas/comptox-model-card.schema.json"
+              },
+              {
+                "$ref": "#/$defs/modelCardReference"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "modelCardReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelName",
+        "modelVersion"
+      ],
+      "properties": {
+        "modelName": {
+          "type": "string"
+        },
+        "modelVersion": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "cardUri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "warnings": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generatedAt",
+        "generatedBy",
+        "sourceTools"
+      ],
+      "properties": {
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "sourceTools": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "semanticCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "hazard",
+        "exposure",
+        "bioactivity",
+        "aopLinkage",
+        "pbpkContext"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/coverageLevel"
+        },
+        "hazard": {
+          "$ref": "#/$defs/coverageLevel"
+        },
+        "exposure": {
+          "$ref": "#/$defs/coverageLevel"
+        },
+        "bioactivity": {
+          "$ref": "#/$defs/coverageLevel"
+        },
+        "aopLinkage": {
+          "$ref": "#/$defs/coverageLevel"
+        },
+        "pbpkContext": {
+          "$ref": "#/$defs/coverageLevel"
+        }
+      }
+    },
+    "coverageLevel": {
+      "type": "string",
+      "enum": [
+        "none",
+        "linked",
+        "summary",
+        "detailed"
+      ]
+    }
+  }
+}

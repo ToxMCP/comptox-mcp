@@ -6,7 +6,10 @@ derived from `MCPServer.get_transport_metrics()`, reporting session counts and
 capability-negotiation outcomes.
 
 ## 1. Prerequisites
-- MCP transport running with `/metrics` enabled (FastAPI app exposed on HTTP).
+- MCP transport running with `/metrics` enabled via
+  `EPACOMP_MCP_METRICS_ENABLED=1` (FastAPI app exposed on HTTP).
+- A bearer token accepted by the MCP auth policy, unless
+  `MCP_METRICS_BYPASS_AUTH=1` is deliberately set behind a trusted gateway.
 - Network connectivity from Prometheus / the OTEL Collector to the transport.
 - Access to the target monitoring configuration repo (GitOps) or cluster.
 
@@ -15,8 +18,10 @@ capability-negotiation outcomes.
    repository.
 2. Replace the `targets` hostname with the service address for your
    environment (e.g., Kubernetes service DNS or load balancer).
-3. Adjust labels (such as `env`, `service`) to match your dashboard naming.
-4. Reload Prometheus or commit the change to your GitOps pipeline.
+3. Add the required `Authorization: Bearer <token>` header or configure a
+   gateway-side scrape identity.
+4. Adjust labels (such as `env`, `service`) to match your dashboard naming.
+5. Reload Prometheus or commit the change to your GitOps pipeline.
 
 Verify:
 - Open the Prometheus UI (`/graph`) and query `mcp_sessions_total` to confirm
@@ -48,8 +53,11 @@ Verify:
   validation step (already documented in this commit).
 
 ## 6. Troubleshooting
-- If `/metrics` returns 404, ensure your deployment uses the refreshed
-  application module (`epacomp_tox.transport.websocket:app`).
+- If `/metrics` returns 404, ensure `EPACOMP_MCP_METRICS_ENABLED=1` and that
+  your deployment uses the refreshed application module
+  (`epacomp_tox.transport.websocket:app`).
+- If `/metrics` returns 401 or 403, check the scrape token issuer, audience,
+  JWKS, and scopes against `MCP_AUTH_*` settings.
 - Verify network policies allow the monitoring stack to reach port `8000` (or
   your chosen bind port).
 - Enable debug logging on the OTEL collector (`service.telemetry.metrics.level = detailed`)

@@ -1,0 +1,214 @@
+{
+  "chemicalIdentityRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7",
+    "inchikey": "IHQYDGMOQILFNV-UHFFFAOYSA-N",
+    "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+    "synonyms": [
+      "BPA",
+      "4,4'-Isopropylidenediphenol"
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "2026-03-21T10:00:00Z",
+      "generatedBy": "build_pbpk_context_bundle",
+      "traceId": "ctx-example-pbpk-chemical-001",
+      "sources": [
+        {
+          "name": "CompTox Chemicals Dashboard API",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/dashboard",
+          "retrievedAt": "2026-03-21T09:58:00Z",
+          "citation": "EPA CompTox Chemicals Dashboard"
+        }
+      ],
+      "notes": [
+        "Embedded identity record for PBPK handoff."
+      ]
+    }
+  },
+  "httkSlice": {
+    "recordCount": 1,
+    "records": [
+      {
+        "model": "httk-3compartment",
+        "species": "human",
+        "fractionUnboundPlasma": 0.06,
+        "intrinsicClearance": 12.4
+      }
+    ],
+    "sourceTool": "get_exposure_httk",
+    "retrievedAt": "2026-03-21T09:59:00Z",
+    "selectedMetrics": {
+      "fractionUnboundPlasma": 0.06,
+      "intrinsicClearance": 12.4,
+      "clearanceUnit": "uL/min/10^6 hepatocytes"
+    }
+  },
+  "hazardAdmeIviveSlice": {
+    "recordCount": 1,
+    "records": [
+      {
+        "assay": "hepatocyte_clearance",
+        "value": 12.4,
+        "unit": "uL/min/10^6 hepatocytes"
+      }
+    ],
+    "sourceTool": "get_hazard_adme_ivive",
+    "retrievedAt": "2026-03-21T09:59:20Z",
+    "selectedMetrics": {
+      "primaryAdmeSignal": "hepatocyte_clearance"
+    }
+  },
+  "exposureHints": [
+    {
+      "hintType": "population_exposure",
+      "value": 0.02,
+      "unit": "mg/kg-day",
+      "source": "SEEM",
+      "context": "Adult central tendency estimate."
+    },
+    {
+      "hintType": "product_presence",
+      "value": "food_contact_material",
+      "source": "CPDat"
+    }
+  ],
+  "modelCardRefs": [
+    {
+      "schemaVersion": "1.0",
+      "modelDetails": {
+        "name": "CompTox HTTK 3-Compartment Model",
+        "version": "1.0.0",
+        "modelType": "PBPK",
+        "description": "Illustrative model card for an HTTK-derived PBPK handoff example.",
+        "developers": [
+          {
+            "name": "EPA CompTox Team"
+          }
+        ],
+        "organizations": [
+          "U.S. EPA"
+        ],
+        "releaseDate": "2025-01-01"
+      },
+      "intendedUse": {
+        "summary": "Provide a transportable model description for downstream PBPK qualification review.",
+        "inScope": [
+          "Screening-level internal exposure context"
+        ],
+        "outOfScope": [
+          "Final PBPK qualification decisions"
+        ],
+        "limitations": [
+          "Example model card embedded for schema validation only."
+        ],
+        "warnings": [
+          "Not a substitute for pbpk-mcp qualification outputs."
+        ],
+        "regulatoryPrograms": [
+          "NGRA workflow support"
+        ]
+      },
+      "oecdValidationPrinciples": {
+        "definedEndpoint": {
+          "description": "Internal concentration time-course surrogates",
+          "unit": "mg/L"
+        },
+        "unambiguousAlgorithm": {
+          "summary": "Three-compartment HTTK parameterization."
+        },
+        "definedApplicabilityDomain": {
+          "summary": "Applies when chemical-specific HTTK parameters are available."
+        },
+        "goodnessOfFitMetrics": {},
+        "mechanisticInterpretation": {
+          "summary": "Mechanistic interpretation derives from toxicokinetic parameterization."
+        }
+      },
+      "trainingData": {
+        "dataset": {
+          "name": "HTTK parameter tables",
+          "source": "CompTox"
+        },
+        "records": 1,
+        "chemicalCount": 1
+      },
+      "evaluationData": {
+        "datasets": [
+          {
+            "name": "Illustrative evaluation set",
+            "source": "CompTox"
+          }
+        ],
+        "validationApproach": "Reference example",
+        "metrics": [
+          {
+            "name": "coverage",
+            "value": 1.0
+          }
+        ]
+      },
+      "applicabilityDomain": {
+        "summary": "Requires a resolvable chemical identity and available HTTK parameter slice.",
+        "criteria": [
+          {
+            "type": "coverage",
+            "description": "HTTK parameters must be available."
+          }
+        ],
+        "enforcement": {
+          "mcpTools": [
+            "build_pbpk_context_bundle"
+          ]
+        }
+      },
+      "ethicalConsiderations": {
+        "risks": [
+          "Users may overinterpret screening-level context as a final PBPK decision."
+        ]
+      },
+      "provenance": {
+        "sourceRepositories": [
+          "https://github.com/ToxMCP/comptox-mcp"
+        ],
+        "build": {
+          "id": "example-build",
+          "timestamp": "2026-03-21T10:00:00Z"
+        },
+        "checksum": {
+          "algorithm": "SHA256",
+          "value": "examplechecksum"
+        },
+        "reviewStatus": {
+          "approvedBy": [
+            {
+              "name": "QA Reviewer"
+            }
+          ],
+          "approvalDate": "2026-03-21"
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "build_pbpk_context_bundle",
+    "traceId": "ctx-example-pbpk-001",
+    "sources": [
+      {
+        "name": "CompTox Exposure and Hazard APIs",
+        "toolName": "get_exposure_httk",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:59:00Z",
+        "citation": "EPA CompTox HTTK and ADME endpoints"
+      }
+    ],
+    "notes": [
+      "This bundle provides context only; it does not emit internal exposure estimates."
+    ]
+  },
+  "handoffTarget": "pbpk-mcp"
+}

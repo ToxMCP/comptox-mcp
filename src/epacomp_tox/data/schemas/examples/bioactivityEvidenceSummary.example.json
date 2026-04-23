@@ -1,0 +1,77 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "summary": {
+    "assayCount": 3,
+    "activeAssayCount": 2,
+    "targetCount": 2,
+    "referenceAssaySet": "toxcast-phase-iii",
+    "notes": [
+      "Example summary highlighting endocrine-relevant activity."
+    ]
+  },
+  "assays": [
+    {
+      "aeid": "AEID:1856",
+      "assayName": "ATG_ERa_TRANS_up",
+      "assayComponent": "estrogen receptor alpha transcriptional activation",
+      "activityDirection": "up",
+      "activityValue": 0.48,
+      "unit": "uM",
+      "hitCall": true
+    },
+    {
+      "aeid": "AEID:1234",
+      "assayName": "TOX21_AR_BLA_Antagonist_ratio",
+      "assayComponent": "androgen receptor antagonist",
+      "activityDirection": "down",
+      "activityValue": 5.1,
+      "unit": "uM",
+      "hitCall": false
+    }
+  ],
+  "targets": [
+    {
+      "targetName": "Estrogen receptor alpha",
+      "geneSymbol": "ESR1",
+      "targetFamily": "nuclear receptor",
+      "assayCount": 2
+    },
+    {
+      "targetName": "Estrogen receptor beta",
+      "geneSymbol": "ESR2",
+      "targetFamily": "nuclear receptor",
+      "assayCount": 1
+    }
+  ],
+  "aopMappings": [
+    {
+      "aopId": "AOP:42",
+      "aopTitle": "Estrogen receptor activation leading to reproductive effects",
+      "eventType": "molecular_initiating_event",
+      "eventLabel": "Activation of estrogen receptor",
+      "confidence": 0.81
+    }
+  ],
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "2026-03-21T10:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "traceId": "ctx-example-bioactivity-001",
+    "sources": [
+      {
+        "name": "CompTox Bioactivity APIs",
+        "toolName": "get_bioactivity_summary_by_dtxsid",
+        "url": "https://comptox.epa.gov/dashboard",
+        "retrievedAt": "2026-03-21T09:59:00Z",
+        "citation": "EPA CompTox bioactivity endpoints"
+      }
+    ],
+    "notes": [
+      "Illustrative bioactivity summary object."
+    ]
+  }
+}

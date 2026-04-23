@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "exposure.search_cpdat.response",
+  "description": "CPDat records returned for functional use, product use category, or list-presence searches.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A CPDat exposure record.",
+    "additionalProperties": true,
+    "properties": {
+      "dtxsid": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "DSSTox substance identifier when present."
+      },
+      "casrn": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "preferredName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "functionalUse": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Functional use term when returned by the chosen vocabulary."
+      },
+      "productUseCategory": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Product use category when returned by the chosen vocabulary."
+      },
+      "listPresence": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "List-presence tag or keyword when returned by the chosen vocabulary."
+      }
+    }
+  }
+}

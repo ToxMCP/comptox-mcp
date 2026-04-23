@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "metadata.get_model_card.response",
+  "type": "object",
+  "required": ["modelCards", "nextCursor"],
+  "properties": {
+    "modelCards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["card", "checksum", "lastModified"],
+        "properties": {
+          "card": {"type": "object"},
+          "checksum": {"type": "string"},
+          "lastModified": {"type": "string"},
+          "documentedCriteria": {
+            "type": "array",
+            "items": {"type": "object", "additionalProperties": true}
+          },
+          "delegatedCriteria": {
+            "type": "array",
+            "items": {"type": "object", "additionalProperties": true}
+          },
+          "locallyEnforcedCriteria": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "enforcementLocation": {
+            "type": "string",
+            "enum": ["delegated-service", "local-engine"]
+          },
+          "guardrailStatus": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "nextCursor": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "predictive.predict.response",
+  "type": "object",
+  "required": ["prediction", "applicability_domain", "metadata"],
+  "properties": {
+    "prediction": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "applicability_domain": {
+      "$ref": "#/$defs/adCheck"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "adCheck": {
+      "type": "object",
+      "required": ["in_domain", "confidence", "details"],
+      "properties": {
+        "in_domain": {"type": "boolean"},
+        "confidence": {"type": "number"},
+        "details": {"type": "object", "additionalProperties": true}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

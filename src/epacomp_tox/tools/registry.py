@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
+from jsonschema import Draft202012Validator
 from pydantic import BaseModel
 
 from epacomp_tox.contracts import load_schema
@@ -21,6 +23,8 @@ class ToolRegistration:
     output_schema: Optional[Dict[str, Any]]
     resource: BaseResource
     parameters_model: Type[BaseModel]
+    input_validator: Draft202012Validator
+    output_validator: Optional[Draft202012Validator]
     annotations: Dict[str, Any]
     response_schema_ref: Optional[Tuple[str, str]]
 
@@ -46,6 +50,7 @@ class ToolRegistry:
             input_schema = (
                 tool.get("inputSchema") or tool.get("parameters") or {"type": "object"}
             )
+            input_schema = _normalise_input_schema(input_schema)
             output_schema = tool.get("outputSchema")
             response_schema_ref: Optional[Tuple[str, str]] = None
 
@@ -67,6 +72,8 @@ class ToolRegistry:
                     "properties": {"data": output_schema},
                     "required": ["data"],
                 }
+            if output_schema:
+                output_schema = _normalise_output_schema(output_schema)
 
             description = tool.get("description", "")
             parameters_model = create_model_from_schema(name, input_schema)
@@ -75,6 +82,10 @@ class ToolRegistry:
             combined_annotations.update(tool_annotations)
             if annotations:
                 combined_annotations.update(annotations)
+            combined_annotations.setdefault("readOnlyHint", True)
+            combined_annotations.setdefault("destructiveHint", False)
+            combined_annotations.setdefault("openWorldHint", True)
+            combined_annotations.setdefault("idempotentHint", True)
 
             self._tools[name] = ToolRegistration(
                 name=name,
@@ -83,6 +94,10 @@ class ToolRegistry:
                 output_schema=output_schema,
                 resource=resource,
                 parameters_model=parameters_model,
+                input_validator=Draft202012Validator(input_schema),
+                output_validator=(
+                    Draft202012Validator(output_schema) if output_schema else None
+                ),
                 annotations=combined_annotations,
                 response_schema_ref=response_schema_ref,
             )
@@ -117,3 +132,37 @@ class ToolRegistry:
 
     def __iter__(self) -> Iterable[ToolRegistration]:
         return iter(self._tools.values())
+
+
+def _normalise_input_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
+    normalised = deepcopy(schema or {"type": "object"})
+    if normalised.get("type", "object") == "object":
+        normalised.setdefault("properties", {})
+        normalised.setdefault("additionalProperties", False)
+    return normalised
+
+
+def _normalise_output_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
+    normalised = deepcopy(schema)
+    if normalised.get("type") != "object":
+        return normalised
+    properties = normalised.setdefault("properties", {})
+    metadata_schema = {"type": "object", "additionalProperties": True}
+    properties.setdefault("metadata", metadata_schema)
+    properties.setdefault("mcpMetadata", metadata_schema)
+    properties.setdefault(
+        "data",
+        {
+            "type": [
+                "object",
+                "array",
+                "string",
+                "number",
+                "integer",
+                "boolean",
+                "null",
+            ],
+            "additionalProperties": True,
+        },
+    )
+    return normalised

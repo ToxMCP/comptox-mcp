@@ -139,3 +139,36 @@ def test_bundle_store_verify_chain_detects_missing_file(tmp_path: Path):
     valid, errors = store.verify_chain()
     assert valid is False
     assert any("bundle file missing" in e for e in errors)
+
+
+def test_bundle_store_rejects_unsafe_workflow_run_id(tmp_path: Path) -> None:
+    store = AuditBundleStore(tmp_path)
+
+    with pytest.raises(ValueError):
+        store.save({"workflowRunId": "../escape", "data": "a"})
+
+
+def test_bundle_store_rejects_attachment_traversal(tmp_path: Path) -> None:
+    store = AuditBundleStore(tmp_path)
+
+    with pytest.raises(ValueError):
+        store.save(
+            {"workflowRunId": "run-1", "data": "a"},
+            attachments={"../escape.txt": "nope"},
+        )
+    assert not (tmp_path.parent / "escape.txt").exists()
+
+
+def test_bundle_store_allows_nested_safe_attachments(tmp_path: Path) -> None:
+    store = AuditBundleStore(tmp_path)
+
+    metadata = store.save(
+        {"workflowRunId": "run-1", "data": "a"},
+        attachments={"interop/aop_linkage_summary.json": "{}"},
+    )
+
+    attachment = (
+        tmp_path / "run-1" / "attachments" / "interop" / "aop_linkage_summary.json"
+    )
+    assert attachment.exists()
+    assert metadata["attachments"][0]["name"] == "interop/aop_linkage_summary.json"

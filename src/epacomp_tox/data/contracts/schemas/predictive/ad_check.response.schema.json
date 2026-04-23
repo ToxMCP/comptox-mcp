@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "predictive.check_applicability_domain.response",
+  "type": "object",
+  "required": ["in_domain", "confidence", "details"],
+  "properties": {
+    "in_domain": {"type": "boolean"},
+    "confidence": {"type": "number"},
+    "details": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": true
+}

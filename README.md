@@ -303,10 +303,18 @@ Settings are resolved via [`pydantic-settings`](https://docs.pydantic.dev/latest
 | `ENVIRONMENT` | Optional | `development` | Controls defaults like permissive CORS. |
 | `LOG_LEVEL` | Optional | `INFO` | Application log level. |
 | `BYPASS_AUTH` | Optional | `0` | Set to `1` to disable auth (development only). |
+| `MCP_AUTH_ISSUER` | Production | – | Expected OIDC issuer for MCP bearer JWTs. |
+| `MCP_AUTH_AUDIENCE` | Production | – | Expected JWT audience for the canonical MCP resource. |
+| `MCP_AUTH_JWKS_URL` | Production | – | JWKS URL used to verify bearer-token signatures. |
+| `MCP_AUTH_REQUIRED_SCOPES` | Optional | – | Space/comma-separated scopes required for MCP tool calls. |
+| `MCP_RESOURCE_URL` | Optional | `http://localhost:8000/mcp` | Canonical protected resource URL advertised in OAuth metadata and challenges. |
+| `MCP_RATE_LIMIT_REQUESTS_PER_MINUTE` | Optional | `120` | In-memory per-subject/IP tool-call limit; set `0` to disable local limiting. |
+| `MCP_RATE_LIMIT_BURST` | Optional | `20` | Token-bucket burst size for local tool-call limiting. |
 | `CORS_ALLOW_ORIGINS` | Optional | – | Comma-separated origins for HTTP transport. Defaults to `*` in development. |
 | `EPACOMP_MCP_HEARTBEAT_TIMEOUT_SECONDS` | Optional | `120` | Minimum heartbeat timeout negotiated with WebSocket clients. |
 | `EPACOMP_MCP_HANDSHAKE_TIMEOUT_SECONDS` | Optional | `30` | Minimum handshake timeout negotiated with WebSocket clients. |
 | `EPACOMP_MCP_METRICS_ENABLED` | Optional | `1` | Toggle `/metrics` endpoint exposure. |
+| `MCP_METRICS_BYPASS_AUTH` | Optional | `0` | Allow unauthenticated metrics only when a trusted gateway already protects the endpoint. |
 
 See [`docs/deployment.md`](docs/deployment.md) for production hardening tips and expanded configuration.
 
@@ -398,7 +406,8 @@ A scheduled GitHub Action (`.github/workflows/endpoint-check.yml`) runs `python 
 - Run via Gunicorn: `gunicorn epacomp_tox.transport.websocket:app -c deploy/gunicorn_conf.py`
 - Container image: see [`deploy/Dockerfile`](deploy/Dockerfile) for a hardened, non-root runtime.
 - Probes: `/healthz` (liveness) and `/readyz` (performs CTX connectivity check). Non-200 responses should trigger restarts.
-- Metrics: `/metrics` exposes Prometheus gauges derived from `MCPServer.get_transport_metrics()`. Sample scrape/OTEL configs live in `deploy/prometheus_scrape.yaml` and `deploy/otel_collector_metrics.yaml`.
+- Auth: production deployments should configure `MCP_AUTH_ISSUER`, `MCP_AUTH_AUDIENCE`, and `MCP_AUTH_JWKS_URL`; unauthorized MCP requests receive OAuth protected-resource challenges.
+- Metrics: `/metrics` exposes Prometheus gauges derived from `MCPServer.get_transport_metrics()` when `EPACOMP_MCP_METRICS_ENABLED=1`; it uses the same bearer auth unless `MCP_METRICS_BYPASS_AUTH=1` is explicitly set. Sample scrape/OTEL configs live in `deploy/prometheus_scrape.yaml` and `deploy/otel_collector_metrics.yaml`.
 - Additional rollout guidance (TLS, ingress, scaling) lives in [`docs/deployment.md`](docs/deployment.md).
 
 ---
@@ -421,14 +430,15 @@ Every successful tool invocation returns structured payloads designed for agents
 
 - `content`: human-readable JSON wrapped as text for chat surfaces.
 - `structuredContent.data`: machine-readable results (lists, dicts, or arrays) for programmatic chaining.
-- `structuredContent.metadata`: when available, includes rate-limit information, validation metadata, and session metadata.
+- `structuredContent.metadata`: when available, includes rate-limit information, validation metadata, and scrubbed session metadata. Bearer tokens and raw client authentication payloads are never echoed.
 - Default registered tools are retrieval and federation oriented; experimental predictive/orchestrator modules in this repository are not part of the canonical public surface yet.
 
 ---
 
 ## Security checklist
 
-- Disable `BYPASS_AUTH` and front the MCP server with OAuth/OIDC once deployed beyond local development.
+- Disable `BYPASS_AUTH` and configure OAuth/OIDC bearer validation before deploying beyond local development.
+- Enforce shared rate limits at the gateway for distributed deployments; the built-in limiter is process-local defense in depth.
 - Restrict `CORS_ALLOW_ORIGINS` to approved hosts when exposing the HTTP transport.
 - Rotate `CTX_API_KEY` regularly and store secrets outside the repository (e.g. cloud secret manager or OS keychain).
 - Monitor `/metrics` for negotiated capability changes and unexpected spikes in `tools/call` failures.
@@ -466,6 +476,7 @@ Every successful tool invocation returns structured payloads designed for agents
 
 - `tests/test_mcp_conformance_suite.py` covers handshake, catalog discovery, and streaming behaviours.
 - `tests/test_tool_contracts.py` enforces output schema declarations for the registered resources.
+- `black --check src tests` and `isort --check-only src tests` are the canonical repository hygiene checks.
 - `scripts/smoke_ctx.sh` runs integration smoke tests against the live CTX API.
 - `scripts/mcp_http_smoke.sh` performs a quick JSON-RPC handshake and tool listing against the HTTP transport.
 - `scripts/mcp_interop_smoke.py` validates the public interop tool path end-to-end over the HTTP transport.

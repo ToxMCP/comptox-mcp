@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "common.mapping_list_generic.response",
+  "description": "Schema for responses keyed by identifier with array payloads.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": {}
+  }
+}

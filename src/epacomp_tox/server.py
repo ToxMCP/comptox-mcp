@@ -7,6 +7,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 from pydantic import ValidationError
 
 from ctxpy import CtxApiError, RateLimitInfo
@@ -17,6 +18,14 @@ from epacomp_tox.health import ProbeMode, check_ctx_health
 from epacomp_tox.settings import settings
 from epacomp_tox.tools.registry import ToolRegistry
 from epacomp_tox.validators import to_serializable
+
+
+class ToolInputValidationError(ValueError):
+    """Raised when tool input fails advertised JSON Schema validation."""
+
+
+class ToolOutputValidationError(RuntimeError):
+    """Raised when structuredContent fails advertised JSON Schema validation."""
 
 
 class MCPServer:
@@ -149,8 +158,9 @@ class MCPServer:
         """
         for resource in self.resources.values():
             if resource.has_tool(tool_name):
-                result = resource.execute_tool(tool_name, parameters)
                 registration = self.tool_registry.get_registration(tool_name)
+                self._validate_tool_input(registration, parameters or {})
+                result = resource.execute_tool(tool_name, parameters)
                 if registration.response_schema_ref:
                     namespace, name = registration.response_schema_ref
                     try:
@@ -273,6 +283,7 @@ class MCPServer:
         resource = registration.resource
 
         try:
+            self._validate_tool_input(registration, parameters or {})
             validated_params = registration.parameters_model.model_validate(
                 parameters or {}
             )
@@ -324,6 +335,10 @@ class MCPServer:
                         "data": existing_sc,
                         "metadata": combined_metadata,
                     }
+            if not result.get("isError") and "structuredContent" in result:
+                self._validate_structured_content(
+                    registration, result["structuredContent"]
+                )
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="success",
@@ -336,7 +351,7 @@ class MCPServer:
                 params=validated_params.model_dump(exclude_none=True),
             )
             return result
-        except ValidationError as exc:
+        except (ValidationError, ToolInputValidationError) as exc:
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="invalid_params",
@@ -356,9 +371,8 @@ class MCPServer:
             metadata = self._format_metadata(resource.get_last_metadata())
             session_metadata = self._format_session_context(context)
             error_payload = {
-                "message": str(exc),
+                "message": "Upstream CTX request failed.",
                 "status": exc.status,
-                "detail": exc.detail,
                 "requestId": exc.request_id,
                 "retryAfter": exc.retry_after,
             }
@@ -387,7 +401,7 @@ class MCPServer:
                 "content": [
                     {
                         "type": "text",
-                        "text": f"Tool call failed: {exc}",
+                        "text": "Tool call failed: upstream CTX request failed.",
                         "annotations": {"audience": ["assistant"]},
                     }
                 ],
@@ -407,7 +421,22 @@ class MCPServer:
                 params=parameters,
                 error=str(exc),
             )
-            raise
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Tool call failed: internal server error.",
+                        "annotations": {"audience": ["assistant"]},
+                    }
+                ],
+                "structuredContent": self._drop_none_values(
+                    {
+                        "message": "Tool execution failed.",
+                        "correlationId": correlation_id,
+                    }
+                ),
+                "isError": True,
+            }
 
     def _emit_audit_event(
         self,
@@ -470,6 +499,43 @@ class MCPServer:
         except (ImportError, ValueError):  # pragma: no cover - defensive
             pass
         return execute_tool(tool_name, parameters)
+
+    @staticmethod
+    def _format_json_schema_error(error: JsonSchemaValidationError) -> str:
+        location = ".".join(str(item) for item in error.path)
+        if location:
+            return f"{location}: {error.message}"
+        return error.message
+
+    def _validate_tool_input(
+        self, registration: Any, parameters: Dict[str, Any]
+    ) -> None:
+        errors = sorted(
+            registration.input_validator.iter_errors(parameters or {}),
+            key=lambda error: list(error.path),
+        )
+        if errors:
+            message = "; ".join(
+                self._format_json_schema_error(error) for error in errors[:5]
+            )
+            raise ToolInputValidationError(message)
+
+    def _validate_structured_content(
+        self, registration: Any, structured_content: Dict[str, Any]
+    ) -> None:
+        if registration.output_validator is None:
+            return
+        errors = sorted(
+            registration.output_validator.iter_errors(structured_content),
+            key=lambda error: list(error.path),
+        )
+        if errors:
+            message = "; ".join(
+                self._format_json_schema_error(error) for error in errors[:5]
+            )
+            raise ToolOutputValidationError(
+                f"Tool '{registration.name}' structuredContent failed schema validation: {message}"
+            )
 
     def _find_resource(self, tool_name: str):
         for resource in self.resources.values():
@@ -543,6 +609,7 @@ class MCPServer:
             "description": tool.get("description", ""),
             "inputSchema": input_schema,
             "annotations": {
+                **(tool.get("annotations") or {}),
                 "resource": resource_name,
             },
         }
@@ -566,7 +633,7 @@ class MCPServer:
         *,
         client_capabilities: Dict[str, Any],
         client_info: Optional[Dict[str, Any]] = None,
-        authentication: Optional[Dict[str, Any]] = None,
+        auth: Optional[Dict[str, Any]] = None,
         negotiated_capabilities: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Track active session metadata for observability and governance."""
@@ -575,7 +642,7 @@ class MCPServer:
             "clientCapabilities": client_capabilities,
             "negotiatedCapabilities": negotiated_capabilities or {},
             "clientInfo": client_info or {},
-            "authentication": authentication or {},
+            "auth": auth or {},
             "lastActivity": datetime.now(tz=timezone.utc).isoformat(),
             "status": "active",
         }
@@ -690,10 +757,14 @@ class MCPServer:
         client_caps = context.get("clientCapabilities")
         if client_caps:
             session_view["clientCapabilities"] = client_caps
-        authentication = context.get("authentication")
-        if authentication:
-            session_view["authentication"] = authentication
+        auth_context = context.get("auth")
+        if auth_context:
+            session_view["auth"] = auth_context
         return session_view or None
+
+    @staticmethod
+    def _drop_none_values(payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {key: value for key, value in payload.items() if value is not None}
 
     def get_transport_metrics(self) -> Dict[str, Any]:
         """Summarize negotiated capability flags for observability consumers."""

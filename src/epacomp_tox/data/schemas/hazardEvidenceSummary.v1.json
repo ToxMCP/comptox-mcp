@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/hazardEvidenceSummary.v1.json",
+  "title": "CompTox Hazard Evidence Summary v1",
+  "description": "Portable summary of hazard evidence retrieved from CompTox hazard datasets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalRef",
+    "datasets",
+    "keyFindings",
+    "references",
+    "provenance",
+    "requestMetadata"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "$ref": "#/$defs/chemicalRef"
+    },
+    "datasets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/datasetSlice"
+      }
+    },
+    "keyFindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/keyFinding"
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "https://epa.gov/comptox/schemas/comptox-model-card.schema.json#/$defs/reference"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "requestMetadata": {
+      "$ref": "#/$defs/requestMetadata"
+    }
+  },
+  "$defs": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dtxsid",
+        "preferredName"
+      ],
+      "properties": {
+        "dtxsid": {
+          "type": "string",
+          "pattern": "^DTXSID[0-9A-Z]+$"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "casrn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "datasetSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset",
+        "summaryLevel",
+        "recordCount"
+      ],
+      "properties": {
+        "dataset": {
+          "type": "string",
+          "enum": [
+            "toxval",
+            "toxref",
+            "cancer",
+            "genetox",
+            "adme_ivive",
+            "iris",
+            "pprtv",
+            "hawc"
+          ]
+        },
+        "summaryLevel": {
+          "type": "string",
+          "enum": [
+            "summary",
+            "detail",
+            "mixed"
+          ]
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "sourceTool": {
+          "type": "string"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "keyFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statement",
+        "sourceDataset"
+      ],
+      "properties": {
+        "statement": {
+          "type": "string"
+        },
+        "sourceDataset": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "context": {
+          "type": "string"
+        }
+      }
+    },
+    "sourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceRecord"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "requestMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceTools",
+        "requestedAt"
+      ],
+      "properties": {
+        "sourceTools": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "requestedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summaryOnly": {
+          "type": "boolean"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

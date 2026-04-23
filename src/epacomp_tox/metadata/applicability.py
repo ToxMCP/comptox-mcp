@@ -4,15 +4,22 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-DEFAULT_AD_DIR = Path(Path.cwd(), "metadata", "applicability_domains")
+from epacomp_tox.assets import data_file
+
+DEFAULT_AD_DIR = data_file("metadata", "applicability_domains")
 
 
 class ApplicabilityDomainStore:
     """File-backed access to applicability domain reference data."""
 
     def __init__(self, directory: Optional[Path] = None):
-        self.directory = Path(directory or DEFAULT_AD_DIR)
-        self.directory.mkdir(parents=True, exist_ok=True)
+        if directory is None:
+            self.directory = DEFAULT_AD_DIR
+            self._filesystem_backed = False
+        else:
+            self.directory = Path(directory)
+            self.directory.mkdir(parents=True, exist_ok=True)
+            self._filesystem_backed = True
 
     def list_definitions(
         self,
@@ -37,7 +44,19 @@ class ApplicabilityDomainStore:
         return None
 
     def _iter_defs(self) -> Iterable[Dict[str, Any]]:
-        for path in sorted(self.directory.glob("*.json")):
+        paths = (
+            sorted(self.directory.glob("*.json"))
+            if self._filesystem_backed
+            else sorted(
+                (
+                    entry
+                    for entry in self.directory.iterdir()
+                    if entry.is_file() and entry.name.endswith(".json")
+                ),
+                key=lambda entry: entry.name,
+            )
+        )
+        for path in paths:
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
             except (
@@ -45,5 +64,11 @@ class ApplicabilityDomainStore:
                 json.JSONDecodeError,
             ):  # pragma: no cover - logged upstream
                 continue
-            payload["path"] = str(path)
+            if self._filesystem_backed:
+                payload["path"] = str(path)
+            else:
+                payload["path"] = (
+                    "package://epacomp_tox.data/metadata/"
+                    f"applicability_domains/{path.name}"
+                )
             yield payload

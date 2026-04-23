@@ -7,7 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-DEFAULT_MODEL_CARD_DIR = Path(Path.cwd(), "metadata", "model_cards")
+from epacomp_tox.assets import data_file
+
+DEFAULT_MODEL_CARD_DIR = data_file("metadata", "model_cards")
+PACKAGED_LAST_MODIFIED = "1970-01-01T00:00:00+00:00"
 
 
 @dataclass
@@ -21,8 +24,13 @@ class ModelCardStore:
     """Simple file-backed store for CompTox model cards."""
 
     def __init__(self, directory: Optional[Path] = None):
-        self.directory = Path(directory or DEFAULT_MODEL_CARD_DIR)
-        self.directory.mkdir(parents=True, exist_ok=True)
+        if directory is None:
+            self.directory = DEFAULT_MODEL_CARD_DIR
+            self._filesystem_backed = False
+        else:
+            self.directory = Path(directory)
+            self.directory.mkdir(parents=True, exist_ok=True)
+            self._filesystem_backed = True
 
     def list_cards(
         self,
@@ -42,7 +50,19 @@ class ModelCardStore:
         return page, next_cursor
 
     def _iter_cards(self) -> Iterable[Dict[str, Any]]:
-        for path in sorted(self.directory.glob("*.json")):
+        paths = (
+            sorted(self.directory.glob("*.json"))
+            if self._filesystem_backed
+            else sorted(
+                (
+                    entry
+                    for entry in self.directory.iterdir()
+                    if entry.is_file() and entry.name.endswith(".json")
+                ),
+                key=lambda entry: entry.name,
+            )
+        )
+        for path in paths:
             try:
                 raw = path.read_text(encoding="utf-8")
                 payload = json.loads(raw)
@@ -52,12 +72,20 @@ class ModelCardStore:
             ):  # pragma: no cover - logged upstream
                 continue
             checksum = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-            stat = path.stat()
+            if self._filesystem_backed:
+                stat = path.stat()
+                last_modified = datetime.fromtimestamp(stat.st_mtime).isoformat()
+                path_value = str(path)
+            else:
+                last_modified = PACKAGED_LAST_MODIFIED
+                path_value = (
+                    f"package://epacomp_tox.data/metadata/model_cards/{path.name}"
+                )
             yield {
                 "card": payload,
                 "checksum": checksum,
-                "path": str(path),
-                "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                "path": path_value,
+                "lastModified": last_modified,
             }
 
     @staticmethod

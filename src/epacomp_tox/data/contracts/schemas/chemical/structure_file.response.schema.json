@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chemical.structure_file.response",
+  "type": "object",
+  "required": [
+    "encoding",
+    "data",
+    "identifier",
+    "identifierType",
+    "fileFormat"
+  ],
+  "properties": {
+    "encoding": {
+      "type": "string",
+      "enum": ["base64", "utf-8"]
+    },
+    "data": {
+      "type": "string"
+    },
+    "contentType": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "identifierType": {
+      "type": "string"
+    },
+    "fileFormat": {
+      "type": "string"
+    },
+    "imageFormat": {
+      "type": "string"
+    },
+    "length": {
+      "type": ["integer", "null"]
+    }
+  },
+  "additionalProperties": false
+}

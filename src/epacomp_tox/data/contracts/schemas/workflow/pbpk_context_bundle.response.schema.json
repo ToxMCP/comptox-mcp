@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workflow.pbpk_context_bundle.response",
+  "description": "CompTox-side PBPK context package prepared for downstream PBPK workflows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalIdentityRef",
+    "httkSlice",
+    "hazardAdmeIviveSlice",
+    "exposureHints",
+    "modelCardRefs",
+    "provenance",
+    "handoffTarget"
+  ],
+  "properties": {
+    "chemicalIdentityRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "dtxsid",
+        "preferredName",
+        "provenance"
+      ],
+      "properties": {
+        "dtxsid": {
+          "type": "string"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "object"
+        }
+      }
+    },
+    "httkSlice": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "hazardAdmeIviveSlice": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "exposureHints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "modelCardRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "identityResolution": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array"
+        }
+      }
+    },
+    "handoffTarget": {
+      "type": "string"
+    }
+  }
+}

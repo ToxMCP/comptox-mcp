@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chemical.indigo_convert.response",
+  "type": "object",
+  "required": ["outputFormat", "value"],
+  "properties": {
+    "outputFormat": {
+      "type": "string"
+    },
+    "value": {}
+  },
+  "additionalProperties": false
+}

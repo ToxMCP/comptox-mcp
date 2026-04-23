@@ -43,14 +43,13 @@ def test_registry_wraps_non_object_output_schema_without_warning_log(
         registry.register_resource(resource)
 
     definition = registry.list_definitions()[0]
-    assert definition["outputSchema"] == {
-        "type": "object",
-        "properties": {
-            "data": {
-                "type": "array",
-                "items": {"type": "string"},
-            }
-        },
-        "required": ["data"],
+    output_schema = definition["outputSchema"]
+    assert output_schema["type"] == "object"
+    assert output_schema["required"] == ["data"]
+    assert output_schema["properties"]["data"] == {
+        "type": "array",
+        "items": {"type": "string"},
     }
+    assert output_schema["properties"]["metadata"]["additionalProperties"] is True
+    assert output_schema["properties"]["mcpMetadata"]["additionalProperties"] is True
     assert not caplog.records

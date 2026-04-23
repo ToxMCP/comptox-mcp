@@ -14,6 +14,7 @@ from epacomp_tox.transport.common import (
     PRIMARY_PROTOCOL_VERSION,
     SUPPORTED_PROTOCOL_VERSIONS,
 )
+from epacomp_tox.transport.security import AuthContext, AuthError, BearerAuthValidator
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ INTERNAL_ERROR = -32603
 UNAUTHORIZED = -32000
 FORBIDDEN = -32001
 TOOL_EXECUTION_ERROR = -32002
+RATE_LIMITED = -32029
 
 # HTTP transport capabilities advertised during initialize
 HTTP_SERVER_CAPABILITIES: Dict[str, Any] = {
@@ -40,6 +42,14 @@ HTTP_SERVER_CAPABILITIES: Dict[str, Any] = {
 router = APIRouter()
 
 
+class RateLimitExceeded(RuntimeError):
+    """Raised when a tool-call rate limit is exceeded."""
+
+    def __init__(self, retry_after_seconds: float):
+        super().__init__("Rate limit exceeded")
+        self.retry_after_seconds = retry_after_seconds
+
+
 @router.get("/mcp")
 async def mcp_probe(request: Request) -> Response:
     """
@@ -47,6 +57,9 @@ async def mcp_probe(request: Request) -> Response:
     Returns server info and supported protocol versions without requiring a JSON-RPC body.
     """
     server = _get_mcp_server(request)
+    auth_response = _require_http_auth_or_response(request, request_id=None)
+    if auth_response is not None:
+        return auth_response
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
@@ -58,7 +71,7 @@ async def mcp_probe(request: Request) -> Response:
     )
 
 
-# Issue 3: OAuth discovery placeholder endpoints
+# OAuth/OIDC discovery and MCP protected-resource metadata endpoints.
 @router.get("/.well-known/oauth-authorization-server")
 @router.get("/mcp/.well-known/oauth-authorization-server")
 @router.get("/.well-known/oauth-authorization-server/mcp")
@@ -68,6 +81,17 @@ async def oauth_discovery_placeholder() -> Response:
     Returns 200 OK with empty content to satisfy client discovery attempts.
     """
     return JSONResponse(status_code=status.HTTP_200_OK, content={})
+
+
+@router.get("/.well-known/oauth-protected-resource")
+@router.get("/.well-known/oauth-protected-resource/mcp")
+@router.get("/mcp/.well-known/oauth-protected-resource")
+async def oauth_protected_resource_metadata(request: Request) -> Response:
+    validator = _get_auth_validator(request)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=validator.protected_resource_metadata(),
+    )
 
 
 def _jsonrpc_success(result: Any, request_id: Optional[Any]) -> Dict[str, Any]:
@@ -104,6 +128,54 @@ def _get_mcp_server(request: Request) -> MCPServer:
             detail="MCP server unavailable",
         )
     return server
+
+
+def _get_auth_validator(request: Request) -> BearerAuthValidator:
+    validator = getattr(request.app.state, "auth_validator", None)
+    if validator is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication policy unavailable",
+        )
+    return validator
+
+
+def _remote_addr(request: Request) -> str:
+    client = getattr(request, "client", None)
+    if client and client.host:
+        return client.host
+    return "unknown"
+
+
+def _require_http_auth_or_response(
+    request: Request, *, request_id: Optional[Any]
+) -> Optional[Response]:
+    validator = _get_auth_validator(request)
+    try:
+        auth_context = validator.authenticate_header(
+            request.headers.get("authorization"), remote_addr=_remote_addr(request)
+        )
+    except AuthError as exc:
+        return _auth_error_response(validator, exc, request_id=request_id)
+    request.state.auth_context = auth_context
+    return None
+
+
+def _auth_error_response(
+    validator: BearerAuthValidator, exc: AuthError, *, request_id: Optional[Any]
+) -> Response:
+    code = UNAUTHORIZED if exc.status_code == 401 else FORBIDDEN
+    payload = _jsonrpc_error(
+        code=code,
+        message=exc.description,
+        request_id=request_id,
+        data={"error": exc.error},
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=payload,
+        headers={"WWW-Authenticate": validator.www_authenticate_header(exc)},
+    )
 
 
 def _normalize_tool_parameters(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -157,8 +229,11 @@ def _build_request_context(request: Request) -> Dict[str, Any]:
         },
         "clientCapabilities": {},
         "negotiatedCapabilities": {},
-        "transport": {"type": "http"},
+        "transport": {"type": "http", "remoteAddress": _remote_addr(request)},
     }
+    auth_context: Optional[AuthContext] = getattr(request.state, "auth_context", None)
+    if auth_context is not None:
+        context["auth"] = auth_context.safe_summary()
     correlation_id = getattr(request.state, "correlation_id", None)
     if correlation_id:
         context["correlationId"] = correlation_id
@@ -225,6 +300,10 @@ async def mcp_endpoint(request: Request) -> Response:
     params = payload.get("params") or {}
     jsonrpc_version = payload.get("jsonrpc")
 
+    auth_response = _require_http_auth_or_response(request, request_id=request_id)
+    if auth_response is not None:
+        return auth_response
+
     # Compatibility: respond to JSON-RPC initialize with a proper JSON-RPC envelope
     # while still carrying the "connected" shape Codex/Gemini expect.
     # if isinstance(method, str) and method.lower() in {"initialize", "mcp/initialize"}:
@@ -288,13 +367,26 @@ async def mcp_endpoint(request: Request) -> Response:
             code=FORBIDDEN, message=str(exc), request_id=request_id
         )
         return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content=content)
+    except RateLimitExceeded as exc:
+        content = _jsonrpc_error(
+            code=RATE_LIMITED,
+            message="Rate limit exceeded",
+            request_id=request_id,
+            data={"retryAfterSeconds": round(exc.retry_after_seconds, 3)},
+        )
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content=content,
+            headers={"Retry-After": str(max(1, int(exc.retry_after_seconds)))},
+        )
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Unhandled MCP error")
+        correlation_id = getattr(request.state, "correlation_id", None)
         content = _jsonrpc_error(
             code=INTERNAL_ERROR,
             message="Internal server error",
             request_id=request_id,
-            data=str(exc),
+            data={"correlationId": correlation_id} if correlation_id else None,
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content
@@ -366,7 +458,13 @@ def _handle_initialize(server: MCPServer, params: Dict[str, Any]) -> Dict[str, A
     logger.info(
         "HTTP MCP initialize with capabilities: %s", params.get("capabilities", {})
     )
-    protocol_version = params.get("protocolVersion") or PRIMARY_PROTOCOL_VERSION
+    requested_version = params.get("protocolVersion")
+    if requested_version and requested_version not in SUPPORTED_PROTOCOL_VERSIONS:
+        raise ValueError(
+            "Unsupported protocol version. Supported versions: "
+            + ", ".join(SUPPORTED_PROTOCOL_VERSIONS)
+        )
+    protocol_version = requested_version or PRIMARY_PROTOCOL_VERSION
     # session_id = params.get("sessionId") or str(uuid4()) # Removed as per instructions
 
     # Return ONLY standard MCP fields
@@ -1064,6 +1162,7 @@ async def _handle_tools_call(
 
     tool_params = _normalize_tool_parameters(params)
     context = _build_request_context(request)
+    _enforce_rate_limit(request, context=context)
 
     try:
         result = server.call_tool(tool_name, tool_params, context=context)
@@ -1122,3 +1221,23 @@ async def _handle_tools_call(
         raise ValueError("Tool result could not be serialized.") from exc
 
     return result
+
+
+def _enforce_rate_limit(request: Request, *, context: Dict[str, Any]) -> None:
+    limiter = getattr(request.app.state, "rate_limiter", None)
+    if limiter is None or not getattr(limiter, "enabled", False):
+        return
+    auth_context: Optional[AuthContext] = getattr(request.state, "auth_context", None)
+    fallback_key = f"ip:{_remote_addr(request)}"
+    key = (
+        auth_context.rate_limit_key(fallback_key)
+        if auth_context is not None
+        else fallback_key
+    )
+    decision = limiter.check(key)
+    if not decision.allowed:
+        context["rateLimit"] = {
+            "limited": True,
+            "retryAfterSeconds": round(decision.retry_after_seconds, 3),
+        }
+        raise RateLimitExceeded(decision.retry_after_seconds)

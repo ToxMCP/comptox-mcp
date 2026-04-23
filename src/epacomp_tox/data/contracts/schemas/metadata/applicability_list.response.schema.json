@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "metadata.list_applicability_domain.response",
+  "type": "object",
+  "required": ["applicabilityDomains", "nextCursor"],
+  "properties": {
+    "applicabilityDomains": {
+      "type": "array",
+      "items": {"type": "object", "additionalProperties": true}
+    },
+    "nextCursor": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

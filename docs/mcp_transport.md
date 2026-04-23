@@ -10,7 +10,7 @@ This document captures the transport requirements for Model Context Protocol (MC
 2. Client sends `initialize` request (`jsonrpc` 2.0) including:
    - `protocolVersion` (server must negotiate from supported set).
    - `capabilities` requested by client (per MCP spec §3.2).
-   - Optional session metadata (auth headers, agent info).
+   - Optional session metadata (agent info and capabilities). Bearer tokens are supplied via the transport `Authorization` header, not echoed through MCP payloads.
 3. Server response must include:
    - Chosen `protocolVersion`.
    - Server `capabilities` object describing supported features.
@@ -23,11 +23,11 @@ This document captures the transport requirements for Model Context Protocol (MC
 
 ### Current State
 
-- Server advertises supported protocol versions (`2025-06-18`, `2025-03-26`, `2024-11-05`) and negotiates correctly.
+- Server advertises supported protocol versions (`2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05`) and negotiates correctly.
 - `notifications/initialized` event emitted.
 - Client capability negotiation is persisted per session; `tools.streams`/`tools.cancel` features downgrade when the client opts out.
 - Ping/heartbeat logic responds to client `ping` frames and enforces configurable idle timeouts derived from transport settings or client overrides.
-- Authentication metadata is included in tool responses so downstream orchestrators can forward bearer tokens and trace identifiers.
+- Tool responses include only scrubbed auth summaries, such as hashed subject, issuer, scopes, expiry, and token hash. Raw bearer tokens and client `authentication` payloads are not returned.
 - Negotiated capability flags are exposed via `MCPServer.get_transport_metrics()` for transport telemetry dashboards.
 
 ### Required Follow-up

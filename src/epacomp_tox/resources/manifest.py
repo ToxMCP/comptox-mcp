@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from epacomp_tox.assets import data_file, iter_data_files
 from epacomp_tox.contracts import schema_ref
 
 from .base import BaseResource
@@ -23,7 +24,7 @@ class ContractManifestResource(BaseResource):
     ) -> None:
         super().__init__(api_key)
         self._server_getter = server_getter
-        self._repo_root = repo_root or Path(__file__).resolve().parents[3]
+        self._repo_root = Path(repo_root) if repo_root is not None else None
 
     @property
     def name(self) -> str:
@@ -167,8 +168,12 @@ class ContractManifestResource(BaseResource):
 
     def _portable_schema_entries(self) -> List[Dict[str, Any]]:
         entries: List[Dict[str, Any]] = []
-        schemas_dir = self._repo_root / "schemas"
-        for path in sorted(schemas_dir.glob("*.json")):
+        paths = (
+            sorted((self._repo_root / "schemas").glob("*.json"))
+            if self._repo_root is not None
+            else list(iter_data_files("schemas", suffix=".json"))
+        )
+        for path in paths:
             if path.name.startswith("."):
                 continue
             data = self._load_json(path)
@@ -187,13 +192,26 @@ class ContractManifestResource(BaseResource):
 
     def _response_schema_entries(self) -> List[Dict[str, Any]]:
         entries: List[Dict[str, Any]] = []
-        schemas_root = self._repo_root / "docs" / "contracts" / "schemas"
-        for path in sorted(schemas_root.glob("*/*.json")):
+        paths = (
+            sorted(
+                (self._repo_root / "docs" / "contracts" / "schemas").glob("*/*.json")
+            )
+            if self._repo_root is not None
+            else list(
+                iter_data_files("contracts", "schemas", suffix=".json", recursive=True)
+            )
+        )
+        for path in paths:
+            relative_path = (
+                str(path.relative_to(self._repo_root))
+                if self._repo_root is not None
+                else f"docs/contracts/schemas/{path.parent.name}/{path.name}"
+            )
             entries.append(
                 {
                     "namespace": path.parent.name,
                     "file": path.name,
-                    "path": str(path.relative_to(self._repo_root)),
+                    "path": relative_path,
                 }
             )
         return entries
@@ -216,9 +234,16 @@ class ContractManifestResource(BaseResource):
 
     def _portable_example_for(self, schema_file: str) -> Optional[str]:
         stem = schema_file.replace(".v1.json", "")
-        candidate = self._repo_root / "schemas" / "examples" / f"{stem}.example.json"
-        if candidate.exists():
-            return str(candidate.relative_to(self._repo_root))
+        if self._repo_root is not None:
+            candidate = (
+                self._repo_root / "schemas" / "examples" / f"{stem}.example.json"
+            )
+            if candidate.exists():
+                return str(candidate.relative_to(self._repo_root))
+            return None
+        candidate = data_file("schemas", "examples", f"{stem}.example.json")
+        if candidate.is_file():
+            return f"schemas/examples/{stem}.example.json"
         return None
 
     @staticmethod

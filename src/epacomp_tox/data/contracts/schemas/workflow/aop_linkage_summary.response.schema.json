@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workflow.aop_linkage_summary.response",
+  "description": "CompTox-side AOP linkage summary prepared for downstream mechanistic consumers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalRef",
+    "lookupMode",
+    "mappings",
+    "supportingAssays",
+    "confidence",
+    "provenance"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "dtxsid",
+        "preferredName"
+      ],
+      "properties": {
+        "dtxsid": {
+          "type": "string"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "casrn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "lookupMode": {
+      "type": "string"
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "supportingAssays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "score"
+      ],
+      "properties": {
+        "score": {
+          "type": "number"
+        }
+      }
+    },
+    "identityResolution": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

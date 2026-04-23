@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toxmcp.org/schemas/contracts/manifest/get_contract_manifest.response.schema.json",
+  "title": "get_contract_manifest response",
+  "type": "object",
+  "properties": {
+    "server": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "version": { "type": "string" },
+        "resourceCount": { "type": "integer", "minimum": 0 },
+        "toolCount": { "type": "integer", "minimum": 0 },
+        "transportEndpoints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["name", "title", "version", "resourceCount", "toolCount", "transportEndpoints"],
+      "additionalProperties": true
+    },
+    "publicBoundary": {
+      "type": "object",
+      "properties": {
+        "primaryRole": { "type": "string" },
+        "screeningRole": { "type": "string" },
+        "experimentalModules": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notOwnedByCompToxMcp": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["primaryRole", "screeningRole", "experimentalModules", "notOwnedByCompToxMcp"],
+      "additionalProperties": true
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "url": { "type": "string" },
+          "toolNames": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["name", "description", "url", "toolNames"],
+        "additionalProperties": true
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "resource": { "type": "string" },
+          "hasOutputSchema": { "type": "boolean" },
+          "responseSchemaRef": {
+            "type": ["object", "null"],
+            "properties": {
+              "namespace": { "type": "string" },
+              "name": { "type": "string" }
+            },
+            "required": ["namespace", "name"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "resource", "hasOutputSchema"],
+        "additionalProperties": true
+      }
+    },
+    "portableObjectSchemas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "title": { "type": "string" },
+          "schemaId": { "type": "string" },
+          "exampleFile": { "type": "string" }
+        },
+        "required": ["file"],
+        "additionalProperties": true
+      }
+    },
+    "responseSchemas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string" },
+          "file": { "type": "string" },
+          "path": { "type": "string" }
+        },
+        "required": ["namespace", "file", "path"],
+        "additionalProperties": false
+      }
+    },
+    "publicContractReferences": {
+      "type": "object",
+      "properties": {
+        "interop": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contractReference" }
+        },
+        "screeningPrioritization": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contractReference" }
+        }
+      },
+      "required": ["interop", "screeningPrioritization"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "server",
+    "publicBoundary",
+    "resources",
+    "tools",
+    "portableObjectSchemas",
+    "responseSchemas",
+    "publicContractReferences"
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "contractReference": {
+      "type": "object",
+      "properties": {
+        "toolName": { "type": "string" },
+        "responseSchemaRef": {
+          "type": "object",
+          "properties": {
+            "namespace": { "type": "string" },
+            "name": { "type": "string" }
+          },
+          "required": ["namespace", "name"],
+          "additionalProperties": false
+        },
+        "portableSchema": { "type": "string" },
+        "exampleFile": { "type": "string" }
+      },
+      "required": ["toolName", "responseSchemaRef"],
+      "additionalProperties": true
+    }
+  }
+}

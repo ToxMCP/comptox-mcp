@@ -196,6 +196,9 @@ def test_http_transport_initialize_and_list_and_call():
         assert any(tool["name"] == "echo" for tool in tools)
         first_tool = next(tool for tool in tools if tool["name"] == "echo")
         assert first_tool["annotations"]["resource"] == "echo"
+        assert first_tool["annotations"]["readOnlyHint"] is True
+        assert first_tool["annotations"]["destructiveHint"] is False
+        assert first_tool["annotations"]["openWorldHint"] is True
 
         call_response = client.post(
             "/mcp",

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/chemicalIdentityRecord.v1.json",
+  "title": "CompTox Chemical Identity Record v1",
+  "description": "Portable chemical identity object for cross-suite evidence handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dtxsid",
+    "preferredName",
+    "provenance"
+  ],
+  "properties": {
+    "dtxsid": {
+      "type": "string",
+      "pattern": "^DTXSID[0-9A-Z]+$",
+      "description": "DSSTox substance identifier."
+    },
+    "preferredName": {
+      "type": "string",
+      "description": "Preferred CompTox chemical name."
+    },
+    "casrn": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "CAS Registry Number when available."
+    },
+    "inchikey": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Standard InChIKey when available."
+    },
+    "smiles": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Canonical or source-provided SMILES when available."
+    },
+    "synonyms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Useful alternate names for downstream matching."
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "sourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "citation": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceRecord"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+import time
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Dict, Iterable, List, Optional, Tuple, Union
+
+SAFE_PATH_COMPONENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 
 
 class AuditBundleStore:
@@ -13,7 +17,7 @@ class AuditBundleStore:
     def __init__(
         self, base_dir: Union[str, Path], *, retention_days: Optional[int] = None
     ) -> None:
-        self.base_dir = Path(base_dir)
+        self.base_dir = Path(base_dir).resolve()
         self.base_dir.mkdir(parents=True, exist_ok=True)
         self.retention_days = retention_days
 
@@ -26,8 +30,9 @@ class AuditBundleStore:
         run_id = bundle.get("workflowRunId")
         if not run_id:
             raise ValueError("Bundle must include 'workflowRunId'.")
+        run_id = self._safe_component(str(run_id), "workflowRunId")
 
-        run_dir = self.base_dir / run_id
+        run_dir = self._resolve_under_base(self.base_dir / run_id)
         run_dir.mkdir(parents=True, exist_ok=True)
         created_at = datetime.now(timezone.utc).isoformat()
 
@@ -35,7 +40,7 @@ class AuditBundleStore:
             bundle, ensure_ascii=False, indent=2, sort_keys=True
         ).encode("utf-8")
         bundle_path = run_dir / "bundle.json"
-        bundle_path.write_bytes(payload)
+        self._atomic_write(bundle_path, payload)
         bundle_checksum = hashlib.sha256(payload).hexdigest()
 
         attachments_meta: List[Dict[str, any]] = []
@@ -43,13 +48,13 @@ class AuditBundleStore:
             attachments_dir = run_dir / "attachments"
             attachments_dir.mkdir(parents=True, exist_ok=True)
             for name, content in attachments.items():
-                target = attachments_dir / name
+                safe_name, target = self._safe_attachment_path(attachments_dir, name)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 data = content.encode("utf-8") if isinstance(content, str) else content
-                target.write_bytes(data)
+                self._atomic_write(target, data)
                 attachments_meta.append(
                     {
-                        "name": name,
+                        "name": safe_name,
                         "path": str(target.relative_to(self.base_dir)),
                         "size": len(data),
                         "checksum": hashlib.sha256(data).hexdigest(),
@@ -71,9 +76,9 @@ class AuditBundleStore:
         }
 
         metadata_path = run_dir / "metadata.json"
-        metadata_path.write_text(
-            json.dumps(metadata, indent=2, sort_keys=True),
-            encoding="utf-8",
+        self._atomic_write(
+            metadata_path,
+            json.dumps(metadata, indent=2, sort_keys=True).encode("utf-8"),
         )
 
         # Update chain manifest with latest hash
@@ -100,9 +105,9 @@ class AuditBundleStore:
             "updatedAt": created_at,
         }
         try:
-            chain_manifest_path.write_text(
-                json.dumps(manifest, indent=2, sort_keys=True),
-                encoding="utf-8",
+            self._atomic_write(
+                chain_manifest_path,
+                json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8"),
             )
         except OSError:  # pragma: no cover - defensive
             pass
@@ -122,7 +127,9 @@ class AuditBundleStore:
                 errors.append(f"Run {run_id}: previous hash mismatch")
 
             # Recompute bundle hash from file
-            bundle_path = self.base_dir / meta.get("bundlePath", "")
+            bundle_path = self._resolve_under_base(
+                self.base_dir / meta.get("bundlePath", "")
+            )
             if bundle_path.exists():
                 computed = hashlib.sha256(bundle_path.read_bytes()).hexdigest()
                 if computed != meta.get("bundleChecksum"):
@@ -135,13 +142,19 @@ class AuditBundleStore:
         return (not errors, errors)
 
     def load_bundle(self, run_id: str) -> Dict[str, any]:
-        bundle_path = self.base_dir / run_id / "bundle.json"
+        safe_run_id = self._safe_component(str(run_id), "workflowRunId")
+        bundle_path = self._resolve_under_base(
+            self.base_dir / safe_run_id / "bundle.json"
+        )
         if not bundle_path.exists():
             raise FileNotFoundError(f"No bundle found for run {run_id}")
         return json.loads(bundle_path.read_text(encoding="utf-8"))
 
     def load_metadata(self, run_id: str) -> Dict[str, any]:
-        metadata_path = self.base_dir / run_id / "metadata.json"
+        safe_run_id = self._safe_component(str(run_id), "workflowRunId")
+        metadata_path = self._resolve_under_base(
+            self.base_dir / safe_run_id / "metadata.json"
+        )
         if not metadata_path.exists():
             raise FileNotFoundError(f"No metadata found for run {run_id}")
         return json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -159,3 +172,38 @@ class AuditBundleStore:
             except json.JSONDecodeError:
                 continue
         return runs
+
+    @staticmethod
+    def _safe_component(value: str, label: str) -> str:
+        if not SAFE_PATH_COMPONENT.match(value) or ".." in value:
+            raise ValueError(f"Unsafe {label}: {value!r}")
+        return value
+
+    def _resolve_under_base(self, path: Path) -> Path:
+        resolved = path.resolve()
+        try:
+            resolved.relative_to(self.base_dir)
+        except ValueError as exc:
+            raise ValueError("Resolved audit path escapes store root.") from exc
+        return resolved
+
+    def _safe_attachment_path(
+        self, attachments_dir: Path, name: Union[str, Path]
+    ) -> Tuple[str, Path]:
+        raw_name = str(name).replace("\\", "/")
+        relative = PurePosixPath(raw_name)
+        if relative.is_absolute() or not relative.parts:
+            raise ValueError(f"Unsafe attachment name: {raw_name!r}")
+        safe_parts = [
+            self._safe_component(part, "attachment path component")
+            for part in relative.parts
+        ]
+        safe_name = "/".join(safe_parts)
+        target = self._resolve_under_base(attachments_dir.joinpath(*safe_parts))
+        return safe_name, target
+
+    @staticmethod
+    def _atomic_write(path: Path, payload: bytes) -> None:
+        tmp_path = path.with_name(f".{path.name}.{time.time_ns()}.tmp")
+        tmp_path.write_bytes(payload)
+        tmp_path.replace(path)

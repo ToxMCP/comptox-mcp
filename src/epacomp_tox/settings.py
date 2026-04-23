@@ -25,6 +25,30 @@ class AppSettings:
 class SecuritySettings:
     bypass_auth: bool
     allowed_origins: List[str]
+    auth_issuer: Optional[str]
+    auth_audience: Optional[str]
+    auth_jwks_url: Optional[str]
+    auth_required_scopes: List[str]
+    resource_url: str
+
+    @property
+    def auth_configured(self) -> bool:
+        return bool(self.auth_issuer and self.auth_audience and self.auth_jwks_url)
+
+    @property
+    def auth_requested(self) -> bool:
+        return bool(
+            self.auth_issuer
+            or self.auth_audience
+            or self.auth_jwks_url
+            or self.auth_required_scopes
+        )
+
+
+@dataclass(frozen=True)
+class RateLimitSettings:
+    requests_per_minute: int
+    burst: int
 
 
 @dataclass(frozen=True)
@@ -45,6 +69,7 @@ class TransportSettings:
 @dataclass(frozen=True)
 class ObservabilitySettings:
     metrics_enabled: bool = True
+    metrics_bypass_auth: bool = False
 
 
 class _RawSettings(BaseSettings):
@@ -61,6 +86,19 @@ class _RawSettings(BaseSettings):
 
     bypass_auth: bool = Field(default=False, alias="BYPASS_AUTH")
     cors_allow_origins: Optional[str] = Field(default=None, alias="CORS_ALLOW_ORIGINS")
+    mcp_auth_issuer: Optional[str] = Field(default=None, alias="MCP_AUTH_ISSUER")
+    mcp_auth_audience: Optional[str] = Field(default=None, alias="MCP_AUTH_AUDIENCE")
+    mcp_auth_jwks_url: Optional[str] = Field(default=None, alias="MCP_AUTH_JWKS_URL")
+    mcp_auth_required_scopes: Optional[str] = Field(
+        default=None, alias="MCP_AUTH_REQUIRED_SCOPES"
+    )
+    mcp_resource_url: str = Field(
+        default="http://localhost:8000/mcp", alias="MCP_RESOURCE_URL"
+    )
+    rate_limit_requests_per_minute: int = Field(
+        default=120, alias="MCP_RATE_LIMIT_REQUESTS_PER_MINUTE"
+    )
+    rate_limit_burst: int = Field(default=20, alias="MCP_RATE_LIMIT_BURST")
 
     ctx_api_key: Optional[str] = Field(default=None, alias="CTX_API_KEY")
     ctx_api_key_legacy: Optional[str] = Field(default=None, alias="EPA_COMPTOX_API_KEY")
@@ -80,6 +118,7 @@ class _RawSettings(BaseSettings):
     )
 
     metrics_enabled: bool = Field(default=True, alias="EPACOMP_MCP_METRICS_ENABLED")
+    metrics_bypass_auth: bool = Field(default=False, alias="MCP_METRICS_BYPASS_AUTH")
 
 
 class Settings(_RawSettings):
@@ -95,7 +134,21 @@ class Settings(_RawSettings):
         origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
         if not origins and self.app.is_development:
             origins = ["*"]
-        return SecuritySettings(bypass_auth=self.bypass_auth, allowed_origins=origins)
+        scopes = [
+            scope.strip()
+            for chunk in (self.mcp_auth_required_scopes or "").split(",")
+            for scope in chunk.split()
+            if scope.strip()
+        ]
+        return SecuritySettings(
+            bypass_auth=bool(self.bypass_auth),
+            allowed_origins=origins,
+            auth_issuer=self.mcp_auth_issuer,
+            auth_audience=self.mcp_auth_audience,
+            auth_jwks_url=self.mcp_auth_jwks_url,
+            auth_required_scopes=scopes,
+            resource_url=self.mcp_resource_url,
+        )
 
     @cached_property
     def ctx(self) -> ContextSettings:
@@ -127,8 +180,19 @@ class Settings(_RawSettings):
         )
 
     @cached_property
+    def rate_limit(self) -> RateLimitSettings:
+        rpm = max(0, int(self.rate_limit_requests_per_minute))
+        burst = int(self.rate_limit_burst)
+        if burst <= 0:
+            burst = rpm
+        return RateLimitSettings(requests_per_minute=rpm, burst=max(0, burst))
+
+    @cached_property
     def observability(self) -> ObservabilitySettings:
-        return ObservabilitySettings(metrics_enabled=bool(self.metrics_enabled))
+        return ObservabilitySettings(
+            metrics_enabled=bool(self.metrics_enabled),
+            metrics_bypass_auth=bool(self.metrics_bypass_auth),
+        )
 
 
 @lru_cache(maxsize=1)

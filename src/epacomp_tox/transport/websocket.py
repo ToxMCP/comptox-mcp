@@ -9,8 +9,16 @@ from copy import deepcopy
 from functools import partial
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Request,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -26,6 +34,12 @@ from epacomp_tox.transport.common import (
     SUPPORTED_PROTOCOL_VERSIONS,
 )
 from epacomp_tox.transport.http import router as http_router
+from epacomp_tox.transport.security import (
+    AuthContext,
+    AuthError,
+    BearerAuthValidator,
+    InMemoryRateLimiter,
+)
 from epacomp_tox.validators import to_serializable
 
 logger = logging.getLogger(__name__)
@@ -38,6 +52,7 @@ DEFAULT_SERVER_CAPABILITIES: Dict[str, Any] = {
 
 CANCELLED_ERROR_CODE = -32800
 CAPABILITY_NOT_NEGOTIATED_ERROR_CODE = -32004
+RATE_LIMITED_ERROR_CODE = -32029
 
 
 class AuditMiddleware:
@@ -182,9 +197,18 @@ class ToolExecutionError(Exception):
 class MCPWebSocketSession:
     """Manage a single MCP WebSocket session and JSON-RPC message loop."""
 
-    def __init__(self, websocket: WebSocket, server: MCPServer):
+    def __init__(
+        self,
+        websocket: WebSocket,
+        server: MCPServer,
+        *,
+        auth_context: AuthContext,
+        rate_limiter: Optional[InMemoryRateLimiter] = None,
+    ):
         self.websocket = websocket
         self.server = server
+        self.auth_context = auth_context
+        self.rate_limiter = rate_limiter
         self.initialized = False
         self.protocol_version: Optional[str] = None
         self.session_id = str(uuid.uuid4())
@@ -197,7 +221,6 @@ class MCPWebSocketSession:
             DEFAULT_SERVER_CAPABILITIES
         )
         self.client_info: Dict[str, Any] = {}
-        self.authentication: Dict[str, Any] = {}
         self._close_reason = "disconnect"
         self.active_requests: Dict[str, Dict[str, Any]] = {}
         self._streams_enabled = True
@@ -341,7 +364,6 @@ class MCPWebSocketSession:
             self.negotiated_capabilities.get("tools", {}).get("cancel", False)
         )
         self.client_info = params.get("clientInfo") or {}
-        self.authentication = params.get("authentication") or {}
         transport_settings = self.server.get_transport_options()
         heartbeat_override = params.get("heartbeatIntervalMs")
         if isinstance(heartbeat_override, (int, float)) and heartbeat_override > 0:
@@ -354,7 +376,7 @@ class MCPWebSocketSession:
             self.session_id,
             client_capabilities=self.client_capabilities,
             client_info=self.client_info,
-            authentication=self.authentication,
+            auth=self.auth_context.safe_summary(),
             negotiated_capabilities=self.negotiated_capabilities,
         )
         server_info = self.server.get_server_info()
@@ -549,6 +571,19 @@ class MCPWebSocketSession:
                 message_id, code=-32602, message="Tool arguments must be an object"
             )
             return
+        if self.rate_limiter is not None and self.rate_limiter.enabled:
+            fallback_key = f"ws:{self.session_id}"
+            decision = self.rate_limiter.check(
+                self.auth_context.rate_limit_key(fallback_key)
+            )
+            if not decision.allowed:
+                await self._send_error(
+                    message_id,
+                    code=RATE_LIMITED_ERROR_CODE,
+                    message="Rate limit exceeded",
+                    data={"retryAfterSeconds": round(decision.retry_after_seconds, 3)},
+                )
+                return
         request_id = params.get("requestId") or str(uuid.uuid4())
         timeout_ms = params.get("timeoutMs")
         timeout_seconds: Optional[float] = None
@@ -850,7 +885,7 @@ class MCPWebSocketSession:
             raise ToolExecutionError(
                 code=-32603,
                 message="Tool execution failed",
-                data={"detail": str(exc)},
+                data={"reason": "internal_error"},
             ) from exc
 
     async def _emit_event(self, method: str, params: Dict[str, Any]) -> None:
@@ -869,7 +904,7 @@ class MCPWebSocketSession:
             "clientInfo": deepcopy(self.client_info),
             "clientCapabilities": deepcopy(self.client_capabilities),
             "negotiatedCapabilities": deepcopy(self.negotiated_capabilities),
-            "authentication": deepcopy(self.authentication),
+            "auth": deepcopy(self.auth_context.safe_summary()),
         }
 
 
@@ -921,10 +956,43 @@ def _json_default(value: Any) -> Any:
     return converted
 
 
-def create_app(server: Optional[MCPServer] = None) -> FastAPI:
+def _remote_addr_from_request(request: Request) -> str:
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def _remote_addr_from_websocket(websocket: WebSocket) -> str:
+    if websocket.client and websocket.client.host:
+        return websocket.client.host
+    return "unknown"
+
+
+def _metrics_auth_response(
+    validator: BearerAuthValidator, exc: AuthError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.description, "error": exc.error},
+        headers={"WWW-Authenticate": validator.www_authenticate_header(exc)},
+    )
+
+
+def create_app(
+    server: Optional[MCPServer] = None,
+    *,
+    auth_bypass: Optional[bool] = None,
+    auth_validator: Optional[BearerAuthValidator] = None,
+) -> FastAPI:
     """Create a FastAPI application exposing the MCP WebSocket transport."""
 
     app = FastAPI(title="EPA CompTox MCP Server")
+    app.state.auth_validator = auth_validator or BearerAuthValidator(
+        security=settings.security,
+        app=settings.app,
+        bypass_auth=auth_bypass,
+    )
+    app.state.rate_limiter = InMemoryRateLimiter(settings.rate_limit)
 
     allowed_origins = settings.security.allowed_origins
     if not allowed_origins and settings.app.is_development:
@@ -977,7 +1045,18 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
         return {"status": "ok", "ctx": health}
 
     @app.get("/metrics", tags=["metrics"])
-    async def metrics() -> Response:
+    async def metrics(request: Request) -> Response:
+        if not settings.observability.metrics_enabled:
+            raise HTTPException(status_code=404, detail="Metrics disabled")
+        if not settings.observability.metrics_bypass_auth:
+            validator: BearerAuthValidator = app.state.auth_validator
+            try:
+                validator.authenticate_header(
+                    request.headers.get("authorization"),
+                    remote_addr=_remote_addr_from_request(request),
+                )
+            except AuthError as exc:
+                return _metrics_auth_response(validator, exc)
         server_instance = getattr(app.state, "mcp_server", None)
         payload = _render_prometheus_metrics(server_instance)
         return Response(content=payload, media_type=CONTENT_TYPE_LATEST)
@@ -1009,7 +1088,35 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
             await websocket.close()
             return
 
-        session = MCPWebSocketSession(websocket=websocket, server=server_instance)
+        validator: BearerAuthValidator = app.state.auth_validator
+        try:
+            auth_context = validator.authenticate_header(
+                websocket.headers.get("authorization"),
+                remote_addr=_remote_addr_from_websocket(websocket),
+            )
+        except AuthError as exc:
+            await websocket.accept()
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": (-32000 if exc.status_code == 401 else -32001),
+                            "message": exc.description,
+                            "data": {"error": exc.error},
+                        },
+                    }
+                )
+            )
+            await websocket.close(code=4401 if exc.status_code == 401 else 4403)
+            return
+
+        session = MCPWebSocketSession(
+            websocket=websocket,
+            server=server_instance,
+            auth_context=auth_context,
+            rate_limiter=app.state.rate_limiter,
+        )
         await session.run()
 
     app.include_router(http_router)

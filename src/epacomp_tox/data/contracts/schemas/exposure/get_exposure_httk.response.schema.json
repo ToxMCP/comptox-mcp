@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "exposure.get_exposure_httk.response",
+  "description": "Detailed HTTK records for a single chemical retrieved from the dedicated exposure HTTK endpoint.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A detailed HTTK record.",
+    "additionalProperties": true,
+    "properties": {
+      "dtxsid": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "casrn": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "preferredName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "species": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "parameter": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "value": {
+        "type": [
+          "number",
+          "string",
+          "null"
+        ]
+      },
+      "unit": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "HTTK model or parameter family when present."
+      }
+    }
+  }
+}

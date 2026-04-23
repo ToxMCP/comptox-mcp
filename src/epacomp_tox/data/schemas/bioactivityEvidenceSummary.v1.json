@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epa.gov/comptox/schemas/bioactivityEvidenceSummary.v1.json",
+  "title": "CompTox Bioactivity Evidence Summary v1",
+  "description": "Portable summary of CompTox bioactivity, assay, target, and AOP crosswalk information.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalRef",
+    "summary",
+    "assays",
+    "targets",
+    "aopMappings",
+    "provenance"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "$ref": "#/$defs/chemicalRef"
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "assays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assaySummary"
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/targetSummary"
+      }
+    },
+    "aopMappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/aopMapping"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dtxsid",
+        "preferredName"
+      ],
+      "properties": {
+        "dtxsid": {
+          "type": "string",
+          "pattern": "^DTXSID[0-9A-Z]+$"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "casrn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assayCount",
+        "targetCount"
+      ],
+      "properties": {
+        "assayCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activeAssayCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "targetCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "referenceAssaySet": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assaySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aeid",
+        "assayName"
+      ],
+      "properties": {
+        "aeid": {
+          "type": "string"
+        },
+        "assayName": {
+          "type": "string"
+        },
+        "assayComponent": {
+          "type": "string"
+        },
+        "activityDirection": {
+          "type": "string"
+        },
+        "activityValue": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "hitCall": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "targetSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetName"
+      ],
+      "properties": {
+        "targetName": {
+          "type": "string"
+        },
+        "geneSymbol": {
+          "type": "string"
+        },
+        "targetFamily": {
+          "type": "string"
+        },
+        "assayCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "aopMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aopId",
+        "eventType",
+        "eventLabel"
+      ],
+      "properties": {
+        "aopId": {
+          "type": "string"
+        },
+        "aopTitle": {
+          "type": "string"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "eventLabel": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "sourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceMcp",
+        "generatedAt",
+        "sources"
+      ],
+      "properties": {
+        "sourceMcp": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceRecord"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

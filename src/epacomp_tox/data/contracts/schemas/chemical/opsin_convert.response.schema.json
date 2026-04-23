@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chemical.opsin_convert.response",
+  "type": "object",
+  "required": ["name", "outputFormat", "value"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "outputFormat": {
+      "type": "string"
+    },
+    "value": {}
+  },
+  "additionalProperties": false
+}
