@@ -8,7 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-MD_FILES = list((ROOT / "docs").rglob("*.md")) + [ROOT / "README.md", ROOT / "research.md"]
+MD_FILES = list((ROOT / "docs").rglob("*.md")) + [
+    ROOT / "README.md",
+    ROOT / "research.md",
+]
 
 LINK_PATTERN = re.compile(r"\[[^\]]+]\(([^)]+)\)")
 
@@ -41,7 +44,9 @@ def check_file(path: Path) -> list[str]:
         link_path = (path.parent / link).resolve()
         # Allow directories (e.g., linking to docs/qa/)
         if not link_path.exists():
-            errors.append(f"{path.relative_to(ROOT)} -> missing link target '{raw_link}'")
+            errors.append(
+                f"{path.relative_to(ROOT)} -> missing link target '{raw_link}'"
+            )
     return errors
 
 

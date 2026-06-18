@@ -35,7 +35,6 @@ from typing import Any, AsyncIterator, Dict, Optional
 
 import websockets
 
-
 Request = Dict[str, Any]
 Response = Dict[str, Any]
 
@@ -92,7 +91,9 @@ class MCPWebSocketSession:
     async def list_resources(self) -> Response:
         return await self._request("resources/list", {"cursor": None})
 
-    async def call_tool(self, name: str, arguments: Dict[str, Any], request_id: Optional[str] = None) -> Response:
+    async def call_tool(
+        self, name: str, arguments: Dict[str, Any], request_id: Optional[str] = None
+    ) -> Response:
         """Invoke `tools/call` and return the final JSON-RPC response.
 
         Streaming events are yielded via `stream_events()` until `events/end` arrives.
@@ -116,7 +117,12 @@ class MCPWebSocketSession:
     async def _request(self, method: str, params: Dict[str, Any]) -> Response:
         self._next_id += 1
         msg_id = self._next_id
-        request: Request = {"jsonrpc": "2.0", "id": msg_id, "method": method, "params": params}
+        request: Request = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "method": method,
+            "params": params,
+        }
         assert self._ws is not None
         await self._ws.send(json.dumps(request))
         loop = asyncio.get_running_loop()
@@ -130,7 +136,9 @@ class MCPWebSocketSession:
             async for raw in self._ws:
                 data = json.loads(raw)
                 if "event" in data:
-                    await self._event_queue.put(MCPEvent(data["event"], data.get("params", {})))
+                    await self._event_queue.put(
+                        MCPEvent(data["event"], data.get("params", {}))
+                    )
                     continue
                 if "id" in data:
                     msg_id = data["id"]
@@ -139,7 +147,11 @@ class MCPWebSocketSession:
                         future.set_result(data)
                 else:
                     # Notifications (e.g., notifications/initialized)
-                    await self._event_queue.put(MCPEvent(data.get("method", "notification"), data.get("params", {})))
+                    await self._event_queue.put(
+                        MCPEvent(
+                            data.get("method", "notification"), data.get("params", {})
+                        )
+                    )
         except asyncio.CancelledError:  # pragma: no cover - cleanup
             pass
 
@@ -154,7 +166,10 @@ async def main() -> None:
         print("Handshake response:", json.dumps(handshake, indent=2))
 
         tools = await session.list_tools()
-        print("Available tools:", [t["name"] for t in tools.get("result", {}).get("tools", [])])
+        print(
+            "Available tools:",
+            [t["name"] for t in tools.get("result", {}).get("tools", [])],
+        )
 
         # Call the chemical search tool and stream results.
         call_response = await session.call_tool(

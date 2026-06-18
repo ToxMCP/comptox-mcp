@@ -89,10 +89,14 @@ def _render_markdown(card: dict, ad_definition: dict | None) -> str:
 
     for criterion in ad.get("criteria", []):
         header = criterion.get("type", "criterion").replace("_", " ").title()
-        lines.append(f"- **{header}:** {criterion.get('description', '').strip() or 'See parameters.'}")
+        lines.append(
+            f"- **{header}:** {criterion.get('description', '').strip() or 'See parameters.'}"
+        )
         parameters = criterion.get("parameters")
         if parameters:
-            formatted = "\n".join(f"  - {key}: {value}" for key, value in parameters.items())
+            formatted = "\n".join(
+                f"  - {key}: {value}" for key, value in parameters.items()
+            )
             lines.append(formatted)
 
     if not ad.get("criteria"):
@@ -106,7 +110,9 @@ def _render_markdown(card: dict, ad_definition: dict | None) -> str:
     )
     for band in ad.get("confidenceBands", []):
         actions = _format_bullets(band.get("actions"))
-        lines.append(f"- **{band.get('label', 'Band')}** (min {band.get('minConfidence', 'n/a')}):")
+        lines.append(
+            f"- **{band.get('label', 'Band')}** (min {band.get('minConfidence', 'n/a')}):"
+        )
         lines.append(indent(actions, "  "))
 
     if not ad.get("confidenceBands"):
@@ -126,7 +132,9 @@ def _render_markdown(card: dict, ad_definition: dict | None) -> str:
         if criteria:
             for item in criteria:
                 ctype = item.get("type", "criterion").replace("_", " ").title()
-                lines.append(f"  - {ctype}: {json.dumps({k: v for k, v in item.items() if k != 'type'}, ensure_ascii=False)}")
+                lines.append(
+                    f"  - {ctype}: {json.dumps({k: v for k, v in item.items() if k != 'type'}, ensure_ascii=False)}"
+                )
         else:
             lines.append("  - (none)")
 
@@ -135,10 +143,18 @@ def _render_markdown(card: dict, ad_definition: dict | None) -> str:
             "",
             "## Performance Metrics",
             "### Training / Validation",
-            _format_metrics(card.get("oecdValidationPrinciples", {}).get("goodnessOfFitMetrics", {}).get("internalValidation")),
+            _format_metrics(
+                card.get("oecdValidationPrinciples", {})
+                .get("goodnessOfFitMetrics", {})
+                .get("internalValidation")
+            ),
             "",
             "### External Validation",
-            _format_metrics(card.get("oecdValidationPrinciples", {}).get("goodnessOfFitMetrics", {}).get("externalValidation")),
+            _format_metrics(
+                card.get("oecdValidationPrinciples", {})
+                .get("goodnessOfFitMetrics", {})
+                .get("externalValidation")
+            ),
             "",
             "## Provenance",
             "- **Source Repositories:**",
@@ -162,7 +178,9 @@ def _render_markdown(card: dict, ad_definition: dict | None) -> str:
 
     checksum = provenance.get("checksum", {})
     if checksum:
-        lines.append(f"- **Checksum:** {checksum.get('algorithm', 'SHA256')} {checksum.get('value', 'n/a')}")
+        lines.append(
+            f"- **Checksum:** {checksum.get('algorithm', 'SHA256')} {checksum.get('value', 'n/a')}"
+        )
 
     return "\n".join(lines).strip() + "\n"
 

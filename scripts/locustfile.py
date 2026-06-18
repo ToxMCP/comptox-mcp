@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import time
 
-from locust import HttpUser, task, events  # type: ignore
+from locust import HttpUser, events, task  # type: ignore
 
 
 class MCPUser(HttpUser):
@@ -21,18 +21,26 @@ class MCPUser(HttpUser):
     @task
     def mcp_workflow(self):
         with self.client.websocket("/mcp/ws") as ws:
-            ws.send(json.dumps({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2025-06-18",
-                    "clientInfo": {"name": "locust", "version": "1.0"},
-                },
-            }))
+            ws.send(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2025-06-18",
+                            "clientInfo": {"name": "locust", "version": "1.0"},
+                        },
+                    }
+                )
+            )
             ws.recv()
             ws.recv()
-            ws.send(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}))
+            ws.send(
+                json.dumps(
+                    {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
+                )
+            )
             ws.recv()
             time.sleep(0.1)
 
