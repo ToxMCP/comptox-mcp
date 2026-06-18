@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Endpoint smoke checker for EPA CompTox MCP dependencies."""
+
 from __future__ import annotations
 
 import argparse
@@ -32,23 +33,34 @@ DEFAULT_ENDPOINTS: List[Endpoint] = [
     ),
     Endpoint(
         name="CTX Hazard API",
-        url=os.environ.get("CTX_HAZARD_HEALTH_URL", "https://comptox.epa.gov/ctx-api/hazard/toxval/search/by-dtxsid/DTXSID7020182"),
+        url=os.environ.get(
+            "CTX_HAZARD_HEALTH_URL",
+            "https://comptox.epa.gov/ctx-api/hazard/toxval/search/by-dtxsid/DTXSID7020182",
+        ),
         description="ToxValDB, ToxRefDB, cancer, genetox, ADME/IVIVE, IRIS, PPRTV, HAWC",
     ),
     Endpoint(
         name="CTX Exposure API",
-        url=os.environ.get("CTX_EXPOSURE_HEALTH_URL", "https://comptox.epa.gov/ctx-api/exposure/product-data/puc"),
+        url=os.environ.get(
+            "CTX_EXPOSURE_HEALTH_URL",
+            "https://comptox.epa.gov/ctx-api/exposure/product-data/puc",
+        ),
         description="CPDat, SEEM, MMDB, HTTK",
     ),
     Endpoint(
         name="CTX Bioactivity API",
-        url=os.environ.get("CTX_BIOACTIVITY_HEALTH_URL", "https://comptox.epa.gov/ctx-api/bioactivity/assay/count"),
+        url=os.environ.get(
+            "CTX_BIOACTIVITY_HEALTH_URL",
+            "https://comptox.epa.gov/ctx-api/bioactivity/assay/count",
+        ),
         description="ToxCast/Tox21 assays, AOP mappings",
     ),
 ]
 
 
-def _build_request(endpoint: Endpoint, api_key: Optional[str]) -> urllib.request.Request:
+def _build_request(
+    endpoint: Endpoint, api_key: Optional[str]
+) -> urllib.request.Request:
     req = urllib.request.Request(endpoint.url)
     if endpoint.needs_api_key and api_key:
         req.add_header("x-api-key", api_key)
@@ -57,7 +69,9 @@ def _build_request(endpoint: Endpoint, api_key: Optional[str]) -> urllib.request
     return req
 
 
-def check_endpoint(endpoint: Endpoint, *, api_key: Optional[str], timeout: float) -> Dict[str, object]:
+def check_endpoint(
+    endpoint: Endpoint, *, api_key: Optional[str], timeout: float
+) -> Dict[str, object]:
     req = _build_request(endpoint, api_key)
     started = time.time()
     try:
@@ -95,7 +109,9 @@ def check_endpoint(endpoint: Endpoint, *, api_key: Optional[str], timeout: float
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Check availability of upstream CompTox endpoints.")
+    parser = argparse.ArgumentParser(
+        description="Check availability of upstream CompTox endpoints."
+    )
     parser.add_argument(
         "--timeout",
         type=float,
@@ -117,9 +133,16 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    api_key = None if args.no_api_key else os.environ.get("CTX_API_KEY") or os.environ.get("EPA_COMPTOX_API_KEY")
+    api_key = (
+        None
+        if args.no_api_key
+        else os.environ.get("CTX_API_KEY") or os.environ.get("EPA_COMPTOX_API_KEY")
+    )
 
-    results = [check_endpoint(ep, api_key=api_key, timeout=args.timeout) for ep in DEFAULT_ENDPOINTS]
+    results = [
+        check_endpoint(ep, api_key=api_key, timeout=args.timeout)
+        for ep in DEFAULT_ENDPOINTS
+    ]
     failed = [item for item in results if not item["ok"]]
 
     if args.json:
@@ -135,7 +158,9 @@ def main() -> int:
             print(line)
 
         if not api_key and not args.no_api_key:
-            print("⚠️  No API key detected in CTX_API_KEY/EPA_COMPTOX_API_KEY; endpoints may reject requests.")
+            print(
+                "⚠️  No API key detected in CTX_API_KEY/EPA_COMPTOX_API_KEY; endpoints may reject requests."
+            )
 
     return 0 if not failed else 1
 

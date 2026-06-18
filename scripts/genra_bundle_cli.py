@@ -22,7 +22,9 @@ from epacomp_tox import AuditBundleStore  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Inspect GenRA orchestrator audit bundles.")
+    parser = argparse.ArgumentParser(
+        description="Inspect GenRA orchestrator audit bundles."
+    )
     parser.set_defaults(command=None)
     parser.add_argument(
         "--store",
@@ -34,10 +36,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("list", help="List stored bundles.")
 
-    show_parser = subparsers.add_parser("show", help="Print bundle JSON for a workflow run.")
+    show_parser = subparsers.add_parser(
+        "show", help="Print bundle JSON for a workflow run."
+    )
     show_parser.add_argument("run_id", help="Workflow run identifier.")
 
-    metadata_parser = subparsers.add_parser("metadata", help="Print metadata for a workflow run.")
+    metadata_parser = subparsers.add_parser(
+        "metadata", help="Print metadata for a workflow run."
+    )
     metadata_parser.add_argument("run_id", help="Workflow run identifier.")
 
     return parser

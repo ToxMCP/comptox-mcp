@@ -18,17 +18,20 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from epacomp_tox import PredictiveTask, PredictiveRequest
+from epacomp_tox import PredictiveRequest, PredictiveTask
 from epacomp_tox.orchestrator.offline import build_offline_orchestrator
-
 
 # --------------------------------------------------------------------------- #
 # CLI
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run the GenRA orchestrator demo workflow.")
-    parser.add_argument("--identifier", default="50-00-0", help="Input identifier (CASRN/DTXSID).")
+    parser = argparse.ArgumentParser(
+        description="Run the GenRA orchestrator demo workflow."
+    )
+    parser.add_argument(
+        "--identifier", default="50-00-0", help="Input identifier (CASRN/DTXSID)."
+    )
     parser.add_argument(
         "--identifier-type",
         default="casrn",

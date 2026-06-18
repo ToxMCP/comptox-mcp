@@ -17,7 +17,7 @@ from typing import Dict, List
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from epacomp_tox import PredictiveTask, PredictiveRequest  # noqa: E402
+from epacomp_tox import PredictiveRequest, PredictiveTask  # noqa: E402
 from epacomp_tox.orchestrator.offline import (  # noqa: E402
     OFFLINE_SCENARIOS,
     build_offline_orchestrator,
@@ -60,7 +60,9 @@ def run_offline_scenarios(output_dir: Path) -> List[Dict[str, str]]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run MCP workflow test harness scenarios.")
+    parser = argparse.ArgumentParser(
+        description="Run MCP workflow test harness scenarios."
+    )
     parser.add_argument(
         "--mode",
         choices=["offline"],

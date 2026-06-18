@@ -497,7 +497,7 @@ class MCPServer:
 
     @staticmethod
     def _format_metadata(
-        metadata: Optional[Dict[str, Any]]
+        metadata: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not metadata:
             return None
@@ -598,7 +598,7 @@ class MCPServer:
 
     @staticmethod
     def _scrub_params_for_audit(
-        params: Optional[Dict[str, Any]]
+        params: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         """Hash sensitive chemical identifiers before audit logging."""
         import hashlib
@@ -657,7 +657,7 @@ class MCPServer:
 
     @staticmethod
     def _resolve_transport_options(
-        override: Optional[Dict[str, Any]]
+        override: Optional[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Resolve heartbeat and handshake settings from configuration and overrides."""
         base_options = settings.transport
@@ -673,7 +673,7 @@ class MCPServer:
 
     @staticmethod
     def _format_session_context(
-        context: Optional[Dict[str, Any]]
+        context: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not context:
             return None

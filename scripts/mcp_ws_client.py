@@ -104,7 +104,9 @@ async def send_request(
         if "id" in response:
             if response.get("id") == payload.get("id"):
                 return response
-            print(f"[response] id={response.get('id')} -> {json.dumps(response, indent=2)}")
+            print(
+                f"[response] id={response.get('id')} -> {json.dumps(response, indent=2)}"
+            )
             continue
         if "method" in response and event_log is not None:
             event_log.append(response)
@@ -140,7 +142,9 @@ async def run_client(args: argparse.Namespace) -> None:
                 },
             }
             event_log: List[Dict[str, Any]] = []
-            init_response = await send_request(ws, initialize, recorder=recorder, event_log=event_log)
+            init_response = await send_request(
+                ws, initialize, recorder=recorder, event_log=event_log
+            )
             print("Initialize response:", json.dumps(init_response, indent=2))
 
             # Drain initialization notifications
@@ -161,7 +165,12 @@ async def run_client(args: argparse.Namespace) -> None:
             if args.list_tools:
                 response = await send_request(
                     ws,
-                    {"jsonrpc": "2.0", "id": next_id, "method": "tools/list", "params": {}},
+                    {
+                        "jsonrpc": "2.0",
+                        "id": next_id,
+                        "method": "tools/list",
+                        "params": {},
+                    },
                     recorder=recorder,
                     event_log=event_log,
                 )
@@ -171,7 +180,12 @@ async def run_client(args: argparse.Namespace) -> None:
             if args.list_resources:
                 response = await send_request(
                     ws,
-                    {"jsonrpc": "2.0", "id": next_id, "method": "resources/list", "params": {}},
+                    {
+                        "jsonrpc": "2.0",
+                        "id": next_id,
+                        "method": "resources/list",
+                        "params": {},
+                    },
                     recorder=recorder,
                     event_log=event_log,
                 )
@@ -184,21 +198,29 @@ async def run_client(args: argparse.Namespace) -> None:
                     try:
                         arguments = json.loads(args.arguments)
                     except json.JSONDecodeError as exc:
-                        raise SystemExit(f"Failed to parse arguments JSON: {exc}") from exc
+                        raise SystemExit(
+                            f"Failed to parse arguments JSON: {exc}"
+                        ) from exc
 
-                params: Dict[str, Any] = {"name": args.call_tool, "arguments": arguments}
+                params: Dict[str, Any] = {
+                    "name": args.call_tool,
+                    "arguments": arguments,
+                }
                 if args.timeout_ms:
                     params["timeoutMs"] = args.timeout_ms
 
                 cancel_task: Optional[asyncio.Task[None]] = None
                 if args.cancel_after_ms:
+
                     async def send_cancel() -> None:
                         await asyncio.sleep(args.cancel_after_ms / 1000)
                         cancel_payload = {
                             "jsonrpc": "2.0",
                             "id": next_id + 1,
                             "method": "tools/cancel",
-                            "params": {"requestId": params.get("requestId", str(next_id))},
+                            "params": {
+                                "requestId": params.get("requestId", str(next_id))
+                            },
                         }
                         print("Sending cancellation request...", file=sys.stderr)
                         await ws.send(json.dumps(cancel_payload))
