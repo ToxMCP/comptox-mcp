@@ -932,6 +932,10 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
     if allowed_origins:
         app.add_middleware(
             CORSMiddleware,
+            # CORS wildcard is dev-only: allowed_origins=["*"] is set only when
+            # settings.app.is_development and no origins are configured; production
+            # uses settings.security.allowed_origins (a configured allowlist).
+            # nosemgrep: python.fastapi.security.wildcard-cors.wildcard-cors
             allow_origins=allowed_origins,
             allow_credentials=True,
             allow_methods=["POST", "GET", "OPTIONS"],
