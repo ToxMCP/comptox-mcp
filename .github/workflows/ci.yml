@@ -43,6 +43,7 @@ jobs:
             tests/test_domain_contracts.py \
             tests/test_cross_suite_handoffs.py \
             tests/test_mcp_conformance_suite.py \
+            tests/test_live_transport_conformance.py \
             -q
 
       - name: Run tests
