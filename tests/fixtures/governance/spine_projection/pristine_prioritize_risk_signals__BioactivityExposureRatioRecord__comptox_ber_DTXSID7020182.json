@@ -1,0 +1,50 @@
+{
+  "schemaId": "https://schemas.ngra.ai/toxmcp/BioactivityExposureRatioRecord.v1.schema.json",
+  "bioactivityExposureRatioRecordId": "comptox:ber:DTXSID7020182",
+  "podRef": "comptox:hazard-pod:DTXSID7020182",
+  "internalExposureRef": "comptox:seem-exposure:DTXSID7020182",
+  "comparabilityQualificationRef": "comptox:comparability:DTXSID7020182",
+  "berValue": {
+    "schemaId": "https://schemas.ngra.ai/toxmcp/MeasurementValue.v1.schema.json",
+    "measurementId": "comptox:moe:DTXSID7020182",
+    "valueType": "numeric",
+    "originalValue": 50.0,
+    "originalUnit": "dimensionless",
+    "normalizedValue": 50.0,
+    "normalizedUnit": "dimensionless",
+    "qualifier": "approximately",
+    "censoring": "none",
+    "uncertainty": []
+  },
+  "berBasis": "screening_ratio",
+  "calculationMethod": "screening",
+  "uncertaintyRefs": [
+    "comptox:uncertainty:caveat:screening-only-this-output-is-not-a-regulatory-risk-determination"
+  ],
+  "confidenceCeilingRefs": [
+    "comptox:ceiling:limitation:this-tool-is-intended-for-screening-prioritization-not-final-risk-characterizati",
+    "comptox:ceiling:limitation:the-screening-margin-uses-only-the-minimum-available-aed-and-the-maximum-availab",
+    "comptox:ceiling:limitation:httk-mmdb-and-cpdat-slices-are-supporting-context-and-are-not-folded-directly-in",
+    "comptox:ceiling:caveat:screening-only-this-output-is-not-a-regulatory-risk-determination"
+  ],
+  "interpretationClass": "prioritization_context",
+  "actionability": "prioritization",
+  "allowedDownstreamUses": [
+    "screening_prioritization"
+  ],
+  "prohibitedDownstreamUses": [
+    "risk_characterization",
+    "regulatory_decision",
+    "safe_level_or_reference_dose_derivation",
+    "margin_of_exposure_risk_conclusion"
+  ],
+  "requiredReviewState": "machine_checked",
+  "limitations": [
+    "This tool is intended for screening prioritization, not final risk characterization.",
+    "The screening margin uses only the minimum available AED and the maximum available SEEM general exposure estimate.",
+    "HTTK, MMDB, and CPDat slices are supporting context and are not folded directly into the margin calculation.",
+    "Screening only; this output is not a regulatory risk determination."
+  ],
+  "notARiskConclusion": true,
+  "notARegulatoryConclusion": true
+}
