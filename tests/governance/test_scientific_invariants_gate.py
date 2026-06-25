@@ -35,11 +35,13 @@ from epacomp_tox.governance import project_to_spine as projector
 from epacomp_tox.governance import source_contract
 from epacomp_tox.governance import spine_bridge as bridge
 from epacomp_tox.governance.errors import SOURCE_CONTRACT_VIOLATION
+from epacomp_tox.governance.source_contract import AOP_LINKAGE_EMISSION_SCHEMA_PATH
 from epacomp_tox.resources.prioritization import PrioritizationResource
 from tests.interop_test_support import (
     StubBioactivityResource,
     StubChemicalResource,
     StubExposureResource,
+    build_interop_resource,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -50,6 +52,22 @@ PRISTINE_PATH = (
     / "governance"
     / "released"
     / "pristine_prioritize_risk_signals.json"
+)
+AOP_PRISTINE_PATH = (
+    REPO_ROOT
+    / "tests"
+    / "fixtures"
+    / "governance"
+    / "released"
+    / "pristine_aop_linkage_summary.json"
+)
+AOP_PACK_PRISTINE_PATH = (
+    REPO_ROOT
+    / "tests"
+    / "fixtures"
+    / "governance"
+    / "released"
+    / "pristine_evidence_pack_aop_linkage.json"
 )
 
 
@@ -275,3 +293,247 @@ def test_golden_projection_fixture_is_byte_stable(pristine: dict) -> None:
     )
     assert golden.exists()
     assert json.loads(golden.read_text(encoding="utf-8")) == obj
+
+
+# =========================================================================== #
+# aopLinkageSummary -> ReadAcrossJustification (the SECOND gated server-authored
+# surface; the scope-gap fix). Proven through the REAL interop producer + REAL
+# vendored engine. The SAME aopLinkageSummary block is released BOTH standalone
+# AND embedded in assemble_comptox_evidence_pack, so the bite proofs cover both.
+# =========================================================================== #
+
+
+def _aop_codes(block: dict) -> set[str]:
+    """source-contract (aop schema) + project + run the REAL engine -> codes."""
+    cf = source_contract.validate_against_schema(
+        block, corpus="test", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+    )
+    if cf is not None:
+        return {cf.code}
+    codes: set[str] = set()
+    for obj in projector.project_aop_packet(block):
+        result = bridge.validate_object(obj)
+        codes |= set(result.blocking_codes)
+    return codes
+
+
+def _real_aop_standalone(**overrides) -> dict:
+    """Run the REAL InteropResource and return its build_aop_linkage_summary
+    response (timestamps normalized to match the committed corpus)."""
+    from tests.interop_test_support import normalize_timestamps
+
+    resource = build_interop_resource()
+    res = resource.execute_tool(
+        "build_aop_linkage_summary", {"dtxsid": "DTXSID7020182"}
+    )
+    return normalize_timestamps(res)
+
+
+def _real_aop_pack() -> dict:
+    from tests.interop_test_support import normalize_timestamps
+
+    resource = build_interop_resource()
+    res = resource.execute_tool(
+        "assemble_comptox_evidence_pack",
+        {"dtxsid": "DTXSID7020182", "hazard_datasets": ["toxval", "adme_ivive"]},
+    )
+    return normalize_timestamps(res)
+
+
+@pytest.fixture()
+def aop_pristine() -> dict:
+    return json.loads(AOP_PRISTINE_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.fixture()
+def aop_pack_pristine() -> dict:
+    return json.loads(AOP_PACK_PRISTINE_PATH.read_text(encoding="utf-8"))
+
+
+# 1. PRISTINE — both surfaces ARE the real producer's emitted (normalized) shape.
+
+
+def test_aop_pristine_standalone_matches_real_producer(aop_pristine: dict) -> None:
+    assert aop_pristine == _real_aop_standalone()
+
+
+def test_aop_pristine_pack_matches_real_producer(aop_pack_pristine: dict) -> None:
+    assert aop_pack_pristine == _real_aop_pack()
+
+
+def test_aop_pristine_standalone_passes(aop_pristine: dict) -> None:
+    assert _aop_codes(aop_pristine) == set()
+
+
+def test_aop_pristine_pack_subblock_passes(aop_pack_pristine: dict) -> None:
+    assert _aop_codes(aop_pack_pristine["aopLinkageSummary"]) == set()
+
+
+# 2. PER-CODE BITE — each advertised code, on a producer-emittable Ajv-VALID fault.
+
+
+def test_category_claim_uncertainty_required_bites_when_disclosure_dropped(
+    aop_pristine: dict,
+) -> None:
+    """A moderate/high server-computed confidence band whose uncertainty
+    disclosure (provenance note + limitations + data gaps) is DROPPED ->
+    CATEGORY_CLAIM_UNCERTAINTY_REQUIRED bites. provenance.notes has no minItems in
+    the strict contract, so the fault is emission-schema-VALID."""
+    fault = copy.deepcopy(aop_pristine)
+    assert fault["confidence"]["band"] in ("moderate", "high")
+    fault["provenance"]["notes"] = []
+    fault["limitations"] = []
+    fault["knownDataGaps"] = []
+    assert (
+        source_contract.validate_against_schema(
+            fault, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+        )
+        is None
+    )
+    assert "CATEGORY_CLAIM_UNCERTAINTY_REQUIRED" in _aop_codes(fault)
+
+
+def test_category_claim_uncertainty_required_bites_on_embedded_copy(
+    aop_pack_pristine: dict,
+) -> None:
+    """Same regression on the EMBEDDED evidence-pack copy (whose only disclosure
+    surface is the provenance note)."""
+    block = copy.deepcopy(aop_pack_pristine["aopLinkageSummary"])
+    block["provenance"]["notes"] = []
+    assert (
+        source_contract.validate_against_schema(
+            block, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+        )
+        is None
+    )
+    assert "CATEGORY_CLAIM_UNCERTAINTY_REQUIRED" in _aop_codes(block)
+
+
+def test_read_across_analog_outside_domain_bites_on_nonsupportive_direction(
+    aop_pristine: dict,
+) -> None:
+    """An actionable (non-``none``) confidence band asserted while an upstream
+    crosswalk row carries a NON-supportive evidenceDirection -> the linkage is not
+    adequate for an actionable claim -> READ_ACROSS_ANALOG_OUTSIDE_DOMAIN bites.
+    evidenceDirection is a plain string the producer's mapping slot carries
+    verbatim from the relayed row, so the fault is emission-schema-VALID."""
+    fault = copy.deepcopy(aop_pristine)
+    fault["mappings"][0]["evidenceDirection"] = "inconclusive"
+    assert (
+        source_contract.validate_against_schema(
+            fault, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+        )
+        is None
+    )
+    assert "READ_ACROSS_ANALOG_OUTSIDE_DOMAIN" in _aop_codes(fault)
+
+
+# 3. GUARD REJECTS A FORBIDDEN FIELD (the dead-arm fix) on the strict surfaces.
+
+
+def test_aop_guard_rejects_forbidden_field_on_confidence_block(
+    aop_pristine: dict,
+) -> None:
+    fault = copy.deepcopy(aop_pristine)
+    fault["confidence"]["riskAuthorization"] = "approved"
+    finding = source_contract.validate_against_schema(
+        fault, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+    )
+    assert finding is not None and finding.code == SOURCE_CONTRACT_VIOLATION
+    assert "riskAuthorization" in finding.message
+
+
+def test_aop_guard_rejects_forbidden_field_on_mapping(aop_pristine: dict) -> None:
+    fault = copy.deepcopy(aop_pristine)
+    fault["mappings"][0]["riskDetermination"] = "high"
+    finding = source_contract.validate_against_schema(
+        fault, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+    )
+    assert finding is not None and finding.code == SOURCE_CONTRACT_VIOLATION
+    assert "riskDetermination" in finding.message
+
+
+def test_aop_guard_rejects_unmapped_band(aop_pristine: dict) -> None:
+    fault = copy.deepcopy(aop_pristine)
+    fault["confidence"]["band"] = "catastrophic"
+    finding = source_contract.validate_against_schema(
+        fault, corpus="fault", schema_path=AOP_LINKAGE_EMISSION_SCHEMA_PATH
+    )
+    assert finding is not None and finding.code == SOURCE_CONTRACT_VIOLATION
+
+
+# 4. HONEST-DROP — a 'none' band (no linkage) is an honest non-claim that PASSES.
+
+
+def test_aop_none_band_is_honest_nonclaim_and_passes() -> None:
+    """When CompTox returns no assay summary / AOP crosswalk, the producer emits a
+    'none' band. That faithfully maps to context_only / actionability=none /
+    not_assessed and PASSES — READ_ACROSS_ANALOG_OUTSIDE_DOMAIN is not falsely
+    RED-ed (it requires actionability != none)."""
+    from epacomp_tox.resources.interop import InteropResource
+    from tests.interop_test_support import StubChemicalResource as _C
+    from tests.interop_test_support import StubExposureResource as _E
+    from tests.interop_test_support import StubHazardResource as _H
+    from tests.interop_test_support import StubMetadataResource as _M
+    from tests.interop_test_support import normalize_timestamps
+
+    class _Empty(StubBioactivityResource):
+        def get_bioactivity_summary_by_dtxsid(self, dtxsid):
+            return []
+
+        def get_bioactivity_aop(self, lookup_type, aeid):
+            return []
+
+    resource = InteropResource(
+        api_key="fake",
+        chemical_resource=_C(),
+        bioactivity_resource=_Empty(),
+        exposure_resource=_E(),
+        hazard_resource=_H(),
+        metadata_resource=_M(),
+    )
+    none_aop = normalize_timestamps(
+        resource.execute_tool("build_aop_linkage_summary", {"dtxsid": "DTXSID7020182"})
+    )
+    assert none_aop["confidence"]["band"] == "none"
+    obj = projector.project_aop_packet(none_aop)[0]
+    assert obj["targetClaimClass"] == "context_only"
+    assert obj["actionability"] == "none"
+    assert obj["notARegulatoryConclusion"] is True
+    assert _aop_codes(none_aop) == set()
+
+
+# 5. ANTI-OVERCLAIM CEILING — the projection never asserts causality/regulatory.
+
+
+def test_aop_projection_is_context_only_not_causal(aop_pristine: dict) -> None:
+    obj = projector.project_aop_packet(aop_pristine)[0]
+    assert obj["targetClaimClass"] == "context_only"
+    assert obj["hypothesisType"] == "empirical_category"
+    assert obj["notARegulatoryConclusion"] is True
+
+
+# 6. DETERMINISM + golden byte-stability for both surfaces.
+
+
+def test_aop_projection_is_deterministic(aop_pristine: dict) -> None:
+    a = projector.project_aop_packet(copy.deepcopy(aop_pristine))
+    b = projector.project_aop_packet(copy.deepcopy(aop_pristine))
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_aop_golden_projection_fixtures_are_byte_stable(
+    aop_pristine: dict, aop_pack_pristine: dict
+) -> None:
+    golden_dir = REPO_ROOT / "tests" / "fixtures" / "governance" / "spine_projection"
+    for stem, block in (
+        ("pristine_aop_linkage_summary", aop_pristine),
+        ("pristine_evidence_pack_aop_linkage", aop_pack_pristine),
+    ):
+        projected = projector.project_aop_packet(block)
+        assert len(projected) == 1
+        obj = projected[0]
+        ref = obj["readAcrossJustificationId"].replace(":", "_")
+        golden = golden_dir / f"{stem}__ReadAcrossJustification__{ref}.json"
+        assert golden.exists()
+        assert json.loads(golden.read_text(encoding="utf-8")) == obj

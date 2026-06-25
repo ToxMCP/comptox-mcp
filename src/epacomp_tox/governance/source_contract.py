@@ -66,17 +66,35 @@ from typing import Any
 
 from epacomp_tox.governance.errors import SOURCE_CONTRACT_VIOLATION, BlockingFinding
 
-__all__ = ["SOURCE_CONTRACT_VIOLATION", "validate_source_packet"]
+__all__ = [
+    "SOURCE_CONTRACT_VIOLATION",
+    "validate_source_packet",
+    "validate_against_schema",
+    "PRIORITIZE_EMISSION_SCHEMA_PATH",
+    "AOP_LINKAGE_EMISSION_SCHEMA_PATH",
+]
 
 # .../src/epacomp_tox/governance/source_contract.py
 # -> repo root is parents[3].
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_EMISSION_SCHEMA_PATH = (
-    _REPO_ROOT
-    / "schemas"
-    / "governance"
-    / "prioritize_risk_signals.emission.schema.json"
+_GOVERNANCE_SCHEMA_DIR = _REPO_ROOT / "schemas" / "governance"
+
+#: The prioritize_risk_signals producer STRICT emission contract (the original,
+#: whole-packet-root contract). Kept as the default of ``validate_source_packet``
+#: for backward compatibility.
+PRIORITIZE_EMISSION_SCHEMA_PATH = (
+    _GOVERNANCE_SCHEMA_DIR / "prioritize_risk_signals.emission.schema.json"
 )
+#: The aopLinkageSummary producer STRICT emission contract — the SERVER-AUTHORED
+#: confidence-band conclusion surface embedded in BOTH build_aop_linkage_summary
+#: and assemble_comptox_evidence_pack (validated against the aopLinkageSummary
+#: block).
+AOP_LINKAGE_EMISSION_SCHEMA_PATH = (
+    _GOVERNANCE_SCHEMA_DIR / "aop_linkage_summary.emission.schema.json"
+)
+
+# Back-compat alias used by the original prioritize gate path.
+_EMISSION_SCHEMA_PATH = PRIORITIZE_EMISSION_SCHEMA_PATH
 
 # The exact, bounded set of Draft-07 keywords the emission schema uses. If the
 # schema ever grows a keyword outside this set, the loader REFUSES it
@@ -146,13 +164,18 @@ def _assert_supported(node: Any, where: str) -> None:
         _assert_supported(items, f"{where}.items")
 
 
-@lru_cache(maxsize=1)
-def _emission_schema() -> dict[str, Any]:
-    schema = json.loads(_EMISSION_SCHEMA_PATH.read_text(encoding="utf-8"))
+@lru_cache(maxsize=8)
+def _load_emission_schema(schema_path: Path) -> dict[str, Any]:
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
     if not isinstance(schema, dict):
         raise SchemaUnsupportedError("Emission schema root is not an object.")
     _assert_supported(schema, "$")
     return schema
+
+
+def _emission_schema() -> dict[str, Any]:
+    """The original prioritize_risk_signals emission schema (back-compat)."""
+    return _load_emission_schema(PRIORITIZE_EMISSION_SCHEMA_PATH)
 
 
 def _resolve_ref(node: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
@@ -286,17 +309,22 @@ def _validate(
                 _validate(item_schema, item, f"{path}[{idx}]", errors, root)
 
 
-def validate_source_packet(source: Any, *, corpus: str) -> BlockingFinding | None:
-    """Validate one raw source object against the producer's STRICT emission schema.
+def validate_against_schema(
+    source: Any, *, corpus: str, schema_path: Path
+) -> BlockingFinding | None:
+    """Validate one raw source object against a named STRICT emission schema.
 
     Returns a ``SOURCE_CONTRACT_VIOLATION`` blocking meta finding if the object
     fails the contract (including any undeclared / schema-forbidden field at a
-    strict level, since those are ``additionalProperties:false``), else ``None``.
+    strict ``additionalProperties:false`` level), else ``None``.
 
     A schema we cannot load / fully enforce is itself a hard block (fail-closed).
+    This is the multi-surface entry point: each gated SERVER-AUTHORED surface
+    (prioritize_risk_signals, aopLinkageSummary, ...) supplies its own strict
+    contract path; the validator core is shared.
     """
     try:
-        schema = _emission_schema()
+        schema = _load_emission_schema(schema_path)
     except (OSError, json.JSONDecodeError, SchemaUnsupportedError) as exc:
         return BlockingFinding.meta(
             SOURCE_CONTRACT_VIOLATION,
@@ -319,8 +347,17 @@ def validate_source_packet(source: Any, *, corpus: str) -> BlockingFinding | Non
         return BlockingFinding.meta(
             SOURCE_CONTRACT_VIOLATION,
             "Source object violates the producer's strict emission contract "
-            f"({_EMISSION_SCHEMA_PATH.name}): " + "; ".join(errors[:8]),
+            f"({schema_path.name}): " + "; ".join(errors[:8]),
             path=errors[0].split(":", 1)[0] if errors else "$",
             corpus=corpus,
         )
     return None
+
+
+def validate_source_packet(source: Any, *, corpus: str) -> BlockingFinding | None:
+    """Validate a raw ``prioritize_risk_signals`` response against its STRICT
+    emission contract (the original gate path; unchanged behaviour).
+    """
+    return validate_against_schema(
+        source, corpus=corpus, schema_path=PRIORITIZE_EMISSION_SCHEMA_PATH
+    )

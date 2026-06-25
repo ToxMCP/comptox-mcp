@@ -74,10 +74,11 @@ jobs:
       - name: Verify vendored spine engine digests (tamper-evidence)
         run: python scripts/vendor_verify.py
 
-      - name: Verify golden spine-projection fixtures are byte-stable
+      - name: Verify golden spine-projection + released corpus fixtures are byte-stable
         run: |
           python scripts/generate_spine_projection_golden.py
-          git diff --exit-code tests/fixtures/governance/spine_projection/
+          python scripts/generate_aop_linkage_corpus.py
+          git diff --exit-code tests/fixtures/governance/
 
       - name: Run scientific-invariants gate (pristine corpus must be GREEN)
         run: python scripts/run_scientific_invariants_gate.py
