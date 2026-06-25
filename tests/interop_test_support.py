@@ -262,6 +262,40 @@ class StubMetadataResource(StubResource):
         }
 
 
+#: A fixed sentinel that replaces every non-deterministic timestamp / trace field
+#: so the committed aopLinkageSummary corpus is byte-stable. These fields are pure
+#: provenance the spine projection never reads.
+_SENTINEL_TS = "1970-01-01T00:00:00Z"
+_TS_KEYS = frozenset(
+    {"generatedAt", "retrievedAt", "capturedAt", "createdAt", "requestedAt"}
+)
+
+
+def normalize_timestamps(value: Any) -> Any:
+    """Deep-copy ``value`` with every timestamp / trace field pinned to a sentinel.
+
+    Pure-provenance fields (``generatedAt`` / ``retrievedAt`` / ``capturedAt`` /
+    ``createdAt`` and any ``traceId`` / ``requestId`` / ``packId`` that embeds a
+    timestamp) are normalized; the projection reads NONE of them, so this never
+    changes a gate outcome — it only makes the committed corpus byte-stable. Shared
+    by the corpus generator and the gate tests so the committed corpus provably
+    equals the real producer's (normalized) emission.
+    """
+    if isinstance(value, dict):
+        out: Dict[str, Any] = {}
+        for k, v in value.items():
+            if k in _TS_KEYS and isinstance(v, str):
+                out[k] = _SENTINEL_TS
+            elif k in ("traceId", "requestId", "packId") and isinstance(v, str):
+                out[k] = f"{k}-sentinel"
+            else:
+                out[k] = normalize_timestamps(v)
+        return out
+    if isinstance(value, list):
+        return [normalize_timestamps(v) for v in value]
+    return value
+
+
 def build_interop_resource() -> InteropResource:
     return InteropResource(
         api_key="fake",

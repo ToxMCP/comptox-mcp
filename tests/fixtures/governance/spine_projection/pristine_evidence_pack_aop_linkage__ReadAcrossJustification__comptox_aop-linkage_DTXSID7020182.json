@@ -1,0 +1,34 @@
+{
+  "schemaId": "https://schemas.ngra.ai/toxmcp/ReadAcrossJustification.v1.schema.json",
+  "readAcrossJustificationId": "comptox:aop-linkage:DTXSID7020182",
+  "targetChemicalRef": "comptox:chemical:DTXSID7020182",
+  "sourceAnalogRefs": [
+    "comptox:assay:aeid:123",
+    "comptox:assay:aeid:456"
+  ],
+  "categoryHypothesis": "CompTox bioactivity assay endpoints empirically crosswalk this chemical to AOP key events (toxcast-aeid linkage); a server-computed confidence band over that membership, NOT established causality.",
+  "hypothesisType": "empirical_category",
+  "similarityBasis": [
+    "toxcast_aeid_crosswalk: AOP:42 / PPARG activation / linked_via_toxcast_aeid",
+    "toxcast_aeid_crosswalk: AOP:77 / AHR activation / linked_via_toxcast_aeid"
+  ],
+  "applicabilityBoundaryRefs": [
+    "comptox:aop-linkage:applicability:DTXSID7020182"
+  ],
+  "uncertaintyRefs": [
+    "comptox:aop:uncertainty:note:comptox-side-linkage-only-downstream-mechanistic-normalization-belongs-in-aop-mc",
+    "comptox:aop:uncertainty:limitations:comptox-evidence-pack-for-downstream-mcp-consumers"
+  ],
+  "analogAdequacy": "adequate_with_limitations",
+  "endpoint": "aop_key_event_context",
+  "route": "not_applicable",
+  "population": "not_applicable",
+  "targetClaimClass": "context_only",
+  "supportLevel": "moderate",
+  "actionability": "prioritization",
+  "limitations": [
+    "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp.",
+    "CompTox evidence pack for downstream MCP consumers."
+  ],
+  "notARegulatoryConclusion": true
+}

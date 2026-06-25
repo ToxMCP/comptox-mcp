@@ -1,0 +1,105 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "lookupMode": "dtxsid",
+  "mappings": [
+    {
+      "aopId": "AOP:42",
+      "aopTitle": "Liver steatosis",
+      "keyEventId": "KE:123",
+      "eventType": "molecular_initiating_event",
+      "eventLabel": "PPARG activation",
+      "relationship": "linked_via_toxcast_aeid",
+      "evidenceDirection": "supports",
+      "confidence": 0.8
+    },
+    {
+      "aopId": "AOP:77",
+      "aopTitle": "Hepatic stress signaling",
+      "eventType": "key_event",
+      "eventLabel": "AHR activation",
+      "relationship": "linked_via_toxcast_aeid",
+      "evidenceDirection": "supports",
+      "confidence": 0.55
+    }
+  ],
+  "supportingAssays": [
+    {
+      "aeid": "123",
+      "assayName": "PPAR activation assay",
+      "targetName": "PPARG"
+    },
+    {
+      "aeid": "456",
+      "assayName": "AhR reporter assay",
+      "targetName": "AHR"
+    }
+  ],
+  "confidence": {
+    "score": 0.4,
+    "band": "moderate",
+    "basis": "Derived from available assay endpoint links and CompTox AOP crosswalk coverage."
+  },
+  "provenance": {
+    "sourceMcp": "epacomp-tox-mcp",
+    "generatedAt": "1970-01-01T00:00:00Z",
+    "generatedBy": "build_aop_linkage_summary",
+    "traceId": "traceId-sentinel",
+    "sources": [
+      {
+        "name": "chemical via search_chemical",
+        "toolName": "search_chemical",
+        "url": "https://comptox.epa.gov/ctx-api",
+        "retrievedAt": "1970-01-01T00:00:00Z",
+        "citation": "CompTox MCP resource chemical"
+      },
+      {
+        "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+        "toolName": "get_bioactivity_summary_by_dtxsid",
+        "url": "https://comptox.epa.gov/ctx-api",
+        "retrievedAt": "1970-01-01T00:00:00Z",
+        "citation": "CompTox MCP resource bioactivity"
+      },
+      {
+        "name": "bioactivity via get_bioactivity_aop",
+        "toolName": "get_bioactivity_aop",
+        "url": "https://comptox.epa.gov/ctx-api",
+        "retrievedAt": "1970-01-01T00:00:00Z",
+        "citation": "CompTox MCP resource bioactivity"
+      },
+      {
+        "name": "bioactivity via get_bioactivity_aop",
+        "toolName": "get_bioactivity_aop",
+        "url": "https://comptox.epa.gov/ctx-api",
+        "retrievedAt": "1970-01-01T00:00:00Z",
+        "citation": "CompTox MCP resource bioactivity"
+      }
+    ],
+    "notes": [
+      "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+    ]
+  },
+  "knownDataGaps": [],
+  "limitations": [
+    "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+  ],
+  "generatedFromTools": [
+    "get_bioactivity_aop",
+    "get_bioactivity_summary_by_dtxsid",
+    "search_chemical"
+  ],
+  "provenanceSummary": {
+    "generatedBy": "build_aop_linkage_summary",
+    "generatedAt": "1970-01-01T00:00:00Z",
+    "sourceCount": 4,
+    "sourceTools": [
+      "get_bioactivity_aop",
+      "get_bioactivity_summary_by_dtxsid",
+      "search_chemical"
+    ],
+    "noteCount": 1
+  }
+}

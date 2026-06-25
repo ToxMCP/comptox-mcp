@@ -1,0 +1,105 @@
+{
+  "chemicalRef": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7"
+  },
+  "hazardSignal": {
+    "recordCount": 1,
+    "sourceTool": "get_bioactivity_aed",
+    "selectedMetric": {
+      "aeid": "123",
+      "aedVal": 6.0,
+      "aedType": "administered_equivalent_dose",
+      "aedValUnit": "mg/kg-day",
+      "httkModel": "3compartment",
+      "httkVersion": "3.0"
+    }
+  },
+  "exposureSignal": {
+    "seem": {
+      "recordCount": 1,
+      "sourceTool": "get_seem_general",
+      "selectedMetrics": {
+        "medianExposure": 0.12,
+        "unit": "mg/kg-day"
+      }
+    },
+    "httk": {
+      "recordCount": 1,
+      "sourceTool": "get_exposure_httk",
+      "selectedMetrics": {
+        "fractionUnboundPlasma": 0.07,
+        "intrinsicClearance": 1.2,
+        "parameter": "CLint",
+        "unit": "L/h/kg"
+      }
+    },
+    "mmdb": {
+      "recordCount": 1,
+      "sourceTool": "get_exposure_mmdb_aggregate_by_dtxsid",
+      "selectedMetrics": {
+        "studyCount": 3,
+        "endpoint": "plasma_concentration"
+      }
+    },
+    "cpdat": {
+      "recordCount": 1,
+      "sourceTool": "search_cpdat",
+      "selectedMetrics": {
+        "productUseCategory": "food-contact",
+        "name": "DTXSID7020182"
+      }
+    }
+  },
+  "prioritization": {
+    "priorityBand": "higher",
+    "marginOfExposure": 50.0,
+    "hazardPointOfDeparture": 6.0,
+    "hazardUnit": "mg/kg-day",
+    "exposureEstimate": 0.12,
+    "exposureUnit": "mg/kg-day",
+    "signalDirection": "smaller_margin_means_higher_priority",
+    "priorityHeuristic": {
+      "higher": "margin < 100",
+      "moderate": "100 <= margin < 1000",
+      "lower": "margin >= 1000",
+      "inconclusive": "core inputs missing or incompatible"
+    },
+    "basis": "Calculated as the minimum available AED divided by the maximum available SEEM general exposure estimate when units matched.",
+    "supportingSignals": [
+      "CPDat product-use records were present.",
+      "MMDB aggregate biomonitoring records were present."
+    ],
+    "caveats": [
+      "Screening only; this output is not a regulatory risk determination."
+    ]
+  },
+  "knownDataGaps": [],
+  "limitations": [
+    "This tool is intended for screening prioritization, not final risk characterization.",
+    "The screening margin uses only the minimum available AED and the maximum available SEEM general exposure estimate.",
+    "HTTK, MMDB, and CPDat slices are supporting context and are not folded directly into the margin calculation."
+  ],
+  "generatedFromTools": [
+    "get_chemical_details",
+    "get_bioactivity_aed",
+    "get_seem_general",
+    "get_exposure_httk",
+    "get_exposure_mmdb_aggregate_by_dtxsid",
+    "search_cpdat"
+  ],
+  "provenanceSummary": {
+    "generatedBy": "prioritize_risk_signals",
+    "sourceCount": 6,
+    "sourceTools": [
+      "get_chemical_details",
+      "get_bioactivity_aed",
+      "get_seem_general",
+      "get_exposure_httk",
+      "get_exposure_mmdb_aggregate_by_dtxsid",
+      "search_cpdat"
+    ],
+    "identityMode": "dtxsid"
+  }
+}
