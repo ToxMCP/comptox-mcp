@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://toxmcp.org/schemas/governance/prioritize_risk_signals.emission.schema.json",
+  "title": "prioritize_risk_signals producer STRICT emission contract",
+  "description": "The additionalProperties:false emission contract for the SERVER-AUTHORED prioritize_risk_signals response, reconstructed by RUNNING the real PrioritizationResource.prioritize_risk_signals producer across its dtxsid / resolved-identifier / inconclusive paths (not a stale fixture). The load-bearing strict surfaces are the packet root, the server-authored `prioritization` conclusion block, `hazardSignal`, `exposureSignal`, and the four `exposureSignal.*` evidence slices: a field outside the declared set on any of these is a SOURCE_CONTRACT_VIOLATION that BLOCKS BEFORE projection, closing the producer-emission-contract dead-arm class. Genuinely-open producer maps that spread upstream EPA CompTox / ccte fields or resolver state (chemicalRef, identityResolution, provenanceSummary, the selectedMetric / selectedMetrics bags, priorityHeuristic) are additionalProperties:true ON PURPOSE — over-tightening them would falsely reject a faithful emission, and the projection never reads a free key off them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chemicalRef",
+    "hazardSignal",
+    "exposureSignal",
+    "prioritization",
+    "knownDataGaps",
+    "limitations",
+    "generatedFromTools",
+    "provenanceSummary"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["dtxsid", "preferredName"],
+      "properties": {
+        "dtxsid": { "type": "string", "minLength": 1 },
+        "preferredName": { "type": "string", "minLength": 1 },
+        "casrn": { "type": "string" }
+      }
+    },
+    "identityResolution": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "hazardSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordCount", "sourceTool"],
+      "properties": {
+        "recordCount": { "type": "integer", "minimum": 0 },
+        "sourceTool": { "type": "string", "minLength": 1 },
+        "selectedMetric": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        }
+      }
+    },
+    "exposureSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seem", "httk", "mmdb", "cpdat"],
+      "properties": {
+        "seem": { "$ref": "#/definitions/evidenceSlice" },
+        "httk": { "$ref": "#/definitions/evidenceSlice" },
+        "mmdb": { "$ref": "#/definitions/evidenceSlice" },
+        "cpdat": { "$ref": "#/definitions/evidenceSlice" }
+      }
+    },
+    "prioritization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "priorityBand",
+        "marginOfExposure",
+        "hazardPointOfDeparture",
+        "hazardUnit",
+        "exposureEstimate",
+        "exposureUnit",
+        "signalDirection",
+        "priorityHeuristic",
+        "basis",
+        "supportingSignals",
+        "caveats"
+      ],
+      "properties": {
+        "priorityBand": {
+          "enum": ["higher", "moderate", "lower", "inconclusive"]
+        },
+        "marginOfExposure": { "type": ["number", "null"] },
+        "hazardPointOfDeparture": { "type": ["number", "null"] },
+        "hazardUnit": { "type": ["string", "null"] },
+        "exposureEstimate": { "type": ["number", "null"] },
+        "exposureUnit": { "type": ["string", "null"] },
+        "signalDirection": { "type": "string", "minLength": 1 },
+        "priorityHeuristic": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "basis": { "type": "string", "minLength": 1 },
+        "supportingSignals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "caveats": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedBy", "sourceTools", "identityMode"],
+      "properties": {
+        "generatedBy": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string" },
+        "sourceCount": { "type": "integer", "minimum": 0 },
+        "sourceTools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "identityMode": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "definitions": {
+    "evidenceSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordCount", "sourceTool"],
+      "properties": {
+        "recordCount": { "type": "integer", "minimum": 0 },
+        "sourceTool": { "type": "string", "minLength": 1 },
+        "selectedMetrics": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

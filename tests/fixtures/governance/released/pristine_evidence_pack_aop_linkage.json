@@ -1,0 +1,835 @@
+{
+  "chemicalIdentity": {
+    "dtxsid": "DTXSID7020182",
+    "preferredName": "Bisphenol A",
+    "casrn": "80-05-7",
+    "inchikey": "IWEXDIRZYOAJPZ-UHFFFAOYSA-N",
+    "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+    "synonyms": [
+      "BPA",
+      "Bisphenol-A"
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "resolve_identity_record",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        }
+      ],
+      "notes": [
+        "Identity resolved through the CompTox chemical search surface."
+      ]
+    }
+  },
+  "hazardEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "datasets": [
+      {
+        "dataset": "toxval",
+        "summaryLevel": "summary",
+        "recordCount": 1,
+        "records": [
+          {
+            "effect": "NOAEL",
+            "value": 40,
+            "unit": "mg/kg-day"
+          }
+        ],
+        "sourceTool": "get_hazard_toxval",
+        "retrievedAt": "1970-01-01T00:00:00Z"
+      },
+      {
+        "dataset": "adme_ivive",
+        "summaryLevel": "summary",
+        "recordCount": 1,
+        "records": [
+          {
+            "intrinsicClearance": 0.91,
+            "parameter": "CLint",
+            "unit": "uL/min/10^6 cells",
+            "assay": "hepatocyte"
+          }
+        ],
+        "sourceTool": "get_hazard_adme_ivive",
+        "retrievedAt": "1970-01-01T00:00:00Z"
+      }
+    ],
+    "keyFindings": [
+      {
+        "statement": "Retrieved 1 toxval record(s) for Bisphenol A.",
+        "sourceDataset": "toxval",
+        "endpoint": "NOAEL",
+        "value": 40,
+        "unit": "mg/kg-day"
+      },
+      {
+        "statement": "Retrieved 1 adme_ivive record(s) for Bisphenol A.",
+        "sourceDataset": "adme_ivive",
+        "endpoint": "hepatocyte",
+        "unit": "uL/min/10^6 cells"
+      }
+    ],
+    "references": [
+      {
+        "citation": "EPA CompTox hazard dataset: toxval.",
+        "url": "https://comptox.epa.gov/ctx-api/v1/hazard"
+      },
+      {
+        "citation": "EPA CompTox hazard dataset: adme_ivive.",
+        "url": "https://comptox.epa.gov/ctx-api/v1/hazard"
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        },
+        {
+          "name": "hazard via get_hazard_toxval",
+          "toolName": "get_hazard_toxval",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "hazard via get_hazard_adme_ivive",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        }
+      ],
+      "notes": [
+        "Hazard evidence compiled from selected CompTox hazard datasets."
+      ]
+    },
+    "requestMetadata": {
+      "sourceTools": [
+        "get_hazard_toxval",
+        "get_hazard_adme_ivive"
+      ],
+      "requestedAt": "1970-01-01T00:00:00Z",
+      "summaryOnly": true,
+      "requestId": "requestId-sentinel"
+    }
+  },
+  "exposureEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "cpdat": {
+      "recordCount": 1,
+      "records": [
+        {
+          "productUseCategory": "food-contact",
+          "name": "DTXSID7020182"
+        }
+      ],
+      "sourceTool": "search_cpdat",
+      "retrievedAt": "1970-01-01T00:00:00Z"
+    },
+    "seem": {
+      "recordCount": 1,
+      "records": [
+        {
+          "medianExposure": 0.12,
+          "unit": "mg/kg-day"
+        }
+      ],
+      "sourceTool": "get_seem_general",
+      "retrievedAt": "1970-01-01T00:00:00Z"
+    },
+    "httk": {
+      "recordCount": 1,
+      "records": [
+        {
+          "fractionUnboundPlasma": 0.07,
+          "intrinsicClearance": 1.2,
+          "parameter": "CLint",
+          "unit": "L/h/kg"
+        }
+      ],
+      "sourceTool": "get_exposure_httk",
+      "retrievedAt": "1970-01-01T00:00:00Z"
+    },
+    "mmdb": {
+      "recordCount": 1,
+      "records": [
+        {
+          "studyCount": 3,
+          "endpoint": "plasma_concentration"
+        }
+      ],
+      "sourceTool": "get_exposure_mmdb_aggregate_by_dtxsid",
+      "retrievedAt": "1970-01-01T00:00:00Z"
+    },
+    "qsurs": {
+      "recordCount": 1,
+      "records": [
+        {
+          "useDescriptor": "thermal-paper",
+          "probability": 0.83
+        }
+      ],
+      "sourceTool": "search_qsurs",
+      "retrievedAt": "1970-01-01T00:00:00Z"
+    },
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        },
+        {
+          "name": "hazard via get_hazard_toxval",
+          "toolName": "get_hazard_toxval",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "hazard via get_hazard_adme_ivive",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "exposure via search_cpdat",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_seem_general",
+          "toolName": "get_seem_general",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_httk",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_mmdb_aggregate_by_dtxsid",
+          "toolName": "get_exposure_mmdb_aggregate_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via search_qsurs",
+          "toolName": "search_qsurs",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        }
+      ],
+      "notes": [
+        "Exposure evidence compiled from CPDat, SEEM, HTTK, MMDB, and QSUR outputs."
+      ]
+    }
+  },
+  "bioactivityEvidenceSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "summary": {
+      "assayCount": 2,
+      "activeAssayCount": 1,
+      "targetCount": 2,
+      "referenceAssaySet": "toxcast-tox21-summary"
+    },
+    "assays": [
+      {
+        "aeid": "123",
+        "assayName": "PPAR activation assay",
+        "activityDirection": "activation",
+        "activityValue": 3.2,
+        "unit": "uM",
+        "hitCall": true
+      },
+      {
+        "aeid": "456",
+        "assayName": "AhR reporter assay",
+        "assayComponent": "reporter",
+        "activityValue": 12.5,
+        "unit": "uM",
+        "hitCall": false
+      }
+    ],
+    "targets": [
+      {
+        "targetName": "PPARG",
+        "geneSymbol": "PPARG",
+        "targetFamily": "nuclear receptor",
+        "assayCount": 1
+      },
+      {
+        "targetName": "AHR",
+        "geneSymbol": "AHR",
+        "targetFamily": "transcription factor",
+        "assayCount": 1
+      }
+    ],
+    "aopMappings": [
+      {
+        "aopId": "AOP:42",
+        "aopTitle": "Liver steatosis",
+        "eventType": "molecular_initiating_event",
+        "eventLabel": "PPARG activation",
+        "confidence": 0.8
+      },
+      {
+        "aopId": "AOP:77",
+        "aopTitle": "Hepatic stress signaling",
+        "eventType": "key_event",
+        "eventLabel": "AHR activation",
+        "confidence": 0.55
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "assemble_comptox_evidence_pack",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        },
+        {
+          "name": "hazard via get_hazard_toxval",
+          "toolName": "get_hazard_toxval",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "hazard via get_hazard_adme_ivive",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "exposure via search_cpdat",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_seem_general",
+          "toolName": "get_seem_general",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_httk",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_mmdb_aggregate_by_dtxsid",
+          "toolName": "get_exposure_mmdb_aggregate_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via search_qsurs",
+          "toolName": "search_qsurs",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+          "toolName": "get_bioactivity_summary_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        }
+      ],
+      "notes": [
+        "Bioactivity summary built from CompTox summary and AOP crosswalk endpoints."
+      ]
+    }
+  },
+  "aopLinkageSummary": {
+    "chemicalRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7"
+    },
+    "lookupMode": "dtxsid",
+    "mappings": [
+      {
+        "aopId": "AOP:42",
+        "aopTitle": "Liver steatosis",
+        "keyEventId": "KE:123",
+        "eventType": "molecular_initiating_event",
+        "eventLabel": "PPARG activation",
+        "relationship": "linked_via_toxcast_aeid",
+        "evidenceDirection": "supports",
+        "confidence": 0.8
+      },
+      {
+        "aopId": "AOP:77",
+        "aopTitle": "Hepatic stress signaling",
+        "eventType": "key_event",
+        "eventLabel": "AHR activation",
+        "relationship": "linked_via_toxcast_aeid",
+        "evidenceDirection": "supports",
+        "confidence": 0.55
+      }
+    ],
+    "supportingAssays": [
+      {
+        "aeid": "123",
+        "assayName": "PPAR activation assay",
+        "targetName": "PPARG"
+      },
+      {
+        "aeid": "456",
+        "assayName": "AhR reporter assay",
+        "targetName": "AHR"
+      }
+    ],
+    "confidence": {
+      "score": 0.4,
+      "band": "moderate",
+      "basis": "Derived from available assay endpoint links and CompTox AOP crosswalk coverage."
+    },
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "build_aop_linkage_summary",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        },
+        {
+          "name": "hazard via get_hazard_toxval",
+          "toolName": "get_hazard_toxval",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "hazard via get_hazard_adme_ivive",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "exposure via search_cpdat",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_seem_general",
+          "toolName": "get_seem_general",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_httk",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_mmdb_aggregate_by_dtxsid",
+          "toolName": "get_exposure_mmdb_aggregate_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via search_qsurs",
+          "toolName": "search_qsurs",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+          "toolName": "get_bioactivity_summary_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        }
+      ],
+      "notes": [
+        "CompTox-side linkage only; downstream mechanistic normalization belongs in aop-mcp."
+      ]
+    }
+  },
+  "pbpkContextBundle": {
+    "chemicalIdentityRef": {
+      "dtxsid": "DTXSID7020182",
+      "preferredName": "Bisphenol A",
+      "casrn": "80-05-7",
+      "inchikey": "IWEXDIRZYOAJPZ-UHFFFAOYSA-N",
+      "smiles": "CC(C)(C1=CC=C(C=C1)O)C2=CC=C(C=C2)O",
+      "synonyms": [
+        "BPA",
+        "Bisphenol-A"
+      ],
+      "provenance": {
+        "sourceMcp": "epacomp-tox-mcp",
+        "generatedAt": "1970-01-01T00:00:00Z",
+        "generatedBy": "resolve_identity_record",
+        "traceId": "traceId-sentinel",
+        "sources": [
+          {
+            "name": "chemical via search_chemical",
+            "toolName": "search_chemical",
+            "url": "https://comptox.epa.gov/ctx-api",
+            "retrievedAt": "1970-01-01T00:00:00Z",
+            "citation": "CompTox MCP resource chemical"
+          }
+        ],
+        "notes": [
+          "Identity resolved through the CompTox chemical search surface."
+        ]
+      }
+    },
+    "httkSlice": {
+      "recordCount": 1,
+      "records": [
+        {
+          "fractionUnboundPlasma": 0.07,
+          "intrinsicClearance": 1.2,
+          "parameter": "CLint",
+          "unit": "L/h/kg"
+        }
+      ],
+      "sourceTool": "get_exposure_httk",
+      "retrievedAt": "1970-01-01T00:00:00Z",
+      "selectedMetrics": {
+        "fractionUnboundPlasma": 0.07,
+        "intrinsicClearance": 1.2,
+        "unit": "L/h/kg",
+        "parameter": "CLint"
+      }
+    },
+    "hazardAdmeIviveSlice": {
+      "recordCount": 1,
+      "records": [
+        {
+          "intrinsicClearance": 0.91,
+          "parameter": "CLint",
+          "unit": "uL/min/10^6 cells",
+          "assay": "hepatocyte"
+        }
+      ],
+      "sourceTool": "get_hazard_adme_ivive",
+      "retrievedAt": "1970-01-01T00:00:00Z",
+      "selectedMetrics": {
+        "intrinsicClearance": 0.91,
+        "unit": "uL/min/10^6 cells",
+        "parameter": "CLint",
+        "assay": "hepatocyte"
+      }
+    },
+    "exposureHints": [
+      {
+        "hintType": "population_exposure",
+        "value": 0.12,
+        "unit": "mg/kg-day",
+        "source": "SEEM",
+        "context": "Screening exposure estimate from CompTox exposure resources."
+      },
+      {
+        "hintType": "product_use_signal",
+        "value": "food-contact",
+        "source": "CPDat"
+      },
+      {
+        "hintType": "functional_use_prediction",
+        "value": "thermal-paper",
+        "source": "QSURS",
+        "context": "probability=0.83"
+      }
+    ],
+    "modelCardRefs": [
+      {
+        "modelName": "HTTK PBPK Surrogate",
+        "modelVersion": "1.0",
+        "endpoint": "internal dose metrics",
+        "limitations": [
+          "Use only for screening contexts."
+        ],
+        "warnings": [
+          "Does not perform PBPK simulation itself."
+        ]
+      }
+    ],
+    "provenance": {
+      "sourceMcp": "epacomp-tox-mcp",
+      "generatedAt": "1970-01-01T00:00:00Z",
+      "generatedBy": "build_pbpk_context_bundle",
+      "traceId": "traceId-sentinel",
+      "sources": [
+        {
+          "name": "chemical via search_chemical",
+          "toolName": "search_chemical",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource chemical"
+        },
+        {
+          "name": "hazard via get_hazard_toxval",
+          "toolName": "get_hazard_toxval",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "hazard via get_hazard_adme_ivive",
+          "toolName": "get_hazard_adme_ivive",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource hazard"
+        },
+        {
+          "name": "exposure via search_cpdat",
+          "toolName": "search_cpdat",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_seem_general",
+          "toolName": "get_seem_general",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_httk",
+          "toolName": "get_exposure_httk",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via get_exposure_mmdb_aggregate_by_dtxsid",
+          "toolName": "get_exposure_mmdb_aggregate_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "exposure via search_qsurs",
+          "toolName": "search_qsurs",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource exposure"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_summary_by_dtxsid",
+          "toolName": "get_bioactivity_summary_by_dtxsid",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "bioactivity via get_bioactivity_aop",
+          "toolName": "get_bioactivity_aop",
+          "url": "https://comptox.epa.gov/ctx-api",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource bioactivity"
+        },
+        {
+          "name": "metadata via metadata_get_model_card",
+          "toolName": "metadata_get_model_card",
+          "url": "https://github.com/ToxMCP/comptox-mcp/tree/main/metadata",
+          "retrievedAt": "1970-01-01T00:00:00Z",
+          "citation": "CompTox MCP resource metadata"
+        }
+      ],
+      "notes": [
+        "CompTox provides PBPK context only; execution and internal exposure outputs belong in pbpk-mcp."
+      ]
+    },
+    "handoffTarget": "pbpk-mcp"
+  },
+  "metadata": {
+    "packId": "packId-sentinel",
+    "sourceMcp": "epacomp-tox-mcp",
+    "createdAt": "1970-01-01T00:00:00Z",
+    "suiteRole": "evidence-federation",
+    "downstreamConsumers": [
+      "aop-mcp",
+      "pbpk-mcp"
+    ],
+    "modelCardRefs": [
+      {
+        "modelName": "HTTK PBPK Surrogate",
+        "modelVersion": "1.0",
+        "endpoint": "internal dose metrics",
+        "limitations": [
+          "Use only for screening contexts."
+        ],
+        "warnings": [
+          "Does not perform PBPK simulation itself."
+        ]
+      }
+    ]
+  },
+  "audit": {
+    "generatedAt": "1970-01-01T00:00:00Z",
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "requestId": "requestId-sentinel",
+    "sourceTools": [
+      "get_bioactivity_aop",
+      "get_bioactivity_summary_by_dtxsid",
+      "get_exposure_httk",
+      "get_exposure_mmdb_aggregate_by_dtxsid",
+      "get_hazard_adme_ivive",
+      "get_hazard_toxval",
+      "get_seem_general",
+      "metadata_get_model_card",
+      "search_chemical",
+      "search_cpdat",
+      "search_qsurs"
+    ],
+    "notes": [
+      "CompTox evidence pack for downstream MCP consumers."
+    ]
+  },
+  "semanticCoverage": {
+    "identity": "detailed",
+    "hazard": "summary",
+    "exposure": "summary",
+    "bioactivity": "summary",
+    "aopLinkage": "linked",
+    "pbpkContext": "summary"
+  },
+  "knownDataGaps": [],
+  "limitations": [
+    "CompTox evidence pack for downstream MCP consumers."
+  ],
+  "generatedFromTools": [
+    "get_bioactivity_aop",
+    "get_bioactivity_summary_by_dtxsid",
+    "get_exposure_httk",
+    "get_exposure_mmdb_aggregate_by_dtxsid",
+    "get_hazard_adme_ivive",
+    "get_hazard_toxval",
+    "get_seem_general",
+    "metadata_get_model_card",
+    "search_chemical",
+    "search_cpdat",
+    "search_qsurs"
+  ],
+  "provenanceSummary": {
+    "generatedBy": "assemble_comptox_evidence_pack",
+    "generatedAt": "1970-01-01T00:00:00Z",
+    "sourceCount": 0,
+    "sourceTools": [
+      "get_bioactivity_aop",
+      "get_bioactivity_summary_by_dtxsid",
+      "get_exposure_httk",
+      "get_exposure_mmdb_aggregate_by_dtxsid",
+      "get_hazard_adme_ivive",
+      "get_hazard_toxval",
+      "get_seem_general",
+      "metadata_get_model_card",
+      "search_chemical",
+      "search_cpdat",
+      "search_qsurs"
+    ],
+    "noteCount": 1
+  }
+}
