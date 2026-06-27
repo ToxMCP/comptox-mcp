@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://toxmcp.org/schemas/governance/aop_linkage_summary.emission.schema.json",
+  "title": "aopLinkageSummary producer STRICT emission contract",
+  "description": "The additionalProperties:false emission contract for the SERVER-AUTHORED aopLinkageSummary block, reconstructed by RUNNING the real InteropResource._build_aop_linkage_summary producer (both the standalone build_aop_linkage_summary response root AND the embedded assemble_comptox_evidence_pack `aopLinkageSummary` sub-block — they share the same core builder). The LOAD-BEARING strict surface is the SERVER-AUTHORED `confidence` conclusion block (score / band / basis — the qualitative confidence judgment the server invents ON TOP of relayed CompTox crosswalk rows) and each `mappings[]` entry (whose `evidenceDirection` is the per-linkage direction assertion): a field outside the declared set on `confidence` or a mapping entry is a SOURCE_CONTRACT_VIOLATION that BLOCKS BEFORE projection, closing the producer-emission-contract dead-arm class. The block ROOT is additionalProperties:true ON PURPOSE: the standalone response (annotated by _annotate_public_payload) carries extra envelope fields (provenanceSummary / limitations / knownDataGaps / generatedFromTools / identityResolution) that the embedded copy does not, and the projection never reads a free key off the root; over-tightening the root would falsely reject one of the two faithful emissions (the over-tighten lesson). The relayed bags (chemicalRef, supportingAssays items, provenance) spread upstream EPA CompTox / ccte identity + crosswalk fields verbatim and are additionalProperties:true ON PURPOSE.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "chemicalRef",
+    "lookupMode",
+    "mappings",
+    "supportingAssays",
+    "confidence",
+    "provenance"
+  ],
+  "properties": {
+    "chemicalRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["dtxsid"],
+      "properties": {
+        "dtxsid": { "type": "string", "minLength": 1 },
+        "preferredName": { "type": "string" },
+        "casrn": { "type": "string" }
+      }
+    },
+    "lookupMode": { "type": "string", "minLength": 1 },
+    "mappings": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mapping" }
+    },
+    "supportingAssays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["aeid"],
+        "properties": {
+          "aeid": { "type": "string", "minLength": 1 },
+          "assayName": { "type": "string" },
+          "targetName": { "type": "string" }
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "band", "basis"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0 },
+        "band": { "enum": ["high", "moderate", "low", "none"] },
+        "basis": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedBy"],
+      "properties": {
+        "generatedBy": { "type": "string", "minLength": 1 },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "knownDataGaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "generatedFromTools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provenanceSummary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "identityResolution": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aopId", "eventType", "eventLabel", "relationship", "evidenceDirection"],
+      "properties": {
+        "aopId": { "type": "string", "minLength": 1 },
+        "aopTitle": { "type": "string" },
+        "keyEventId": { "type": "string" },
+        "eventType": { "type": "string", "minLength": 1 },
+        "eventLabel": { "type": "string", "minLength": 1 },
+        "relationship": { "type": "string", "minLength": 1 },
+        "evidenceDirection": { "type": "string", "minLength": 1 },
+        "confidence": { "type": ["number", "null"] }
+      }
+    }
+  }
+}
