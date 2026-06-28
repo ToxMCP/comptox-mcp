@@ -3,6 +3,7 @@
 FROM python:3.11-slim AS runtime
 
 ENV PIP_NO_CACHE_DIR=1 \
+    EPACOMP_TOX_CONTRACT_SCHEMA_ROOT=/app/docs/contracts/schemas \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
