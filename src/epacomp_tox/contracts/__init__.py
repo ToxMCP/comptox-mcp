@@ -14,7 +14,9 @@ def _default_schema_root() -> Path:
     if override:
         return Path(override)
 
-    repo_relative = Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+    repo_relative = (
+        Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+    )
     if repo_relative.exists():
         return repo_relative
 

@@ -6,8 +6,16 @@ from pathlib import Path
 
 
 def load_contracts_module():
-    module_path = Path(__file__).resolve().parents[1] / "src" / "epacomp_tox" / "contracts" / "__init__.py"
-    spec = importlib.util.spec_from_file_location("epacomp_tox_contracts_under_test", module_path)
+    module_path = (
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "epacomp_tox"
+        / "contracts"
+        / "__init__.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "epacomp_tox_contracts_under_test", module_path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -18,9 +26,7 @@ def load_contracts_module():
 def test_default_contract_schema_root_exists() -> None:
     contracts = load_contracts_module()
     assert (
-        contracts.SCHEMA_ROOT
-        / "chemical"
-        / "search_chemical.response.schema.json"
+        contracts.SCHEMA_ROOT / "chemical" / "search_chemical.response.schema.json"
     ).exists()
 
 
