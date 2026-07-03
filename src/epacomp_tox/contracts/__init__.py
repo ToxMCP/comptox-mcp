@@ -1,13 +1,29 @@
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 from jsonschema import Draft202012Validator
 
-SCHEMA_ROOT = Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+
+def _default_schema_root() -> Path:
+    override = os.getenv("EPACOMP_TOX_CONTRACT_SCHEMA_ROOT")
+    if override:
+        return Path(override)
+
+    repo_relative = (
+        Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+    )
+    if repo_relative.exists():
+        return repo_relative
+
+    return Path.cwd() / "docs" / "contracts" / "schemas"
+
+
+SCHEMA_ROOT = _default_schema_root()
 
 
 class SchemaValidationError(RuntimeError):
