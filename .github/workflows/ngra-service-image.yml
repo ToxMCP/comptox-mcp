@@ -1,0 +1,136 @@
+name: NGRA service image publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Commit SHA or ref to publish for the NGRA private-pilot feed.
+        required: true
+        type: string
+      tag_suffix:
+        description: Optional additional tag for the published image.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ngra-service-image-${{ github.repository }}-${{ inputs.source_ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/toxmcp/ngra-private-pilot-comptox
+  NAMESPACE: comptox
+  NGRA_DIGEST_ENV: NGRA_COMPTOX_IMAGE_DIGEST
+  DOCKERFILE_PATH: deploy/Dockerfile
+
+jobs:
+  publish:
+    name: Build and publish service image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.source_ref }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare image metadata
+        id: image_meta
+        env:
+          TAG_SUFFIX: ${{ inputs.tag_suffix }}
+        run: |
+          set -euo pipefail
+          source_ref="$(git rev-parse HEAD)"
+          short_ref="$(git rev-parse --short=12 HEAD)"
+          source_tag="sha-${short_ref}"
+          tags="${IMAGE_NAME}:${source_tag}"
+          if [ -n "${TAG_SUFFIX}" ]; then
+            tags="${tags}"$'\n'"${IMAGE_NAME}:${TAG_SUFFIX}"
+          fi
+          {
+            echo "source_ref=${source_ref}"
+            echo "source_tag=${source_tag}"
+            echo "tags<<EOF"
+            printf '%s\n' "${tags}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          pull: true
+          push: true
+          tags: ${{ steps.image_meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.image_meta.outputs.source_ref }}
+
+      - name: Write digest evidence
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          IMAGE_TAGS: ${{ steps.image_meta.outputs.tags }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SOURCE_REF: ${{ steps.image_meta.outputs.source_ref }}
+          SOURCE_REF_INPUT: ${{ inputs.source_ref }}
+          SOURCE_TAG: ${{ steps.image_meta.outputs.source_tag }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import UTC, datetime
+
+          image = os.environ["IMAGE_NAME"]
+          digest = os.environ["IMAGE_DIGEST"]
+          digest_env = os.environ["NGRA_DIGEST_ENV"]
+          evidence = {
+              "schema": "ngra.service_image_digest.v1",
+              "generated_at": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+              "namespace": os.environ["NAMESPACE"],
+              "image": image,
+              "digest": digest,
+              "image_ref": f"{image}@{digest}",
+              "ngra_env": {
+                  digest_env: digest,
+              },
+              "source_repo": os.environ["GITHUB_REPOSITORY"],
+              "source_ref": os.environ["SOURCE_REF"],
+              "source_ref_input": os.environ["SOURCE_REF_INPUT"],
+              "source_tag": os.environ["SOURCE_TAG"],
+              "run_url": os.environ["RUN_URL"],
+              "workflow_ref": os.environ["WORKFLOW_REF"],
+              "tags": [tag for tag in os.environ["IMAGE_TAGS"].splitlines() if tag],
+          }
+          with open("service-image-digest.json", "w", encoding="utf-8") as handle:
+              json.dump(evidence, handle, indent=2, sort_keys=True)
+              handle.write("\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("## NGRA service image digest\n\n")
+              handle.write(f"- Namespace: `{os.environ['NAMESPACE']}`\n")
+              handle.write(f"- Image: `{image}`\n")
+              handle.write(f"- Digest: `{digest}`\n")
+              handle.write(f"- Immutable ref: `{image}@{digest}`\n")
+              handle.write(f"- Source ref: `{os.environ['SOURCE_REF']}`\n")
+          PY
+
+      - name: Upload digest evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ngra-service-image-digest
+          path: service-image-digest.json
+          if-no-files-found: error
