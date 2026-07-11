@@ -33,6 +33,22 @@ def test_external_github_actions_are_pinned_to_commit_shas() -> None:
     ), "Workflow actions must be pinned to commit SHAs: " + ", ".join(offenders)
 
 
+def test_workflow_conditionals_do_not_reference_secrets_directly() -> None:
+    offenders: list[str] = []
+    for workflow_path in sorted(WORKFLOWS_DIR.glob("*.yml")):
+        for line_number, line in enumerate(
+            workflow_path.read_text(encoding="utf-8").splitlines(),
+            start=1,
+        ):
+            if re.search(r"\bif:\s*.*\bsecrets\.", line):
+                offenders.append(f"{workflow_path.name}:{line_number}:{line.strip()}")
+    assert (
+        not offenders
+    ), "Workflow conditionals cannot reference secrets directly: " + ", ".join(
+        offenders
+    )
+
+
 def test_codeql_workflow_exists_with_python_analysis() -> None:
     text = _workflow_text("codeql.yml")
     assert "name: CodeQL" in text
@@ -71,6 +87,8 @@ def test_live_interop_smoke_workflow_exists_with_pinned_tooling() -> None:
     assert "actions/setup-python@" in text
     assert "uvicorn epacomp_tox.transport.websocket:app" in text
     assert "scripts/mcp_interop_smoke.py" in text
+    assert "Check live credential availability" in text
+    assert "steps.live-credentials.outputs.available == 'true'" in text
 
 
 def test_scientific_validation_workflow_exists_with_artifact_capture() -> None:
@@ -87,3 +105,5 @@ def test_scientific_validation_workflow_exists_with_artifact_capture() -> None:
     assert "scripts/live_concordance_panel.py" in text
     assert "artifacts/scientific-validation/offline/report.json" in text
     assert "artifacts/scientific-validation/live/report.json" in text
+    assert "Check live credential availability" in text
+    assert "steps.live-credentials.outputs.available == 'true'" in text
