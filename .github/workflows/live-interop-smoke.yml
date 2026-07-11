@@ -19,34 +19,49 @@ concurrency:
 jobs:
   live-interop-smoke:
     name: Live Interop Smoke
-    if: ${{ secrets.CTX_API_KEY != '' }}
     runs-on: ubuntu-latest
     env:
       CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
       EPA_MCP_HTTP_ENDPOINT: http://127.0.0.1:8016/mcp
 
     steps:
+      - name: Check live credential availability
+        id: live-credentials
+        shell: bash
+        run: |
+          if [[ -n "${CTX_API_KEY:-}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CTX_API_KEY is not configured; skipping the live interop smoke steps."
+          fi
+
       - name: Checkout
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.11"
 
       - name: Install project
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
       - name: Start MCP server
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: |
           nohup uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8016 > /tmp/live-interop-smoke.log 2>&1 &
           echo $! > /tmp/live-interop-smoke.pid
 
       - name: Wait for health check
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: |
-          for attempt in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8016/healthz >/dev/null; then
               exit 0
             fi
@@ -57,14 +72,15 @@ jobs:
           exit 1
 
       - name: Run live interop smoke
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: python scripts/mcp_interop_smoke.py --endpoint "$EPA_MCP_HTTP_ENDPOINT" --json
 
       - name: Dump server log on failure
-        if: ${{ failure() }}
+        if: ${{ failure() && steps.live-credentials.outputs.available == 'true' }}
         run: cat /tmp/live-interop-smoke.log >&2 || true
 
       - name: Stop MCP server
-        if: ${{ always() }}
+        if: ${{ always() && steps.live-credentials.outputs.available == 'true' }}
         run: |
           if [[ -f /tmp/live-interop-smoke.pid ]]; then
             kill "$(cat /tmp/live-interop-smoke.pid)" || true

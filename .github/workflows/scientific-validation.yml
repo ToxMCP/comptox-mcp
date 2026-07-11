@@ -52,26 +52,40 @@ jobs:
 
   live-concordance-panel:
     name: Live Concordance Panel
-    if: ${{ secrets.CTX_API_KEY != '' }}
     runs-on: ubuntu-latest
     env:
       CTX_API_KEY: ${{ secrets.CTX_API_KEY }}
 
     steps:
+      - name: Check live credential availability
+        id: live-credentials
+        shell: bash
+        run: |
+          if [[ -n "${CTX_API_KEY:-}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CTX_API_KEY is not configured; skipping the live concordance steps."
+          fi
+
       - name: Checkout
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.11"
 
       - name: Install project
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Generate live concordance panel reports
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         run: |
           mkdir -p artifacts/scientific-validation/live
           python scripts/live_concordance_panel.py \
@@ -80,6 +94,7 @@ jobs:
             --output-markdown artifacts/scientific-validation/live/report.md
 
       - name: Upload live concordance artifacts
+        if: ${{ steps.live-credentials.outputs.available == 'true' }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: scientific-validation-live
