@@ -273,28 +273,33 @@ async def mcp_endpoint(request: Request) -> Response:
     except ValueError as exc:
         logger.debug("Invalid request parameters: %s", exc)
         content = _jsonrpc_error(
-            code=INVALID_PARAMS, message=str(exc), request_id=request_id
+            code=INVALID_PARAMS,
+            message="Invalid method parameters.",
+            request_id=request_id,
         )
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
     except LookupError as exc:
         logger.debug("Requested tool not found: %s", exc)
         content = _jsonrpc_error(
-            code=METHOD_NOT_FOUND, message=str(exc), request_id=request_id
+            code=METHOD_NOT_FOUND,
+            message="Method or tool not found.",
+            request_id=request_id,
         )
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=content)
     except PermissionError as exc:
         logger.warning("Forbidden tool access: %s", exc)
         content = _jsonrpc_error(
-            code=FORBIDDEN, message=str(exc), request_id=request_id
+            code=FORBIDDEN,
+            message="Access to this method or tool is forbidden.",
+            request_id=request_id,
         )
         return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content=content)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         logger.exception("Unhandled MCP error")
         content = _jsonrpc_error(
             code=INTERNAL_ERROR,
             message="Internal server error",
             request_id=request_id,
-            data=str(exc),
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content

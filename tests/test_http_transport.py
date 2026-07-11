@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, List
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -221,7 +222,7 @@ def test_http_transport_method_not_found():
         assert response.status_code == 404
         payload = response.json()
         assert payload["error"]["code"] == METHOD_NOT_FOUND
-        assert "Method not found" in payload["error"]["message"]
+        assert payload["error"]["message"] == "Method or tool not found."
 
 
 def test_http_transport_tool_not_found():
@@ -239,7 +240,8 @@ def test_http_transport_tool_not_found():
         assert response.status_code == 404
         payload = response.json()
         assert payload["error"]["code"] == METHOD_NOT_FOUND
-        assert "missing" in payload["error"]["message"]
+        assert payload["error"]["message"] == "Method or tool not found."
+        assert "missing" not in payload["error"]["message"]
 
 
 def test_http_transport_invalid_parameters():
@@ -257,6 +259,35 @@ def test_http_transport_invalid_parameters():
         assert response.status_code == 400
         payload = response.json()
         assert payload["error"]["code"] == INVALID_PARAMS
+
+
+def test_http_transport_never_exposes_exception_details() -> None:
+    app = _create_app()
+    cases = (
+        (ValueError("sensitive-value-error"), 400, "Invalid method parameters."),
+        (LookupError("sensitive-lookup-error"), 404, "Method or tool not found."),
+        (
+            PermissionError("sensitive-permission-error"),
+            403,
+            "Access to this method or tool is forbidden.",
+        ),
+        (RuntimeError("sensitive-runtime-error"), 500, "Internal server error"),
+    )
+
+    with TestClient(app) as client:
+        for exception, expected_status, expected_message in cases:
+            with mock.patch(
+                "epacomp_tox.transport.http._dispatch_method",
+                new=mock.AsyncMock(side_effect=exception),
+            ):
+                response = client.post(
+                    "/mcp",
+                    json={"jsonrpc": "2.0", "id": 99, "method": "tools/list"},
+                )
+
+            assert response.status_code == expected_status
+            assert response.json()["error"]["message"] == expected_message
+            assert "sensitive-" not in response.text
 
 
 def test_http_transport_serializes_nested_metadata_rate_limit() -> None:

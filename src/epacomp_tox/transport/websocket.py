@@ -844,13 +844,16 @@ class MCPWebSocketSession:
                 data={"reason": "timeout", "timeoutSeconds": timeout},
             ) from exc
         except ValueError as exc:
-            raise ToolExecutionError(code=-32602, message=str(exc)) from exc
+            logger.debug("Invalid tool parameters: %s", exc)
+            raise ToolExecutionError(
+                code=-32602,
+                message="Invalid tool parameters",
+            ) from exc
         except Exception as exc:  # pragma: no cover - defensive logging
             logger.exception("Unhandled tool execution error")
             raise ToolExecutionError(
                 code=-32603,
                 message="Tool execution failed",
-                data={"detail": str(exc)},
             ) from exc
 
     async def _emit_event(self, method: str, params: Dict[str, Any]) -> None:
@@ -921,6 +924,12 @@ def _json_default(value: Any) -> Any:
     return converted
 
 
+def _public_health_status(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return health fields that are safe to expose outside the service."""
+    allowed_fields = ("ok", "status", "probeMode", "authenticated")
+    return {field: payload[field] for field in allowed_fields if field in payload}
+
+
 def create_app(server: Optional[MCPServer] = None) -> FastAPI:
     """Create a FastAPI application exposing the MCP WebSocket transport."""
 
@@ -970,15 +979,20 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
             raise HTTPException(status_code=503, detail="MCP server not initialized")
         try:
             health = server_instance.check_health(timeout=2.0, probe_mode="readiness")
-        except Exception as exc:
+        except Exception:
+            logger.exception("CTX readiness check failed")
             cached = getattr(server_instance, "_last_health", None)
             if cached:
-                return {"status": "degraded", "ctx": cached, "detail": str(exc)}
+                return {
+                    "status": "degraded",
+                    "ctx": _public_health_status(cached),
+                    "detail": "CTX health check failed; cached status returned.",
+                }
             raise HTTPException(
                 status_code=503,
-                detail=f"CTX health check failed: {exc}",
-            ) from exc
-        return {"status": "ok", "ctx": health}
+                detail="CTX health check failed",
+            )
+        return {"status": "ok", "ctx": _public_health_status(health)}
 
     @app.get("/metrics", tags=["metrics"])
     async def metrics() -> Response:
