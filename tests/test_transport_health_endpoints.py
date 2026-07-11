@@ -53,7 +53,13 @@ def test_readyz_returns_ok_when_health_passes() -> None:
     app = create_app(server=server)
     client = TestClient(app)
     with mock.patch.object(
-        server, "check_health", return_value={"ok": True, "status": 200}
+        server,
+        "check_health",
+        return_value={
+            "ok": True,
+            "status": 200,
+            "url": "https://internal.example.test/ctx-api",
+        },
     ) as mock_check_health:
         response = client.get("/readyz")
 
@@ -61,6 +67,8 @@ def test_readyz_returns_ok_when_health_passes() -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert body["ctx"]["ok"] is True
+    assert "url" not in body["ctx"]
+    assert "internal.example.test" not in response.text
     mock_check_health.assert_called_once_with(timeout=2.0, probe_mode="readiness")
 
 
@@ -74,7 +82,8 @@ def test_readyz_returns_503_when_health_fails_without_cache() -> None:
         response = client.get("/readyz")
 
     assert response.status_code == 503
-    assert "CTX health check failed" in response.json()["detail"]
+    assert response.json()["detail"] == "CTX health check failed"
+    assert "auth failed" not in response.text
 
 
 def test_readyz_returns_degraded_when_cached_health_exists() -> None:
@@ -91,7 +100,10 @@ def test_readyz_returns_degraded_when_cached_health_exists() -> None:
     body = response.json()
     assert body["status"] == "degraded"
     assert body["ctx"]["status"] == 200
-    assert body["detail"] == "auth failed"
+    assert body["detail"] == "CTX health check failed; cached status returned."
+    assert "auth failed" not in response.text
+    assert "url" not in body["ctx"]
+    assert "example.test" not in response.text
 
 
 def test_readyz_returns_503_when_server_unavailable() -> None:
