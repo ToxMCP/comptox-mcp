@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, Dict, List
 from unittest import mock
 
+import pytest
 from fastapi.testclient import TestClient
 
 from ctxpy import RateLimitInfo
 from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.server import MCPServer
 from epacomp_tox.transport.common import PRIMARY_PROTOCOL_VERSION
-from epacomp_tox.transport.http import INVALID_PARAMS, METHOD_NOT_FOUND
+from epacomp_tox.transport.http import (
+    INVALID_PARAMS,
+    METHOD_NOT_FOUND,
+    _handle_resources_read,
+)
 from epacomp_tox.transport.websocket import create_app
 
 
@@ -364,3 +370,30 @@ def test_http_resources_read_infers_prioritization_tool_from_resource_uri() -> N
         text = json.loads(payload["text"])
         assert text["chemicalRef"]["dtxsid"] == "DTXSID7020182"
         assert text["prioritization"]["priorityBand"] == "higher"
+
+
+def test_http_resource_compatibility_errors_do_not_embed_exception_details() -> None:
+    sentinel = "sensitive-resource-compatibility-error"
+    server = PrioritizationReadMCPServer(
+        api_key="dummy-key",
+        validate_health=False,
+    )
+    cases = (
+        {
+            "uri": "resource://prioritization",
+            "name": "prioritize_risk_signals",
+            "arguments": {"dtxsid": "DTXSID7020182"},
+        },
+        {"uri": "resource://prioritization?dtxsid=DTXSID7020182"},
+    )
+
+    for params in cases:
+        with mock.patch(
+            "epacomp_tox.transport.http._handle_tools_call",
+            new=mock.AsyncMock(side_effect=RuntimeError(sentinel)),
+        ):
+            with pytest.raises(ValueError) as exc_info:
+                asyncio.run(_handle_resources_read(server, params, mock.Mock()))
+
+        assert str(exc_info.value) == "Tool execution failed"
+        assert sentinel not in str(exc_info.value)

@@ -6,12 +6,13 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
 from epacomp_tox.resources.base import BaseResource
 from epacomp_tox.server import MCPServer
-from epacomp_tox.transport.websocket import create_app
+from epacomp_tox.transport.websocket import MCPWebSocketSession, create_app
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -488,3 +489,30 @@ def test_websocket_resources_read_infers_prioritization_tool_from_resource_uri()
         result = response["result"]["structuredContent"]
         assert result["chemicalRef"]["dtxsid"] == "DTXSID7020182"
         assert result["prioritization"]["priorityBand"] == "higher"
+
+
+def test_websocket_resources_read_never_exposes_inferred_tool_exception() -> None:
+    sentinel = "sensitive-inferred-resource-error"
+    with mock.patch.object(
+        MCPWebSocketSession,
+        "_handle_tools_call",
+        new=mock.AsyncMock(side_effect=RuntimeError(sentinel)),
+    ):
+        with _connect_prioritization() as (_, websocket):
+            _initialize(websocket, capabilities={"tools": {"streams": False}})
+            websocket.send_json(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 103,
+                    "method": "resources/read",
+                    "params": {
+                        "uri": "resource://prioritization?dtxsid=DTXSID7020182",
+                    },
+                }
+            )
+            response = websocket.receive_json()
+
+    assert response["id"] == 103
+    assert response["error"]["code"] == -32602
+    assert response["error"]["message"] == "Tool execution failed"
+    assert sentinel not in json.dumps(response)
