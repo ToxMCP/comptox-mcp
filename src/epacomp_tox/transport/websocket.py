@@ -477,9 +477,12 @@ class MCPWebSocketSession:
                     await self._handle_tools_call(
                         message_id, {"name": inferred_tool, "arguments": arguments}
                     )
-                except Exception as exc:  # pragma: no cover - defensive
+                except Exception:  # pragma: no cover - defensive logging
+                    logger.exception("Unhandled inferred resource tool error")
                     await self._send_error(
-                        message_id, code=-32602, message=f"Tool execution failed: {exc}"
+                        message_id,
+                        code=-32602,
+                        message="Tool execution failed",
                     )
                 return
 

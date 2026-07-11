@@ -927,7 +927,8 @@ async def _handle_resources_read(
                 request,
             )
         except Exception as exc:
-            raise ValueError(f"Tool execution failed: {exc}") from exc
+            logger.exception("Explicit resource tool execution failed")
+            raise ValueError("Tool execution failed") from exc
 
         sanitized_text = _sanitize_tool_result_for_resource_read(tool_result)
         return {
@@ -1016,7 +1017,8 @@ async def _handle_resources_read(
 
         except Exception as exc:
             # Catch validation errors (400) or LookupErrors during legacy execution
-            raise ValueError(f"Tool execution failed: {exc}") from exc
+            logger.exception("Inferred resource tool execution failed")
+            raise ValueError("Tool execution failed") from exc
 
     # Standard resource read path (No tool found or inferred)
     # (Keep this section the same as previously implemented, including resource lookup and summarization)
