@@ -3,6 +3,10 @@
 > Part of **ToxMCP** Suite -> https://github.com/ToxMCP/toxmcp
 >
 > **Public MCP endpoint for EPA Computational Toxicology (CompTox) evidence federation.** Expose chemical identity, hazard, exposure, bioactivity, metadata, screening-prioritization summaries, contract-manifest discovery, and cross-suite handoff builders to any MCP-aware agent (Codex CLI, Gemini CLI, Claude Code, etc.).
+>
+> **Maintainer:** [Ivo Djidrovski (`@senseibelbi`)](https://github.com/senseibelbi)
+>
+> **Contact:** Use [GitHub Issues](https://github.com/ToxMCP/comptox-mcp/issues) for bugs, usage questions, and feature requests; use the [in4r.ai contact form](https://www.in4r.ai/#contact) for private general inquiries; and report vulnerabilities through [GitHub's private security advisory channel](https://github.com/ToxMCP/comptox-mcp/security/advisories/new).
 
 ## Architecture
 

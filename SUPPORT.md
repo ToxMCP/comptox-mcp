@@ -2,6 +2,14 @@
 
 Use the right channel for the right kind of request so the public issue tracker stays useful and security-sensitive reports stay private.
 
+## Maintainer and contact
+
+This project is maintained by [Ivo Djidrovski (`@senseibelbi`)](https://github.com/senseibelbi).
+
+- For bugs, usage questions, documentation feedback, and feature requests, use [GitHub Issues](https://github.com/ToxMCP/comptox-mcp/issues).
+- For private general inquiries, use the [in4r.ai contact form](https://www.in4r.ai/#contact).
+- For vulnerabilities and other security-sensitive reports, use [GitHub's private security advisory channel](https://github.com/ToxMCP/comptox-mcp/security/advisories/new).
+
 ## When to open an issue
 
 Use [GitHub Issues](https://github.com/ToxMCP/comptox-mcp/issues) for:
