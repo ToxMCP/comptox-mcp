@@ -168,15 +168,27 @@ def test_discovery_contains_required_contract() -> None:
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
         )
         tools_response = websocket.receive_json()
-        assert tools_response["result"]["nextCursor"] is None
+        assert "nextCursor" not in tools_response["result"]
         tool_names = {tool["name"] for tool in tools_response["result"]["tools"]}
         for required in expected["requiredTools"]:
             assert required in tool_names
 
         websocket.send_json(
-            {"jsonrpc": "2.0", "id": 3, "method": "resources/list", "params": {}}
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/list",
+                "params": {"limit": 1},
+            }
+        )
+        paginated_tools_response = websocket.receive_json()
+        assert paginated_tools_response["result"]["nextCursor"] == "1"
+
+        websocket.send_json(
+            {"jsonrpc": "2.0", "id": 4, "method": "resources/list", "params": {}}
         )
         resources_response = websocket.receive_json()
+        assert "nextCursor" not in resources_response["result"]
         resource_names = {
             resource["name"] for resource in resources_response["result"]["resources"]
         }
