@@ -47,10 +47,27 @@ jobs:
           cyclonedx-py environment .sbom-venv \
             --pyproject pyproject.toml \
             --mc-type library \
-            --output-reproducible \
             --spec-version 1.6 \
             --output-format JSON \
             --output-file artifacts/epacomp-tox-mcp.sbom.cdx.json
+
+      - name: Validate SBOM attestation metadata
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          sbom_path = Path("artifacts/epacomp-tox-mcp.sbom.cdx.json")
+          sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
+          required = ("bomFormat", "serialNumber", "specVersion")
+          missing = [key for key in required if not sbom.get(key)]
+
+          if sbom.get("bomFormat") != "CycloneDX" or missing:
+              raise SystemExit(
+                  "SBOM is not compatible with actions/attest: "
+                  f"bomFormat={sbom.get('bomFormat')!r}, missing={missing}"
+              )
+          PY
 
       - name: Attest release provenance
         id: attest-provenance
