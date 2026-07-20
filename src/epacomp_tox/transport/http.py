@@ -397,7 +397,10 @@ def _handle_tools_list(server: MCPServer, params: Dict[str, Any]) -> Dict[str, A
             limit_value = None
 
     tools, next_cursor = server.list_tools(cursor=cursor, limit=limit_value)
-    return {"tools": tools, "nextCursor": next_cursor}
+    result: Dict[str, Any] = {"tools": tools}
+    if next_cursor is not None:
+        result["nextCursor"] = next_cursor
+    return result
 
 
 def _handle_resources_list(server: MCPServer, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -413,7 +416,10 @@ def _handle_resources_list(server: MCPServer, params: Dict[str, Any]) -> Dict[st
             limit_value = None
 
     resources, next_cursor = server.list_resources(cursor=cursor, limit=limit_value)
-    return {"resources": resources, "nextCursor": next_cursor}
+    result: Dict[str, Any] = {"resources": resources}
+    if next_cursor is not None:
+        result["nextCursor"] = next_cursor
+    return result
 
 
 def _handle_resources_templates_list(

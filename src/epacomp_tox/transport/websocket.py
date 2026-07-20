@@ -387,11 +387,14 @@ class MCPWebSocketSession:
         if limit_value is not None and limit_value <= 0:
             limit_value = None
         tools, next_cursor = self.server.list_tools(cursor=cursor, limit=limit_value)
+        result: Dict[str, Any] = {"tools": tools}
+        if next_cursor is not None:
+            result["nextCursor"] = next_cursor
         await self._send(
             {
                 "jsonrpc": "2.0",
                 "id": message_id,
-                "result": {"tools": tools, "nextCursor": next_cursor},
+                "result": result,
             }
         )
 
@@ -408,11 +411,14 @@ class MCPWebSocketSession:
         resources, next_cursor = self.server.list_resources(
             cursor=cursor, limit=limit_value
         )
+        result: Dict[str, Any] = {"resources": resources}
+        if next_cursor is not None:
+            result["nextCursor"] = next_cursor
         await self._send(
             {
                 "jsonrpc": "2.0",
                 "id": message_id,
-                "result": {"resources": resources, "nextCursor": next_cursor},
+                "result": result,
             }
         )
 

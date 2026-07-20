@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-07-20
+
+- fixed MCP discovery responses so `nextCursor` is omitted when pagination is complete instead of being serialized as invalid JSON `null`
+- applied the pagination fix consistently to HTTP and WebSocket tool/resource discovery
+- restored tool discovery in strict clients including Claude Code 2.1.214
+- added regression coverage for absent terminal cursors and string-valued continuation cursors
+
 ## [0.2.3] - 2026-04-15
 
 - hardened audit subsystem with SHA-256 content hashing, sequential chain linkage, and tamper-evident event verification

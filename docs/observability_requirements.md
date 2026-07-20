@@ -1,6 +1,6 @@
 # Observability & Governance Requirements (MCP Phase 2)
 
-> Historical/internal planning document. These requirements cover broader transport, predictive, and orchestrator ambitions beyond the current default public MCP surface released in `v0.2.3`.
+> Historical/internal planning document. These requirements cover broader transport, predictive, and orchestrator ambitions beyond the current default public MCP surface released in `v0.2.4`.
 
 ## Overview
 To support MCP Phase 2, the platform must expose consistent telemetry, audit, and policy hooks across transport, metadata, predictive services, and the GenRA orchestrator. This document captures the requirements aligned with stakeholder needs.

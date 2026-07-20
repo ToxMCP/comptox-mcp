@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epacomp-tox-mcp"
-version = "0.2.3"
+version = "0.2.4"
 description = "Evidence federation MCP server for the EPA CompTox API"
 readme = "README.md"
 license = "Apache-2.0"

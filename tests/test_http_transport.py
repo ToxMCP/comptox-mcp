@@ -199,16 +199,25 @@ def test_http_transport_initialize_and_list_and_call():
         )
         assert list_response.status_code == 200
         tools_payload = list_response.json()
+        assert "nextCursor" not in tools_payload["result"]
         tools = tools_payload["result"]["tools"]
         assert any(tool["name"] == "echo" for tool in tools)
         first_tool = next(tool for tool in tools if tool["name"] == "echo")
         assert first_tool["annotations"]["resource"] == "echo"
 
+        resources_response = client.post(
+            "/mcp",
+            json={"jsonrpc": "2.0", "id": 3, "method": "resources/list"},
+        )
+        assert resources_response.status_code == 200
+        resources_payload = resources_response.json()
+        assert "nextCursor" not in resources_payload["result"]
+
         call_response = client.post(
             "/mcp",
             json={
                 "jsonrpc": "2.0",
-                "id": 3,
+                "id": 4,
                 "method": "tools/call",
                 "params": {"name": "echo", "parameters": {"text": "hello"}},
             },

@@ -75,6 +75,16 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
+## What's New In v0.2.4
+
+This patch release restores MCP tool discovery in clients that strictly validate paginated list responses, including Claude Code 2.1.214.
+
+- `tools/list` and `resources/list` now omit `nextCursor` when no additional page exists, as required by the MCP schema.
+- HTTP and WebSocket transports use the same pagination encoding.
+- Regression tests cover both terminal pages and string-valued continuation cursors.
+
+See the full release notes in [`docs/releases/v0.2.4_release_description.md`](docs/releases/v0.2.4_release_description.md).
+
 ## What's New In v0.2.3
 
 This release focuses on **audit hardening, privacy controls, provenance capture, and workflow governance** in response to the ToxMCP internal audit review. No public MCP boundary changes were made.
@@ -447,10 +457,10 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
+- Completed: [`v0.2.4` release cleanup](docs/releases/v0.2.4_release_description.md) — strict MCP pagination compatibility for HTTP and WebSocket discovery.
 - Completed: [`v0.2.3` release cleanup](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.
 - Completed: [`v0.2.2` release cleanup](docs/releases/v0.2.2_release_description.md)
 - Completed: [`v0.2.1` stabilization](docs/releases/v0.2.1_stabilization_plan.md) and the matching [`v0.2.1` release description](docs/releases/v0.2.1_release_description.md)
-- `v0.2.4` should focus on CI/release automation (promote `scripts/release_smoke.py` and live interop capture into repeatable GitHub Actions), documentation polish around deterministic identifier usage, and expanding screening prioritization signals without overstating risk semantics.
 - Revisit predictive/orchestrator publication only after the default server, contracts, and docs all agree.
 
 ---

@@ -1,6 +1,6 @@
 # MCP Phase 2 Planning Snapshot (2025-10-25)
 
-> Historical planning snapshot retained for archive purposes. It does not describe the current public `v0.2.3` release boundary.
+> Historical planning snapshot retained for archive purposes. It does not describe the current public `v0.2.4` release boundary.
 
 This snapshot captures the planning workspace state after completing the MCP Phase 2 rollout and associated CTX migration tasks.
 

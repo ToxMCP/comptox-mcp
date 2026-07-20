@@ -82,7 +82,8 @@ def _discover_over_websocket() -> Dict[str, Any]:
         )
         resources_response = websocket.receive_json()
 
-    assert tools_response["result"]["nextCursor"] is None
+    assert "nextCursor" not in tools_response["result"]
+    assert "nextCursor" not in resources_response["result"]
     return {
         "tool_names": sorted(
             tool["name"] for tool in tools_response["result"]["tools"]
