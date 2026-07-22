@@ -2,7 +2,7 @@
 
 This document provides guidance for developers who want to extend or modify the EPA CompTox MCP implementation.
 
-The released `v0.2.4` public server is an evidence-and-federation MCP. Predictive and orchestrator code still exists in-repo, but it is not part of the default public MCP surface unless explicitly registered and documented.
+The released `v0.2.5` public server is an evidence-and-federation MCP. Predictive and orchestrator code still exists in-repo, but it is not part of the default public MCP surface unless explicitly registered and documented.
 
 ## Project Structure
 

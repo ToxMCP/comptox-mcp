@@ -195,6 +195,31 @@ class TestChemicalResource(unittest.TestCase):
         self.assertEqual(result["searchModeUsed"], None)
         self.assertIn("not found", result["warnings"][0])
 
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_resolve_identifier_does_not_mask_authentication_failure(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.side_effect = CtxApiError(403, "Forbidden")
+
+        resource = ChemicalResource(api_key="invalid")
+        with self.assertRaises(CtxApiError) as raised:
+            resource.resolve_chemical_identifier(identifier="80-05-7")
+
+        self.assertEqual(raised.exception.status, 403)
+
+    @mock.patch("epacomp_tox.resources.chemical.ctx.Chemical")
+    def test_search_chemical_defaults_to_contains(
+        self, mock_client_cls: mock.MagicMock
+    ) -> None:
+        mock_client = mock_client_cls.return_value
+        mock_client.search.return_value = []
+
+        resource = ChemicalResource(api_key="fake")
+        resource.execute_tool("search_chemical", {"query": "Bisphenol A"})
+
+        mock_client.search.assert_called_once_with(by="contains", word="Bisphenol A")
+
 
 class TestExposureResource(unittest.TestCase):
     @mock.patch("epacomp_tox.resources.exposure.ctx.Exposure")

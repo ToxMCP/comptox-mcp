@@ -432,7 +432,7 @@ def test_ping_and_capability_negotiation():
         assert "method" not in call_response
         assert call_response["result"]["requestId"] == "nostream"
         assert call_response["result"]["structuredContent"]["echo"] == "no-stream"
-        metadata = call_response["result"]["structuredContent"]["metadata"]["session"]
+        metadata = call_response["result"]["_meta"]["session"]
         assert metadata["sessionId"] == session_id
         assert metadata["negotiatedCapabilities"]["tools"]["streams"] is False
 

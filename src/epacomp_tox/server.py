@@ -18,6 +18,13 @@ from epacomp_tox.settings import settings
 from epacomp_tox.tools.registry import ToolRegistry
 from epacomp_tox.validators import to_serializable
 
+COMPTOX_SOURCE_NAME = "EPA CompTox Chemicals Dashboard API"
+COMPTOX_SOURCE_URL = "https://comptox.epa.gov/dashboard/"
+COMPTOX_API_KEY_URL = (
+    "https://www.epa.gov/comptox-tools/"
+    "computational-toxicology-and-exposure-apis-about"
+)
+
 
 class MCPServer:
     """
@@ -284,46 +291,32 @@ class MCPServer:
             )
             structured = to_serializable(payload)
             metadata = self._format_metadata(resource.get_last_metadata())
+            provenance = self._format_metadata(resource.get_last_provenance())
             session_metadata = self._format_session_context(context)
             combined_metadata: Dict[str, Any] = {}
             if metadata:
                 combined_metadata.update(metadata)
+            if provenance:
+                combined_metadata["provenance"] = provenance
             if session_metadata:
                 combined_metadata["session"] = session_metadata
             result: Dict[str, Any] = {
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps(structured, indent=2, default=str),
+                        "text": self._render_tool_content(tool_name, structured),
                     }
                 ],
             }
-            if structured:
-                if isinstance(structured, dict):
-                    normalized_sc = dict(structured)
-                    normalized_sc.setdefault("data", dict(structured))
-                    result["structuredContent"] = normalized_sc
-                else:
-                    # Normalize lists/scalars into a consistent envelope so metadata can be attached.
-                    result["structuredContent"] = {"data": structured}
+            if isinstance(structured, dict):
+                # Object outputs must remain byte-for-byte compatible with their
+                # advertised outputSchema. Runtime metadata belongs in MCP _meta.
+                result["structuredContent"] = structured
+            else:
+                # ToolRegistry wraps non-object schemas in the same data envelope.
+                result["structuredContent"] = {"data": structured}
             if combined_metadata:
-                existing_sc = result.get("structuredContent")
-                if isinstance(existing_sc, dict):
-                    metadata_key = (
-                        "mcpMetadata" if "metadata" in existing_sc else "metadata"
-                    )
-                    existing_sc[metadata_key] = combined_metadata
-                    data_payload = existing_sc.get("data")
-                    if isinstance(data_payload, dict):
-                        data_metadata_key = (
-                            "mcpMetadata" if "metadata" in data_payload else "metadata"
-                        )
-                        data_payload[data_metadata_key] = combined_metadata
-                else:
-                    result["structuredContent"] = {
-                        "data": existing_sc,
-                        "metadata": combined_metadata,
-                    }
+                result["_meta"] = combined_metadata
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="success",
@@ -356,9 +349,8 @@ class MCPServer:
             metadata = self._format_metadata(resource.get_last_metadata())
             session_metadata = self._format_session_context(context)
             error_payload = {
-                "message": str(exc),
+                "code": self._ctx_error_code(exc),
                 "status": exc.status,
-                "detail": exc.detail,
                 "requestId": exc.request_id,
                 "retryAfter": exc.retry_after,
             }
@@ -368,8 +360,7 @@ class MCPServer:
                     merged.update(metadata)
                 if session_metadata:
                     merged["session"] = session_metadata
-                error_payload["metadata"] = merged
-            error_payload.setdefault("data", None)
+                error_payload["runtime"] = merged
             self._emit_audit_event(
                 tool_name=tool_name,
                 status="error",
@@ -387,11 +378,11 @@ class MCPServer:
                 "content": [
                     {
                         "type": "text",
-                        "text": f"Tool call failed: {exc}",
+                        "text": self._render_ctx_error(exc),
                         "annotations": {"audience": ["assistant"]},
                     }
                 ],
-                "structuredContent": error_payload,
+                "_meta": {"error": error_payload},
                 "isError": True,
             }
         except Exception as exc:
@@ -408,6 +399,75 @@ class MCPServer:
                 error=str(exc),
             )
             raise
+
+    @staticmethod
+    def _render_tool_content(tool_name: str, structured: Any) -> str:
+        if tool_name == "search_chemical" and isinstance(structured, list):
+            lines = [f"Found {len(structured)} chemical match(es).", ""]
+            for record in structured[:10]:
+                if not isinstance(record, dict):
+                    continue
+                name = record.get("preferredName") or "Unnamed chemical"
+                identifiers = [
+                    value
+                    for value in (record.get("dtxsid"), record.get("casrn"))
+                    if value
+                ]
+                suffix = f" ({'; '.join(identifiers)})" if identifiers else ""
+                lines.append(f"- {name}{suffix}")
+            if len(structured) > 10:
+                lines.append(f"- … {len(structured) - 10} additional match(es)")
+            lines.extend(["", f"Source: {COMPTOX_SOURCE_NAME} — {COMPTOX_SOURCE_URL}"])
+            return "\n".join(lines)
+
+        if tool_name == "resolve_chemical_identifier" and isinstance(structured, dict):
+            lines = [
+                f"Chemical resolution: {structured.get('status', 'unknown')}",
+                f"- Input: {structured.get('inputIdentifier', 'n/a')}",
+                f"- Preferred name: {structured.get('preferredName') or 'n/a'}",
+                f"- DTXSID: {structured.get('canonicalDtxsid') or 'n/a'}",
+                f"- CAS RN: {structured.get('casrn') or 'n/a'}",
+                f"- Candidates: {structured.get('candidateCount', 0)}",
+            ]
+            warnings = structured.get("warnings") or []
+            if warnings:
+                lines.append("- Warnings: " + "; ".join(str(item) for item in warnings))
+            lines.extend(["", f"Source: {COMPTOX_SOURCE_NAME} — {COMPTOX_SOURCE_URL}"])
+            return "\n".join(lines)
+
+        return json.dumps(structured, indent=2, default=str)
+
+    @staticmethod
+    def _ctx_error_code(exc: CtxApiError) -> str:
+        if exc.status in {401, 403}:
+            return "comptox_authentication_failed"
+        if exc.status == 429:
+            return "comptox_rate_limited"
+        if exc.status is None or (exc.status and exc.status >= 500):
+            return "comptox_upstream_unavailable"
+        return "comptox_request_failed"
+
+    @staticmethod
+    def _render_ctx_error(exc: CtxApiError) -> str:
+        if exc.status in {401, 403}:
+            return (
+                "EPA CompTox authentication failed. Set a valid CTX_API_KEY "
+                "(or EPA_COMPTOX_API_KEY), restart the server, and retry. "
+                f"API key guidance: {COMPTOX_API_KEY_URL}"
+            )
+        if exc.status == 429:
+            return (
+                "EPA CompTox rate limit reached. Wait briefly and retry the tool call."
+            )
+        if exc.status is None or (exc.status and exc.status >= 500):
+            return (
+                "EPA CompTox is temporarily unavailable. Verify /readyz and retry "
+                "after the upstream service recovers."
+            )
+        return (
+            f"EPA CompTox rejected the request (HTTP {exc.status}). "
+            "Check the identifier and tool arguments, then retry."
+        )
 
     def _emit_audit_event(
         self,
@@ -544,8 +604,13 @@ class MCPServer:
             "inputSchema": input_schema,
             "annotations": {
                 "resource": resource_name,
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
             },
         }
+        normalised["annotations"].update(tool.get("annotations") or {})
         if output_schema:
             normalised["outputSchema"] = output_schema
         return normalised

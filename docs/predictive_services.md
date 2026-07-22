@@ -1,6 +1,6 @@
 # Predictive Micro-Server Harness
 
-> Experimental/internal guide. The predictive service harness described here is not part of the default public MCP tool catalog released in `v0.2.4`.
+> Experimental/internal guide. The predictive service harness described here is not part of the default public MCP tool catalog released in `v0.2.5`.
 
 Phase 2 introduces a shared harness for the TEST, OPERA, and GenRA predictive services. The goal is to give all model micro-servers a consistent structure for request validation, applicability-domain enforcement, and response formatting.
 

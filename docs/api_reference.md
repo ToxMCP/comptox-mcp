@@ -208,13 +208,13 @@ The `ChemicalResource` class provides access to chemical structures, nomenclatur
 
 **Methods:**
 
-#### search_chemical(query, search_type)
+#### search_chemical(query, search_type='contains')
 
 Search for chemicals by name, CAS-RN, or other identifiers.
 
 **Parameters:**
 - `query` (str): Search term.
-- `search_type` (str): Type of search (`equals`, `starts-with`, `contains`).
+- `search_type` (str, optional): Type of search (`equals`, `starts-with`, `contains`); defaults to `contains`.
 
 **Returns:**
 - List of matching chemicals.

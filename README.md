@@ -79,6 +79,18 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
+## What's New In v0.2.5
+
+This reliability patch restores useful chemical output in strict MCP clients while keeping machine-readable results aligned with their advertised schemas.
+
+- `search_chemical` and `resolve_chemical_identifier` now return readable chemical names, identifiers, warnings, and an explicit EPA CompTox source in `content`.
+- `structuredContent` remains schema-valid; runtime, session, and upstream provenance now lives in MCP `_meta`.
+- `search_chemical` defaults `search_type` to `contains` when the client omits it.
+- Authentication failures are actionable errors and are no longer reported as missing chemicals.
+- The quickstart links directly to the official EPA API-key request instructions and includes a Bisphenol A demo.
+
+See the full release notes in [`docs/releases/v0.2.5_release_description.md`](docs/releases/v0.2.5_release_description.md).
+
 ## What's New In v0.2.4
 
 This patch release restores MCP tool discovery in clients that strictly validate paginated list responses, including Claude Code 2.1.214.
@@ -211,7 +223,7 @@ cp .env.example .env
 # set CTX_API_KEY in .env
 
 # 3) run
-uvicorn epacomp_tox.transport.websocket:app --host 0.0.0.0 --port 8000 --reload
+uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
 
 # 4) verify
 curl -s http://localhost:8000/healthz | jq .
@@ -227,10 +239,10 @@ git clone https://github.com/ToxMCP/comptox-mcp.git
 cd comptox-mcp
 pip install -e .
 cp .env.example .env
-uvicorn epacomp_tox.transport.websocket:app --reload
+uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
 ```
 
-> **Important:** The server needs a valid EPA CompTox API key. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` in `.env` before starting the transport.
+> **Important:** The server needs a valid EPA CompTox API key. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` in `.env` before starting the transport. EPA provides individual keys free of charge; follow the [official API instructions](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about) or contact `ccte_api@epa.gov`.
 
 With the server running, MCP clients can connect to `http://localhost:8000/mcp` (HTTP) or `ws://localhost:8000/mcp/ws` (WebSocket).
 
@@ -256,6 +268,17 @@ curl -s http://localhost:8000/healthz | jq .
 curl -s http://localhost:8000/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
+
+# live Bisphenol A demo (also validates the configured API key)
+curl -s http://localhost:8000/readyz | jq .
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_chemical","arguments":{"query":"Bisphenol A","search_type":"equals"}}}' \
+  | jq -r '.result.content[0].text'
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"resolve_chemical_identifier","arguments":{"identifier":"80-05-7"}}}' \
+  | jq -r '.result.content[0].text'
 
 # live interop smoke
 python scripts/mcp_interop_smoke.py --endpoint http://localhost:8000/mcp --json
@@ -323,7 +346,7 @@ The repository also contains predictive and orchestrator code under `src/epacomp
 ```bash
 # install and start the dual-transport server
 pip install -e .
-uvicorn epacomp_tox.transport.websocket:app --host 0.0.0.0 --port 8000 --reload
+uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
 ```
 
 The FastAPI app exposes both transports:
@@ -400,12 +423,15 @@ Each guide covers tool listing, sample calls, binary payload handling, and troub
 
 ## Output artifacts
 
-Every successful tool invocation returns structured payloads designed for agents:
+Every successful tool invocation returns payloads designed for both agents and people:
 
-- `content`: human-readable JSON wrapped as text for chat surfaces.
-- `structuredContent.data`: machine-readable results (lists, dicts, or arrays) for programmatic chaining.
-- `structuredContent.metadata`: when available, includes rate-limit information, validation metadata, and session metadata.
+- `content`: human-readable text for chat surfaces; chemical search and resolution include an explicit source line.
+- `structuredContent`: machine-readable object results that exactly match the advertised output schema.
+- `structuredContent.data`: the standard envelope used when a tool's native result is an array or scalar.
+- `_meta`: runtime-only upstream, provenance, and session information that does not alter the scientific result schema.
 - Default registered tools are retrieval and federation oriented; experimental predictive/orchestrator modules in this repository are not part of the canonical public surface yet.
+
+Tool annotations identify these public retrieval tools as read-only and idempotent. Approval persistence is controlled by the MCP client (for example Claude Desktop), not by the server.
 
 ---
 
@@ -461,6 +487,7 @@ Every successful tool invocation returns structured payloads designed for agents
 
 ## Roadmap
 
+- Completed: [`v0.2.5` release cleanup](docs/releases/v0.2.5_release_description.md) — schema-valid, readable chemical search and resolution responses.
 - Completed: [`v0.2.4` release cleanup](docs/releases/v0.2.4_release_description.md) — strict MCP pagination compatibility for HTTP and WebSocket discovery.
 - Completed: [`v0.2.3` release cleanup](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.
 - Completed: [`v0.2.2` release cleanup](docs/releases/v0.2.2_release_description.md)

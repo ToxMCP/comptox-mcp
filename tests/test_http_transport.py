@@ -204,6 +204,8 @@ def test_http_transport_initialize_and_list_and_call():
         assert any(tool["name"] == "echo" for tool in tools)
         first_tool = next(tool for tool in tools if tool["name"] == "echo")
         assert first_tool["annotations"]["resource"] == "echo"
+        assert first_tool["annotations"]["readOnlyHint"] is True
+        assert first_tool["annotations"]["destructiveHint"] is False
 
         resources_response = client.post(
             "/mcp",
@@ -319,8 +321,9 @@ def test_http_transport_serializes_nested_metadata_rate_limit() -> None:
         )
 
         assert response.status_code == 200
-        payload = response.json()["result"]["structuredContent"]
-        nested_rate_limit = payload["metadata"]["steps"]["echo:call"]["metadata"][
+        result = response.json()["result"]
+        assert result["structuredContent"] == {"echo": "hello"}
+        nested_rate_limit = result["_meta"]["steps"]["echo:call"]["metadata"][
             "rate_limit"
         ]
         assert nested_rate_limit == {
@@ -346,10 +349,12 @@ def test_http_transport_preserves_domain_metadata_when_attaching_runtime_metadat
         )
 
         assert response.status_code == 200
-        payload = response.json()["result"]["structuredContent"]
+        result = response.json()["result"]
+        payload = result["structuredContent"]
         assert payload["metadata"] == {"suiteRole": "evidence-federation"}
-        assert payload["mcpMetadata"]["resource"] == "echo"
-        nested_rate_limit = payload["mcpMetadata"]["steps"]["echo:call"]["metadata"][
+        assert "mcpMetadata" not in payload
+        assert result["_meta"]["resource"] == "echo"
+        nested_rate_limit = result["_meta"]["steps"]["echo:call"]["metadata"][
             "rate_limit"
         ]
         assert nested_rate_limit == {

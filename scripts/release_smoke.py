@@ -31,6 +31,7 @@ class SmokeSummary:
     healthz: Dict[str, Any]
     readyz: Dict[str, Any]
     manifest: Dict[str, Any]
+    search_bpa: Dict[str, Any]
     resolve_exact: Dict[str, Any]
     resolve_ambiguous: Dict[str, Any]
     resolve_not_found: Dict[str, Any]
@@ -223,6 +224,24 @@ def run_release_smoke(
     if manifest["server"]["toolCount"] != tool_count:
         raise ReleaseSmokeError("Manifest tool count does not match tools/list output.")
 
+    search_result = _rpc(
+        endpoint,
+        "tools/call",
+        {
+            "name": "search_chemical",
+            "arguments": {"query": "Bisphenol A", "search_type": "equals"},
+        },
+        request_id=5,
+    )
+    search_bpa = search_result["structuredContent"].get("data", [])
+    if not any(item.get("dtxsid") == "DTXSID7020182" for item in search_bpa):
+        raise ReleaseSmokeError("Bisphenol A search did not return DTXSID7020182.")
+    search_text = "\n".join(
+        block.get("text", "") for block in search_result.get("content", [])
+    )
+    if "Bisphenol A" not in search_text or "Source:" not in search_text:
+        raise ReleaseSmokeError("Bisphenol A search is not human-readable and sourced.")
+
     resolve_exact = _rpc(
         endpoint,
         "tools/call",
@@ -344,6 +363,11 @@ def run_release_smoke(
             "toolCount": manifest["server"]["toolCount"],
             "publicBoundary": manifest["publicBoundary"],
         },
+        search_bpa={
+            "matchCount": len(search_bpa),
+            "dtxsid": "DTXSID7020182",
+            "sourceVisible": True,
+        },
         resolve_exact={
             "status": resolve_exact["status"],
             "canonicalDtxsid": resolve_exact["canonicalDtxsid"],
@@ -419,6 +443,7 @@ def main() -> int:
         "healthz": summary.healthz,
         "readyz": summary.readyz,
         "manifest": summary.manifest,
+        "search_bpa": summary.search_bpa,
         "resolve_exact": summary.resolve_exact,
         "resolve_ambiguous": summary.resolve_ambiguous,
         "resolve_not_found": summary.resolve_not_found,
