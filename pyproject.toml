@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epacomp-tox-mcp"
-version = "0.2.5"
+version = "0.2.6"
 description = "Evidence federation MCP server for the EPA CompTox API"
 readme = "README.md"
 license = "Apache-2.0"
@@ -57,6 +57,19 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.data-files]
+"share/epacomp-tox-mcp/contracts/schemas/bioactivity" = ["docs/contracts/schemas/bioactivity/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/chemical" = ["docs/contracts/schemas/chemical/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/cheminformatics" = ["docs/contracts/schemas/cheminformatics/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/common" = ["docs/contracts/schemas/common/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/exposure" = ["docs/contracts/schemas/exposure/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/hazard" = ["docs/contracts/schemas/hazard/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/manifest" = ["docs/contracts/schemas/manifest/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/metadata" = ["docs/contracts/schemas/metadata/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/predictive" = ["docs/contracts/schemas/predictive/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/risk" = ["docs/contracts/schemas/risk/*.json"]
+"share/epacomp-tox-mcp/contracts/schemas/workflow" = ["docs/contracts/schemas/workflow/*.json"]
 
 [tool.black]
 line-length = 88

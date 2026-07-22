@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import sysconfig
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
@@ -9,16 +10,32 @@ from typing import Any, Dict
 from jsonschema import Draft202012Validator
 
 
+def _repository_schema_root() -> Path:
+    return Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
+
+
+def _installed_schema_root() -> Path:
+    return (
+        Path(sysconfig.get_path("data"))
+        / "share"
+        / "epacomp-tox-mcp"
+        / "contracts"
+        / "schemas"
+    )
+
+
 def _default_schema_root() -> Path:
     override = os.getenv("EPACOMP_TOX_CONTRACT_SCHEMA_ROOT")
     if override:
         return Path(override)
 
-    repo_relative = (
-        Path(__file__).resolve().parents[3] / "docs" / "contracts" / "schemas"
-    )
+    repo_relative = _repository_schema_root()
     if repo_relative.exists():
         return repo_relative
+
+    installed = _installed_schema_root()
+    if installed.exists():
+        return installed
 
     return Path.cwd() / "docs" / "contracts" / "schemas"
 
