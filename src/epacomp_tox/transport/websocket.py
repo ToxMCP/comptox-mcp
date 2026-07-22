@@ -806,6 +806,7 @@ class MCPWebSocketSession:
                         "structuredContent": result.get("structuredContent"),
                         "content": result.get("content"),
                         "isError": result.get("isError", False),
+                        "_meta": result.get("_meta"),
                     },
                 },
             )

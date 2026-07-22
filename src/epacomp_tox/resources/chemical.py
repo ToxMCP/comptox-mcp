@@ -78,9 +78,10 @@ class ChemicalResource(BaseResource):
                             "type": "string",
                             "description": "Search type: equals, starts-with, or contains",
                             "enum": ["equals", "starts-with", "contains"],
+                            "default": "contains",
                         },
                     },
-                    "required": ["query", "search_type"],
+                    "required": ["query"],
                 },
             },
             {
@@ -377,7 +378,7 @@ class ChemicalResource(BaseResource):
         if tool_name == "search_chemical":
             return self.search_chemical(
                 query=parameters["query"],
-                search_type=parameters["search_type"],
+                search_type=parameters.get("search_type", "contains"),
             )
         if tool_name == "batch_search_chemical":
             return self.batch_search_chemical(
@@ -430,7 +431,9 @@ class ChemicalResource(BaseResource):
             )
         raise ValueError(f"Unknown tool: {tool_name}")
 
-    def search_chemical(self, query: str, search_type: str) -> List[Dict[str, Any]]:
+    def search_chemical(
+        self, query: str, search_type: str = "contains"
+    ) -> List[Dict[str, Any]]:
         """Search for chemicals by name, CAS-RN, or other identifiers."""
         result = self._with_retry(
             lambda: self.client.search(by=search_type, word=query)
@@ -476,6 +479,8 @@ class ChemicalResource(BaseResource):
                     search_type=mode,
                 )
             except CtxApiError as exc:
+                if exc.status in {401, 403}:
+                    raise
                 if exc.status and 400 <= exc.status < 500:
                     warnings.append(
                         "Upstream search rejected the identifier; treating it as not found."

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-07-22
+
+- kept `structuredContent` schema-valid and moved runtime/session provenance to MCP `_meta`
+- restored readable, sourced output for `search_chemical` and `resolve_chemical_identifier` in clients that primarily render text content
+- defaulted `search_chemical.search_type` to `contains` for simpler agent calls
+- stopped translating CompTox 401/403 authentication failures into false `not_found` resolution results
+- documented the official EPA API-key request path and added a live Bisphenol A search/resolution release gate
+- updated local quickstarts to bind to `127.0.0.1` without development reload processes
+
 ## [0.2.4] - 2026-07-20
 
 - fixed MCP discovery responses so `nextCursor` is omitted when pagination is complete instead of being serialized as invalid JSON `null`

@@ -1,6 +1,6 @@
 # Documentation Refresh Content Plan (Phase 2)
 
-> Historical planning artifact. The `v0.2.4` release preserves the public server boundary around evidence federation and interop; use this document as background context, not as the current public contract.
+> Historical planning artifact. The `v0.2.5` release preserves the public server boundary around evidence federation and interop; use this document as background context, not as the current public contract.
 
 ## Goals
 - Update public and internal documentation to reflect MCP Phase 2 architecture, guardrails, observability, and developer tooling.

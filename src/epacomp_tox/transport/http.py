@@ -1086,47 +1086,6 @@ async def _handle_tools_call(
             raise LookupError(f"Tool not found: {tool_name}") from exc
         raise
 
-    # --- Issue 1: Sanitize the response content to prevent client-side parsing issues ---
-    # Intercept the result and simplify the 'content' field if it contains oversized JSON dumps
-    if (
-        isinstance(result, dict)
-        and "structuredContent" in result
-        and "content" in result
-    ):
-        structured_data = result.get("structuredContent")
-        summary = None
-
-        # Generate a simple summary based on the structured data
-        if isinstance(structured_data, list):
-            summary = f"Successfully retrieved {len(structured_data)} records."
-        elif isinstance(structured_data, dict):
-            summary = "Successfully retrieved structured data."
-
-        if summary:
-            # Heuristic check: If the original content seems to be a raw JSON dump, replace it
-            original_content = result.get("content")
-            is_likely_json_dump = False
-
-            if (
-                isinstance(original_content, list)
-                and len(original_content) > 0
-                and isinstance(original_content[0], dict)
-                and original_content[0].get("type") == "text"
-            ):
-                text_content = original_content[0].get("text", "")
-                if isinstance(text_content, str):
-                    stripped_text = text_content.strip()
-                    # Check if it starts like JSON or is excessively long (e.g., > 512 chars)
-                    if stripped_text.startswith(("[", "{")) or len(stripped_text) > 512:
-                        is_likely_json_dump = True
-
-            if is_likely_json_dump:
-                logger.debug(
-                    f"Sanitizing large/JSON 'content' field for tool: {tool_name}"
-                )
-                result["content"] = [{"type": "text", "text": summary}]
-    # --- END Issue 1 modification ---
-
     # Ensure content is serializable JSON
     try:
         json.dumps(result)
