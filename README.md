@@ -8,6 +8,9 @@
 >
 > **Contact:** Use [GitHub Issues](https://github.com/ToxMCP/comptox-mcp/issues) for bugs, usage questions, and feature requests; use the [in4r.ai contact form](https://www.in4r.ai/#contact) for private general inquiries; and report vulnerabilities through [GitHub's private security advisory channel](https://github.com/ToxMCP/comptox-mcp/security/advisories/new).
 
+> [!IMPORTANT]
+> **An EPA CompTox API key is required for live chemical data.** [Request a key using EPA's official instructions](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about), or email [ccte_api@epa.gov](mailto:ccte_api@epa.gov) for API-key help. After cloning the repository, put the key in `.env` as `CTX_API_KEY`; never commit or share it.
+
 ## Architecture
 
 ```mermaid
@@ -89,59 +92,7 @@ This packaging hotfix makes the release wheel self-contained.
 
 See the full release notes in [`docs/releases/v0.2.6_release_description.md`](docs/releases/v0.2.6_release_description.md).
 
-## What's New In v0.2.5
-
-This reliability patch restores useful chemical output in strict MCP clients while keeping machine-readable results aligned with their advertised schemas.
-
-- `search_chemical` and `resolve_chemical_identifier` now return readable chemical names, identifiers, warnings, and an explicit EPA CompTox source in `content`.
-- `structuredContent` remains schema-valid; runtime, session, and upstream provenance now lives in MCP `_meta`.
-- `search_chemical` defaults `search_type` to `contains` when the client omits it.
-- Authentication failures are actionable errors and are no longer reported as missing chemicals.
-- The quickstart links directly to the official EPA API-key request instructions and includes a Bisphenol A demo.
-
-See the full release notes in [`docs/releases/v0.2.5_release_description.md`](docs/releases/v0.2.5_release_description.md).
-
-## What's New In v0.2.4
-
-This patch release restores MCP tool discovery in clients that strictly validate paginated list responses, including Claude Code 2.1.214.
-
-- `tools/list` and `resources/list` now omit `nextCursor` when no additional page exists, as required by the MCP schema.
-- HTTP and WebSocket transports use the same pagination encoding.
-- Regression tests cover both terminal pages and string-valued continuation cursors.
-
-See the full release notes in [`docs/releases/v0.2.4_release_description.md`](docs/releases/v0.2.4_release_description.md).
-
-## What's New In v0.2.3
-
-This release focuses on **audit hardening, privacy controls, provenance capture, and workflow governance** in response to the ToxMCP internal audit review. No public MCP boundary changes were made.
-
-### Security & Privacy
-- **Deterministic audit hashing**: every audit event emitted to a registered sink now carries tamper-evident metadata (`contentHash`, `previousHash`, `sequence`, `timestamp`) and can be verified with `audit.verify_event_hash()`.
-- **Sensitive identifier scrubbing**: audit logs no longer record raw DTXSID, CASRN, SMILES, InChI, or InChIKey values in plaintext. Identifiers are hashed with a deterministic salt so the same value maps to the same hash across events.
-- **Privacy-aware parameter logging**: `MCPServer._scrub_params_for_audit()` inspects tool parameters before audit emission and automatically hashes chemical identifiers and identifier-like query strings.
-
-### Provenance & Traceability
-- **Response hash capture**: `BaseResource` now records a SHA-256 hash of every serialized upstream response alongside `retrieved_at` and `retry_count` via `get_last_provenance()`.
-- **Bundle chain integrity**: `AuditBundleStore.save()` links each persisted bundle to the previous bundle hash. `verify_chain()` detects tampering, checksum mismatches, or missing files.
-- **Distributed trace propagation**: HTTP transport extracts or generates a W3C-style `traceId` from the `traceparent` header and passes it through tool execution audit events.
-- **Runtime provenance envelope**: every orchestrator bundle now includes a `provenance` section with `serverVersion`, `runtimeEnvironment`, `traceId`, `createdAt`, and `upstreamProvenance`.
-
-### Workflow Governance
-- **AD hard-gating by default**: `GenRAOrchestrator.run_workflow()` now defaults `require_ad_clearance` to `True` when predictive tasks are present. Callers who explicitly pass `requireAdClearance=False` remain unaffected.
-- **Clearer denied vs error semantics**: hard applicability-domain failures now set bundle `status` to `"denied"`, while generic predictive errors continue to map to `"error"`.
-- **Advisory review checkpoints**: every bundle now includes `reviewCheckpoints` metadata (`chemical_id_confirmation`, `ad_assessment`, `final_report`) to seed future pause/approve UX without breaking synchronous callers.
-
-### Testing
-- Added `test_audit_hardening.py`, `test_audit_privacy.py`, `test_provenance_capture.py`, `test_trace_propagation.py`, `test_bundle_provenance.py`, and `test_orchestrator_ad_gating.py` to cover the new controls end-to-end.
-
-## What's New In v0.2.2
-
-- Published a clean `v0.2.2` patch-release layer over the already-shipped `0.2.1` public-surface hardening work, without changing the default MCP boundary.
-- Aligned README, architecture notes, changelog, and release metadata around the current patch version so downstream users see one coherent release story.
-- Kept the protected-branch release path CI-clean by removing broken docs-link assumptions and normalizing formatting/import ordering across the touched Python and test files.
-- Left the public server role unchanged: CompTox MCP remains an evidence-federation and screening-prioritization surface, while predictive and orchestrator modules stay experimental.
-
-See the full release notes in [`docs/releases/v0.2.2_release_description.md`](docs/releases/v0.2.2_release_description.md).
+For earlier changes, see the [`CHANGELOG.md`](CHANGELOG.md), [GitHub releases](https://github.com/ToxMCP/comptox-mcp/releases), or the versioned notes in [`docs/releases/`](docs/releases/).
 
 ## Published Schemas
 
@@ -199,60 +150,64 @@ The EPA CompTox MCP server wraps those workflows in a **secure, programmable int
 ## Table of contents
 
 1. [Architecture](#architecture)
-2. [Published schemas](#published-schemas)
-3. [Quick start](#quick-start)
-4. [Release verification](#release-verification)
-5. [Configuration](#configuration)
-6. [Tool catalog](#tool-catalog)
-7. [Running the server](#running-the-server)
-8. [Integrating with coding agents](#integrating-with-coding-agents)
-9. [Output artifacts](#output-artifacts)
-10. [Security checklist](#security-checklist)
-11. [Current limitations](#current-limitations)
-12. [Development notes](#development-notes)
-13. [Contributing](#contributing)
-14. [Security policy](#security-policy)
-15. [Support](#support)
-16. [Code of conduct](#code-of-conduct)
-17. [Citation](#citation)
-18. [Roadmap](#roadmap)
-19. [License](#license)
+2. [What's new](#whats-new-in-v026)
+3. [Published schemas](#published-schemas)
+4. [Get an EPA CompTox API key](#get-an-epa-comptox-api-key-required)
+5. [Quick start](#quick-start)
+6. [Release verification](#release-verification)
+7. [Configuration](#configuration)
+8. [Tool catalog](#tool-catalog)
+9. [Running the server](#running-the-server)
+10. [Integrating with coding agents](#integrating-with-coding-agents)
+11. [Output artifacts](#output-artifacts)
+12. [Security checklist](#security-checklist)
+13. [Current limitations](#current-limitations)
+14. [Development notes](#development-notes)
+15. [Contributing](#contributing)
+16. [Security policy](#security-policy)
+17. [Support](#support)
+18. [Code of conduct](#code-of-conduct)
+19. [Citation](#citation)
+20. [Roadmap](#roadmap)
+21. [License](#license)
 
 ---
 
-## Quickstart TL;DR
+## Get an EPA CompTox API key (required)
 
-```bash
-# 1) install
-git clone https://github.com/ToxMCP/comptox-mcp.git
-cd comptox-mcp
-pip install -e .
+The server can start without a key, but its live chemical tools cannot retrieve EPA data until one is configured.
 
-# 2) configure
-cp .env.example .env
-# set CTX_API_KEY in .env
+1. [Request an API key from EPA](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about). EPA provides individual keys free of charge.
+2. For help with the request, email [ccte_api@epa.gov](mailto:ccte_api@epa.gov).
+3. After cloning this repository, copy `.env.example` to `.env` and replace `your_ctx_api_key_here` with your key:
 
-# 3) run
-uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
+   ```dotenv
+   CTX_API_KEY="your_key_from_epa"
+   ```
 
-# 4) verify
-curl -s http://localhost:8000/healthz | jq .
-curl -s http://localhost:8000/mcp \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
-```
+Keep `.env` private. The readiness check in the quick start confirms that the configured key can authenticate with EPA.
 
 ## Quick start
 
 ```bash
+# 1) Install
 git clone https://github.com/ToxMCP/comptox-mcp.git
 cd comptox-mcp
 pip install -e .
-cp .env.example .env
-uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
-```
 
-> **Important:** The server needs a valid EPA CompTox API key. Set `CTX_API_KEY` (preferred) or `EPA_COMPTOX_API_KEY` in `.env` before starting the transport. EPA provides individual keys free of charge; follow the [official API instructions](https://www.epa.gov/comptox-tools/computational-toxicology-and-exposure-apis-about) or contact `ccte_api@epa.gov`.
+# 2) Configure the API key requested above
+cp .env.example .env
+# Open .env and replace your_ctx_api_key_here with your key
+
+# 3) Run
+uvicorn epacomp_tox.transport.websocket:app --host 127.0.0.1 --port 8000
+
+# 4) Verify authenticated EPA readiness, then list MCP tools
+curl -s http://localhost:8000/readyz | jq .
+curl -s http://localhost:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | jq '.result.tools | length'
+```
 
 With the server running, MCP clients can connect to `http://localhost:8000/mcp` (HTTP) or `ws://localhost:8000/mcp/ws` (WebSocket).
 
