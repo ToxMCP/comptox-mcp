@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-07-22
+
+- packaged all MCP response schemas in wheel installations instead of relying on a source checkout's `docs/` tree
+- added an installed-schema fallback that follows Python's active installation data path
+- added regression coverage for installed schema discovery and complete namespace packaging
+
 ## [0.2.5] - 2026-07-22
 
 - kept `structuredContent` schema-valid and moved runtime/session provenance to MCP `_meta`

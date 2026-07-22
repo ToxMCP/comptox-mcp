@@ -79,6 +79,16 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
+## What's New In v0.2.6
+
+This packaging hotfix makes the release wheel self-contained.
+
+- All MCP response schemas now ship with the wheel under the active Python installation's data directory.
+- Contract loading now checks the installed schema bundle when the server is launched outside a source checkout.
+- Release verification now includes starting the server and calling MCP discovery from a clean wheel-only environment.
+
+See the full release notes in [`docs/releases/v0.2.6_release_description.md`](docs/releases/v0.2.6_release_description.md).
+
 ## What's New In v0.2.5
 
 This reliability patch restores useful chemical output in strict MCP clients while keeping machine-readable results aligned with their advertised schemas.
@@ -487,6 +497,7 @@ Tool annotations identify these public retrieval tools as read-only and idempote
 
 ## Roadmap
 
+- Completed: [`v0.2.6` release cleanup](docs/releases/v0.2.6_release_description.md) — self-contained wheel contract schemas and standalone startup verification.
 - Completed: [`v0.2.5` release cleanup](docs/releases/v0.2.5_release_description.md) — schema-valid, readable chemical search and resolution responses.
 - Completed: [`v0.2.4` release cleanup](docs/releases/v0.2.4_release_description.md) — strict MCP pagination compatibility for HTTP and WebSocket discovery.
 - Completed: [`v0.2.3` release cleanup](docs/releases/v0.2.3_release_description.md) — audit hardening, privacy controls, provenance capture, and workflow governance.

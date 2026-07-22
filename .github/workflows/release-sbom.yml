@@ -41,6 +41,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install dist/*.whl
 
+      - name: Verify standalone wheel runtime
+        working-directory: /tmp
+        run: |
+          "$GITHUB_WORKSPACE/.sbom-venv/bin/python" -c 'from epacomp_tox.server import MCPServer; server = MCPServer(api_key="wheel-contract-test"); assert len(server.get_tools()) == 85'
+
       - name: Generate CycloneDX SBOM
         run: |
           mkdir -p artifacts

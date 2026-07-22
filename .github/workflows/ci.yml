@@ -7,6 +7,32 @@ on:
     branches: [main]
 
 jobs:
+  wheel-contract:
+    name: Standalone Wheel Contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Build and install wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build==1.4.0
+          python -m build --wheel
+          python -m venv .wheel-venv
+          .wheel-venv/bin/python -m pip install dist/*.whl
+
+      - name: Verify standalone initialization outside the checkout
+        working-directory: /tmp
+        run: |
+          "$GITHUB_WORKSPACE/.wheel-venv/bin/python" -c 'from epacomp_tox.server import MCPServer; server = MCPServer(api_key="wheel-contract-test"); assert len(server.get_tools()) == 85'
+
   test:
     name: Tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest

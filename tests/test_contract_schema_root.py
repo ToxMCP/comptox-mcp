@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 
@@ -46,3 +47,33 @@ def test_contract_schema_root_env_override(monkeypatch, tmp_path: Path) -> None:
         }
     finally:
         monkeypatch.delenv("EPACOMP_TOX_CONTRACT_SCHEMA_ROOT", raising=False)
+
+
+def test_installed_contract_schema_root_is_used_outside_checkout(
+    monkeypatch, tmp_path: Path
+) -> None:
+    contracts = load_contracts_module()
+    repository_root = tmp_path / "missing-repository-schemas"
+    installed_root = tmp_path / "installed-schemas"
+    installed_root.mkdir()
+
+    monkeypatch.setattr(contracts, "_repository_schema_root", lambda: repository_root)
+    monkeypatch.setattr(contracts, "_installed_schema_root", lambda: installed_root)
+
+    assert contracts._default_schema_root() == installed_root
+
+
+def test_distribution_data_files_cover_every_contract_namespace() -> None:
+    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+    packaged_namespaces = set(
+        re.findall(
+            r'^"share/epacomp-tox-mcp/contracts/schemas/([^"/]+)"\s*=',
+            pyproject,
+            re.MULTILINE,
+        )
+    )
+    schema_namespaces = {
+        path.name for path in Path("docs/contracts/schemas").iterdir() if path.is_dir()
+    }
+
+    assert packaged_namespaces == schema_namespaces
