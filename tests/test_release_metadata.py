@@ -61,10 +61,28 @@ def test_server_version_matches_project_metadata() -> None:
     assert MCPServer._resolve_version() == _project_version()
 
 
-def test_readme_whats_new_section_matches_project_version() -> None:
+def test_readme_has_one_whats_new_section_for_current_version() -> None:
     version = _project_version()
     readme = _read_text(README_PATH)
-    assert f"## What's New In v{version}" in readme
+    headings = re.findall(r"^## What's New In v[^\n]+$", readme, re.MULTILINE)
+    assert headings == [f"## What's New In v{version}"]
+
+
+def test_readme_makes_api_key_onboarding_actionable() -> None:
+    readme = _read_text(README_PATH)
+    prerequisite = "## Get an EPA CompTox API key (required)"
+    quick_start = "## Quick start"
+    official_instructions = (
+        "https://www.epa.gov/comptox-tools/"
+        "computational-toxicology-and-exposure-apis-about"
+    )
+
+    assert prerequisite in readme
+    assert readme.index(prerequisite) < readme.index(quick_start)
+    assert official_instructions in readme
+    assert "[ccte_api@epa.gov](mailto:ccte_api@epa.gov)" in readme
+    assert 'CTX_API_KEY="your_key_from_epa"' in readme
+    assert "http://localhost:8000/readyz" in readme
 
 
 def test_changelog_has_unreleased_section_and_current_release_entry() -> None:
