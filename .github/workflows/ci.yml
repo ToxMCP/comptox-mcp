@@ -31,7 +31,7 @@ jobs:
       - name: Verify standalone initialization outside the checkout
         working-directory: /tmp
         run: |
-          "$GITHUB_WORKSPACE/.wheel-venv/bin/python" -c 'from epacomp_tox.server import MCPServer; server = MCPServer(); assert len(server.get_tools()) == 85'
+          "$GITHUB_WORKSPACE/.wheel-venv/bin/python" -c 'from epacomp_tox.server import MCPServer; server = MCPServer(api_key="wheel-contract-test"); assert len(server.get_tools()) == 85'
 
   test:
     name: Tests (${{ matrix.python-version }})
