@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 
@@ -63,11 +64,14 @@ def test_installed_contract_schema_root_is_used_outside_checkout(
 
 
 def test_distribution_data_files_cover_every_contract_namespace() -> None:
-    import tomllib
-
-    project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-    configured = project["tool"]["setuptools"]["data-files"]
-    packaged_namespaces = {Path(destination).name for destination in configured}
+    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+    packaged_namespaces = set(
+        re.findall(
+            r'^"share/epacomp-tox-mcp/contracts/schemas/([^"/]+)"\s*=',
+            pyproject,
+            re.MULTILINE,
+        )
+    )
     schema_namespaces = {
         path.name for path in Path("docs/contracts/schemas").iterdir() if path.is_dir()
     }
