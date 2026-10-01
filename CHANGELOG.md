@@ -4,6 +4,8 @@
 
 ## [0.2.7] - 2026-10-01
 
+- add a recurring, manual, PR and main audit of the complete committed runtime and development dependency graph on Python 3.10 and 3.12
+
 - require AnyIO 4.14.2 or newer and refresh the committed lock to 4.15.1
 - update the scientific-invariants CI runtime from Node.js 20 to 22
 - populate standalone-wheel contract manifests from installed response and portable schema bundles, including packaged portable examples
