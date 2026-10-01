@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epacomp-tox-mcp"
-version = "0.2.6"
+version = "0.2.7"
 description = "Evidence federation MCP server for the EPA CompTox API"
 readme = "README.md"
 license = "Apache-2.0"
@@ -25,6 +25,7 @@ authors = [
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "anyio>=4.14.2,<5.0.0",
     "fastapi>=0.137.2,<0.138",
     "uvicorn[standard]>=0.49,<0.50",
     "websockets>=14,<17",
@@ -70,6 +71,8 @@ where = ["src"]
 "share/epacomp-tox-mcp/contracts/schemas/predictive" = ["docs/contracts/schemas/predictive/*.json"]
 "share/epacomp-tox-mcp/contracts/schemas/risk" = ["docs/contracts/schemas/risk/*.json"]
 "share/epacomp-tox-mcp/contracts/schemas/workflow" = ["docs/contracts/schemas/workflow/*.json"]
+"share/epacomp-tox-mcp/portable/schemas" = ["schemas/*.json"]
+"share/epacomp-tox-mcp/portable/schemas/examples" = ["schemas/examples/*.json"]
 
 [tool.black]
 line-length = 88

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from epacomp_tox.contracts import validate_payload
+from epacomp_tox.resources import manifest
 from epacomp_tox.server import MCPServer
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -68,3 +70,44 @@ def test_contract_manifest_tracks_schema_files_and_examples() -> None:
             },
         }
     ]
+
+
+def test_manifest_inventories_installed_schema_bundles_without_a_checkout(
+    monkeypatch, tmp_path: Path
+) -> None:
+    installed_data = tmp_path / "installed-data"
+    package_data = installed_data / "share" / "epacomp-tox-mcp"
+    responses = package_data / "contracts" / "schemas"
+    portable = package_data / "portable" / "schemas"
+    shutil.copytree(ROOT_DIR / "docs" / "contracts" / "schemas", responses)
+    shutil.copytree(ROOT_DIR / "schemas", portable)
+    missing_source = tmp_path / "missing-source" / "src" / "epacomp_tox" / "resources"
+    monkeypatch.setattr(manifest, "__file__", str(missing_source / "manifest.py"))
+    monkeypatch.setattr(manifest, "SCHEMA_ROOT", responses)
+    monkeypatch.setattr(
+        manifest.sysconfig, "get_path", lambda _name: str(installed_data)
+    )
+
+    server = MCPServer(api_key="dummy", validate_health=False)
+    result = server.execute_tool("get_contract_manifest", {})
+
+    assert len(result["responseSchemas"]) == len(list(responses.glob("*/*.json"))) > 0
+    assert (
+        len(result["portableObjectSchemas"]) == len(list(portable.glob("*.json"))) > 0
+    )
+    # Seven evidence objects have examples; the existing model-card schema does not.
+    assert sum("exampleFile" in item for item in result["portableObjectSchemas"]) == 7
+    assert all(
+        item["path"].startswith("docs/contracts/schemas/")
+        for item in result["responseSchemas"]
+    )
+    assert all(
+        item["exampleFile"].startswith("schemas/examples/")
+        for item in result["portableObjectSchemas"]
+        if "exampleFile" in item
+    )
+    validate_payload(
+        result,
+        namespace="manifest",
+        name="get_contract_manifest.response.schema",
+    )

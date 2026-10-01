@@ -31,7 +31,17 @@ jobs:
       - name: Verify standalone initialization outside the checkout
         working-directory: /tmp
         run: |
-          "$GITHUB_WORKSPACE/.wheel-venv/bin/python" -c 'from epacomp_tox.server import MCPServer; server = MCPServer(api_key="wheel-contract-test"); assert len(server.get_tools()) == 85'
+          "$GITHUB_WORKSPACE/.wheel-venv/bin/python" - <<'PY'
+          from epacomp_tox.contracts import SCHEMA_ROOT
+          from epacomp_tox.server import MCPServer
+
+          server = MCPServer(api_key="wheel-contract-test")
+          assert len(server.get_tools()) == 85
+          manifest = server.execute_tool("get_contract_manifest", {})
+          assert len(manifest["responseSchemas"]) == len(list(SCHEMA_ROOT.glob("*/*.json"))) > 0
+          assert len(manifest["portableObjectSchemas"]) == 8
+          assert sum("exampleFile" in item for item in manifest["portableObjectSchemas"]) == 7
+          PY
 
   test:
     name: Tests (${{ matrix.python-version }})
@@ -85,7 +95,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0

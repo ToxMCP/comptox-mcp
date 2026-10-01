@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import sysconfig
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-from epacomp_tox.contracts import schema_ref
+from epacomp_tox.contracts import SCHEMA_ROOT, schema_ref
 
 from .base import BaseResource
 
@@ -24,6 +25,20 @@ class ContractManifestResource(BaseResource):
         super().__init__(api_key)
         self._server_getter = server_getter
         self._repo_root = repo_root or Path(__file__).resolve().parents[3]
+        self._response_schema_root = (
+            self._repo_root / "docs" / "contracts" / "schemas"
+            if repo_root is not None
+            else SCHEMA_ROOT
+        )
+        self._portable_schema_root = self._repo_root / "schemas"
+        if repo_root is None and not self._portable_schema_root.exists():
+            self._portable_schema_root = (
+                Path(sysconfig.get_path("data"))
+                / "share"
+                / "epacomp-tox-mcp"
+                / "portable"
+                / "schemas"
+            )
 
     @property
     def name(self) -> str:
@@ -167,7 +182,7 @@ class ContractManifestResource(BaseResource):
 
     def _portable_schema_entries(self) -> List[Dict[str, Any]]:
         entries: List[Dict[str, Any]] = []
-        schemas_dir = self._repo_root / "schemas"
+        schemas_dir = self._portable_schema_root
         for path in sorted(schemas_dir.glob("*.json")):
             if path.name.startswith("."):
                 continue
@@ -187,13 +202,13 @@ class ContractManifestResource(BaseResource):
 
     def _response_schema_entries(self) -> List[Dict[str, Any]]:
         entries: List[Dict[str, Any]] = []
-        schemas_root = self._repo_root / "docs" / "contracts" / "schemas"
+        schemas_root = self._response_schema_root
         for path in sorted(schemas_root.glob("*/*.json")):
             entries.append(
                 {
                     "namespace": path.parent.name,
                     "file": path.name,
-                    "path": str(path.relative_to(self._repo_root)),
+                    "path": f"docs/contracts/schemas/{path.parent.name}/{path.name}",
                 }
             )
         return entries
@@ -216,9 +231,9 @@ class ContractManifestResource(BaseResource):
 
     def _portable_example_for(self, schema_file: str) -> Optional[str]:
         stem = schema_file.replace(".v1.json", "")
-        candidate = self._repo_root / "schemas" / "examples" / f"{stem}.example.json"
+        candidate = self._portable_schema_root / "examples" / f"{stem}.example.json"
         if candidate.exists():
-            return str(candidate.relative_to(self._repo_root))
+            return f"schemas/examples/{candidate.name}"
         return None
 
     @staticmethod
