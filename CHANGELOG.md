@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-10-01
+
+- require AnyIO 4.14.2 or newer and refresh the committed lock to 4.15.1
+- update the scientific-invariants CI runtime from Node.js 20 to 22
+- populate standalone-wheel contract manifests from installed response and portable schema bundles, including packaged portable examples
+- add regression coverage and a wheel CI check for installed schema inventories
+- align the README, current public boundary notices, and release description with v0.2.7
+- correct the README Python badge to the supported 3.10 minimum
+
 ## [0.2.6] - 2026-07-22
 
 - packaged all MCP response schemas in wheel installations instead of relying on a source checkout's `docs/` tree

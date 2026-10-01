@@ -1,4 +1,4 @@
-# EPA CompTox MCP Server [![CI](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml) [![DOI](https://img.shields.io/badge/DOI-10.64898%2F2026.02.06.703989-blue)](https://doi.org/10.64898/2026.02.06.703989) [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE) [![Release](https://img.shields.io/github/v/release/ToxMCP/comptox-mcp?sort=semver)](https://github.com/ToxMCP/comptox-mcp/releases) [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+# EPA CompTox MCP Server [![CI](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ToxMCP/comptox-mcp/actions/workflows/ci.yml) [![DOI](https://img.shields.io/badge/DOI-10.64898%2F2026.02.06.703989-blue)](https://doi.org/10.64898/2026.02.06.703989) [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE) [![Release](https://img.shields.io/github/v/release/ToxMCP/comptox-mcp?sort=semver)](https://github.com/ToxMCP/comptox-mcp/releases) [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
 > Part of **ToxMCP** Suite -> https://github.com/ToxMCP/toxmcp
 >
@@ -82,15 +82,16 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
-## What's New In v0.2.6
+## What's New In v0.2.7
 
-This packaging hotfix makes the release wheel self-contained.
+This maintenance patch refreshes the transport dependency protections and validation toolchain.
 
-- All MCP response schemas now ship with the wheel under the active Python installation's data directory.
-- Contract loading now checks the installed schema bundle when the server is launched outside a source checkout.
-- Release verification now includes starting the server and calling MCP discovery from a clean wheel-only environment.
+- Require AnyIO 4.14.2 or newer, with the committed lock refreshed to 4.15.1.
+- Run the scientific-invariants CI gate with Node.js 22.
+- Discover response and portable schema inventories, including examples, from an installed wheel outside a source checkout.
+- Align the package, current release notes, and public boundary documentation for v0.2.7.
 
-See the full release notes in [`docs/releases/v0.2.6_release_description.md`](docs/releases/v0.2.6_release_description.md).
+See the full release notes in [`docs/releases/v0.2.7_release_description.md`](docs/releases/v0.2.7_release_description.md).
 
 For earlier changes, see the [`CHANGELOG.md`](CHANGELOG.md), [GitHub releases](https://github.com/ToxMCP/comptox-mcp/releases), or the versioned notes in [`docs/releases/`](docs/releases/).
 
@@ -452,6 +453,7 @@ Tool annotations identify these public retrieval tools as read-only and idempote
 
 ## Roadmap
 
+- Prepared: [`v0.2.7` release cleanup](docs/releases/v0.2.7_release_description.md) — maintained transport dependencies and scientific CI runtime.
 - Completed: [`v0.2.6` release cleanup](docs/releases/v0.2.6_release_description.md) — self-contained wheel contract schemas and standalone startup verification.
 - Completed: [`v0.2.5` release cleanup](docs/releases/v0.2.5_release_description.md) — schema-valid, readable chemical search and resolution responses.
 - Completed: [`v0.2.4` release cleanup](docs/releases/v0.2.4_release_description.md) — strict MCP pagination compatibility for HTTP and WebSocket discovery.
