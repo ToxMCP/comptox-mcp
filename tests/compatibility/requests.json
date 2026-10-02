@@ -1,0 +1,109 @@
+{
+  "calls": [
+    {
+      "label": "search",
+      "name": "search_chemical",
+      "arguments": {
+        "query": "Bisphenol A",
+        "search_type": "equals"
+      }
+    },
+    {
+      "label": "batch-search",
+      "name": "batch_search_chemical",
+      "arguments": {
+        "identifiers": [
+          "80-05-7",
+          "BPA"
+        ]
+      }
+    },
+    {
+      "label": "details",
+      "name": "get_chemical_details",
+      "arguments": {
+        "identifier": "DTXSID7020182",
+        "id_type": "dtxsid"
+      }
+    },
+    {
+      "label": "batch-details",
+      "name": "batch_get_chemical_details",
+      "arguments": {
+        "identifiers": [
+          "DTXSID7020182"
+        ],
+        "id_type": "dtxsid"
+      }
+    },
+    {
+      "label": "resolve",
+      "name": "resolve_chemical_identifier",
+      "arguments": {
+        "identifier": "80-05-7",
+        "identifier_type": "casrn"
+      }
+    },
+    {
+      "label": "aop-linkage",
+      "name": "build_aop_linkage_summary",
+      "arguments": {
+        "identifier": "80-05-7",
+        "identifier_type": "casrn",
+        "max_assays": 5
+      }
+    },
+    {
+      "label": "pbpk-handoff",
+      "name": "build_pbpk_context_bundle",
+      "arguments": {
+        "dtxsid": "DTXSID7020182"
+      }
+    },
+    {
+      "label": "evidence-pack",
+      "name": "assemble_comptox_evidence_pack",
+      "arguments": {
+        "dtxsid": "DTXSID7020182",
+        "hazard_datasets": [
+          "toxval",
+          "adme_ivive"
+        ],
+        "max_assays": 5
+      }
+    },
+    {
+      "label": "prioritization",
+      "name": "prioritize_risk_signals",
+      "arguments": {
+        "dtxsid": "DTXSID7020182"
+      }
+    },
+    {
+      "label": "manifest",
+      "name": "get_contract_manifest",
+      "arguments": {}
+    },
+    {
+      "label": "upstream-error",
+      "name": "search_chemical",
+      "arguments": {
+        "query": "fixture-unavailable"
+      },
+      "isError": true
+    }
+  ],
+  "resourceReads": [
+    "resource://chemical",
+    "resource://bioactivity",
+    "resource://exposure",
+    "resource://hazard",
+    "resource://chemical_list",
+    "resource://cheminformatics",
+    "resource://metadata",
+    "resource://interop",
+    "resource://prioritization",
+    "resource://manifest",
+    "resource://chemical/search_chemical?query=BPA&search_type=equals"
+  ]
+}

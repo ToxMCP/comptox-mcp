@@ -1,5 +1,8 @@
 # Workflow Testing Strategy – MCP Phase 2
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 > Historical/internal workflow-planning document. The released `v0.2.7` public MCP server is centered on evidence federation and interop; predictive and orchestrator workflow coverage described here remains experimental and non-canonical for the default public surface.
 
 ## Objectives

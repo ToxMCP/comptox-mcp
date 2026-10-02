@@ -1,5 +1,8 @@
 # Documentation Refresh Content Plan (Phase 2)
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 > Historical planning artifact. The `v0.2.7` release preserves the public server boundary around evidence federation and interop; use this document as background context, not as the current public contract.
 
 ## Goals

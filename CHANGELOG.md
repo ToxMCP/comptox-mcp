@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.3.0] - Unreleased migration candidate
+
+- Add the stable MCP 2.2.0 protocol adapter, per-request modern HTTP discovery and a dual-generation stdio entry point.
+- Preserve the released legacy HTTP/WebSocket handlers and all 85 tools, ten resources and scientific contracts.
+- Move modern catalog extensions into namespaced metadata, preserving standard hints and upstream provenance.
+- Bound declared and streamed MCP bodies to 4 MiB by default; add explicit modern Host/Origin allowlists and routing-header CORS support.
+- Gate installed SDK1/SDK2 clients and unchanged scientific fixtures in CI before a separate release review.
+
 ## [0.2.7] - 2026-10-01
 
 - add a recurring, manual, PR and main audit of the complete committed runtime and development dependency graph on Python 3.10 and 3.12

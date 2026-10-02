@@ -35,10 +35,16 @@ jobs:
         run: uv export --locked --all-extras --all-groups --no-emit-project --no-hashes --output-file audit-requirements.txt
       - name: Audit exact locked versions against current advisories
         run: uvx --python "${{ matrix.python-version }}" pip-audit==2.10.1 --strict --desc --disable-pip --no-deps --requirement audit-requirements.txt --format json --output dependency-audit.json
+      - name: Audit isolated legacy client lock
+        run: |
+          uv export --locked --project tests/compatibility/legacy-client --no-emit-project --no-hashes --output-file legacy-audit-requirements.txt
+          uvx --python "${{ matrix.python-version }}" pip-audit==2.10.1 --strict --desc --disable-pip --no-deps --requirement legacy-audit-requirements.txt --format json --output legacy-dependency-audit.json
       - name: Retain audit results
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependency-audit-py${{ matrix.python-version }}
-          path: dependency-audit.json
+          path: |
+            dependency-audit.json
+            legacy-dependency-audit.json
           if-no-files-found: warn

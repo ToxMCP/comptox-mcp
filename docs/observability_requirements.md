@@ -1,5 +1,8 @@
 # Observability & Governance Requirements (MCP Phase 2)
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 > Historical/internal planning document. These requirements cover broader transport, predictive, and orchestrator ambitions beyond the current default public MCP surface released in `v0.2.7`.
 
 ## Overview

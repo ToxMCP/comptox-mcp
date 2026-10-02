@@ -1,5 +1,8 @@
 # MCP Phase 2 Planning Snapshot (2025-10-25)
 
+> The unreleased `v0.3.0` SDK2 candidate preserves this public boundary; these historical plans do not add registered tools.
+
+
 > Historical planning snapshot retained for archive purposes. It does not describe the current public `v0.2.7` release boundary.
 
 This snapshot captures the planning workspace state after completing the MCP Phase 2 rollout and associated CTX migration tasks.

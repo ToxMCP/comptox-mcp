@@ -144,7 +144,9 @@ def _extract_trace_id(request: Request) -> str:
     return str(uuid4())
 
 
-def _build_request_context(request: Request) -> Dict[str, Any]:
+def _build_request_context(request: Optional[Request]) -> Dict[str, Any]:
+    if request is None:
+        return {"clientInfo": {"name": "stdio-client"}, "transport": {"type": "stdio"}}
     session_id = request.headers.get("x-mcp-session-id") or str(uuid4())
     user_agent = request.headers.get("user-agent")
     trace_id = _extract_trace_id(request)
@@ -194,6 +196,11 @@ async def mcp_endpoint(request: Request) -> Response:
             request_id=None,
         )
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
+
+    from .sdk2 import SDKResponse, is_modern_request
+
+    if is_modern_request(request, payload):
+        return SDKResponse(request.app.state.sdk2_app, await request.body())
 
     # Handle Codex CLI / MCP handshake (streamable HTTP).
     # Some clients send {"type": "connect", ...}; others omit "type" and only
@@ -896,7 +903,7 @@ def _sanitize_tool_result_for_resource_read(tool_result: Dict[str, Any]) -> str:
 
 
 async def _handle_resources_read(
-    server: MCPServer, params: Dict[str, Any], request: Request
+    server: MCPServer, params: Dict[str, Any], request: Optional[Request]
 ) -> Dict[str, Any]:
     """
     Handle resources/read, including comprehensive compatibility shims for legacy URIs.
@@ -1069,7 +1076,7 @@ async def _handle_resources_read(
 
 
 async def _handle_tools_call(
-    server: MCPServer, params: Dict[str, Any], request: Request
+    server: MCPServer, params: Dict[str, Any], request: Optional[Request]
 ) -> Dict[str, Any]:
     tool_name = params.get("name")
     if not isinstance(tool_name, str) or not tool_name:

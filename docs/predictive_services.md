@@ -1,5 +1,8 @@
 # Predictive Micro-Server Harness
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 > Experimental/internal guide. The predictive service harness described here is not part of the default public MCP tool catalog released in `v0.2.7`.
 
 Phase 2 introduces a shared harness for the TEST, OPERA, and GenRA predictive services. The goal is to give all model micro-servers a consistent structure for request validation, applicability-domain enforcement, and response formatting.

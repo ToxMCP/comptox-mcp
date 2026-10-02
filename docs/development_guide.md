@@ -1,5 +1,8 @@
 # Development Guide
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 This document provides guidance for developers who want to extend or modify the EPA CompTox MCP implementation.
 
 The released `v0.2.7` public server is an evidence-and-federation MCP. Predictive and orchestrator code still exists in-repo, but it is not part of the default public MCP surface unless explicitly registered and documented.
