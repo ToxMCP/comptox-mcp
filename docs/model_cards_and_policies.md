@@ -1,5 +1,8 @@
 # Model Cards & Guardrail Policies
 
+> The unreleased `v0.3.0` SDK2 candidate preserves the `v0.2.7` public evidence-federation boundary. See [the migration guide](mcp_sdk2.md).
+
+
 > This guide primarily covers in-repo predictive and orchestrator assets. These components remain experimental and are not part of the default public MCP tool catalog in `v0.2.7`.
 
 This guide explains how to publish human-readable summaries for machine-readable model cards and applicability-domain (AD) policies, interpret guardrail outcomes, and follow the governance workflow required for release sign-off.

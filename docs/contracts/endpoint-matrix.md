@@ -22,3 +22,7 @@ This matrix summarizes the upstream services the MCP server depends on, their fa
 - **Schema validation:** Public response validation now covers the shared schemas under `docs/contracts/schemas/common/` plus dedicated `chemical/`, `cheminformatics/`, `hazard/`, `exposure/`, `bioactivity/`, `workflow/`, `metadata/`, and `predictive/` namespaces.
 
 Keep this document updated as new endpoints are added or mirrors change. Consistency here is a requirement for A-grade reproducibility reviews.
+
+## SDK2 candidate transport
+
+The unreleased v0.3.0 candidate adds modern stateless JSON HTTP at `/mcp` and `comptox-mcp-stdio`. The existing legacy HTTP and `/mcp/ws` handlers remain. Configure `EPACOMP_MCP_ALLOWED_HOSTS` and `EPACOMP_MCP_ALLOWED_ORIGINS` for gateway authority; inbound authentication remains the existing gateway/WebSocket responsibility. Both HTTP protocol paths enforce `EPACOMP_MCP_MAX_REQUEST_BYTES` (4 MiB default). See [the migration guide](../mcp_sdk2.md).

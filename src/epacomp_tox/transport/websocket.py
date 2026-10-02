@@ -5,6 +5,7 @@ import json
 import logging
 import time
 import uuid
+from contextlib import asynccontextmanager
 from copy import deepcopy
 from functools import partial
 from typing import Any, Dict, List, Optional
@@ -943,7 +944,16 @@ def _public_health_status(payload: Dict[str, Any]) -> Dict[str, Any]:
 def create_app(server: Optional[MCPServer] = None) -> FastAPI:
     """Create a FastAPI application exposing the MCP WebSocket transport."""
 
-    app = FastAPI(title="EPA CompTox MCP Server")
+    @asynccontextmanager
+    async def lifespan(app):
+        sdk_app = app.state.sdk2_app
+        if sdk_app is None:
+            yield
+        else:
+            async with sdk_app.router.lifespan_context(sdk_app):
+                yield
+
+    app = FastAPI(title="EPA CompTox MCP Server", lifespan=lifespan)
 
     allowed_origins = settings.security.allowed_origins
     if not allowed_origins and settings.app.is_development:
@@ -958,7 +968,15 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
             allow_origins=allowed_origins,
             allow_credentials=True,
             allow_methods=["POST", "GET", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type"],
+            allow_headers=[
+                "Authorization",
+                "Content-Type",
+                "MCP-Protocol-Version",
+                "Mcp-Method",
+                "Mcp-Name",
+                "Mcp-Session-Id",
+                "Last-Event-ID",
+            ],
         )
 
     if server is not None:
@@ -973,6 +991,12 @@ def create_app(server: Optional[MCPServer] = None) -> FastAPI:
             app.state.mcp_server = None
             app.state.mcp_server_error = exc
 
+    from .body_limit import MCPBodyLimitMiddleware
+    from .sdk2 import create_sdk_http_app
+
+    instance = app.state.mcp_server
+    app.state.sdk2_app = create_sdk_http_app(instance) if instance is not None else None
+    app.add_middleware(MCPBodyLimitMiddleware, max_bytes=settings.mcp_max_request_bytes)
     app.add_middleware(AuditMiddleware)
 
     @app.get("/healthz", tags=["health"])

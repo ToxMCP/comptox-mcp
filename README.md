@@ -82,16 +82,16 @@ The current implementation follows a layered model:
 - `Contract layers` are split intentionally: `docs/contracts/schemas/` for MCP response wrappers, `schemas/` for cross-suite portable evidence objects.
 - `Regression gates` keep README, live discovery, published schemas, and AOP/PBPK handoff fixtures aligned before release.
 
-## What's New In v0.2.7
+## What's New In v0.3.0
 
-This maintenance patch refreshes the transport dependency protections and validation toolchain.
+This is an **unreleased SDK2 migration candidate**. The published `v0.2.7` deployment continues to serve existing clients until a separately reviewed rollout.
 
-- Require AnyIO 4.14.2 or newer, with the committed lock refreshed to 4.15.1.
-- Run the scientific-invariants CI gate with Node.js 22.
-- Discover response and portable schema inventories, including examples, from an installed wheel outside a source checkout.
-- Align the package, current release notes, and public boundary documentation for v0.2.7.
+- Stable MCP Python SDK 2.2.0 serves protocol `2026-07-28` on the existing `/mcp` endpoint and adds `comptox-mcp-stdio`.
+- Existing HTTP initialization, method aliases, WebSocket sessions, tool names, schemas, provenance and evidence-federation behavior remain available. Python 3.10 remains supported.
+- Modern catalog policy extensions use namespaced `_meta`; standard tool hints stay in `annotations`. Modern discovery uses private cache hints; upstream scientific results retain their provenance.
+- SDK1/SDK2 installed-client checks compare chemical retrieval, identity resolution, evidence packs, AOP/PBPK handoffs, prioritization, provider errors, descriptors and legacy resource URI calls.
 
-See the full release notes in [`docs/releases/v0.2.7_release_description.md`](docs/releases/v0.2.7_release_description.md).
+See [`v0.3.0` release cleanup](docs/releases/v0.3.0_release_description.md) and the [SDK2 compatibility and hosting guide](docs/mcp_sdk2.md).
 
 For earlier changes, see the [`CHANGELOG.md`](CHANGELOG.md), [GitHub releases](https://github.com/ToxMCP/comptox-mcp/releases), or the versioned notes in [`docs/releases/`](docs/releases/).
 

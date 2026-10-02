@@ -80,6 +80,15 @@ class _RawSettings(BaseSettings):
     )
 
     metrics_enabled: bool = Field(default=True, alias="EPACOMP_MCP_METRICS_ENABLED")
+    mcp_allowed_hosts: Optional[str] = Field(
+        default=None, alias="EPACOMP_MCP_ALLOWED_HOSTS"
+    )
+    mcp_allowed_origins: Optional[str] = Field(
+        default=None, alias="EPACOMP_MCP_ALLOWED_ORIGINS"
+    )
+    mcp_max_request_bytes: int = Field(
+        default=4 * 1024 * 1024, gt=0, alias="EPACOMP_MCP_MAX_REQUEST_BYTES"
+    )
 
 
 class Settings(_RawSettings):
