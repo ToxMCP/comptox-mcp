@@ -84,7 +84,7 @@ The current implementation follows a layered model:
 
 ## What's New In v0.3.0
 
-This is an **unreleased SDK2 migration candidate**. The published `v0.2.7` deployment continues to serve existing clients until a separately reviewed rollout.
+`v0.3.0` is the latest GitHub release and the first with a local stdio entry point (`comptox-mcp-stdio`), which desktop and coding agents use; see [Local stdio install](#local-stdio-install-desktop-and-coding-agents). It is an SDK2 migration: the existing `v0.2.7` HTTP deployment continues to serve existing clients until a separately reviewed rollout.
 
 - Stable MCP Python SDK 2.2.0 serves protocol `2026-07-28` on the existing `/mcp` endpoint and adds `comptox-mcp-stdio`.
 - Existing HTTP initialization, method aliases, WebSocket sessions, tool names, schemas, provenance and evidence-federation behavior remain available. Python 3.10 remains supported.
@@ -187,6 +187,32 @@ The server can start without a key, but its live chemical tools cannot retrieve 
    ```
 
 Keep `.env` private. The readiness check in the quick start confirms that the configured key can authenticate with EPA.
+
+## Local stdio install (desktop and coding agents)
+
+To use CompTox MCP inside an MCP client such as Claude Desktop, Claude Code, Codex CLI or Gemini CLI, install the pinned release wheel with [uv](https://docs.astral.sh/uv/). There is nothing to clone and no server to keep running: the client starts the server itself over stdio.
+
+```json
+{
+  "mcpServers": {
+    "comptox": {
+      "command": "/full/path/to/uvx",
+      "args": [
+        "--python", "3.12",
+        "--from", "https://github.com/ToxMCP/comptox-mcp/releases/download/v0.3.0/epacomp_tox_mcp-0.3.0-py3-none-any.whl",
+        "comptox-mcp-stdio"
+      ],
+      "env": { "CTX_API_KEY": "<your EPA CTX API key>" }
+    }
+  }
+}
+```
+
+- Use the **full path** to `uvx` (`which uvx`, or `where uvx` on Windows). Some clients do not inherit your shell `PATH`.
+- The server refuses to start without `CTX_API_KEY`.
+- Restart the client fully after editing its config so it loads the server.
+
+The quick start below runs the HTTP service from a clone instead.
 
 ## Quick start
 
